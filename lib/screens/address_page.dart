@@ -52,11 +52,12 @@ class _AddressPageState extends State<AddressPage> {
 
           // Correspondence Address (Current)
           _cFlatController.text = data['correspondenceAddress'] ?? '';
-          
-          if (_pFlatController.text == _cFlatController.text && _pFlatController.text.isNotEmpty) {
+
+          if (_pFlatController.text == _cFlatController.text &&
+              _pFlatController.text.isNotEmpty) {
             _isSameAsPermanent = true;
           }
-          
+
           _isLoading = false;
         });
       }
@@ -70,7 +71,9 @@ class _AddressPageState extends State<AddressPage> {
     try {
       final profileData = {
         'permanentAddress': _pFlatController.text,
-        'correspondenceAddress': _isSameAsPermanent ? _pFlatController.text : _cFlatController.text,
+        'correspondenceAddress': _isSameAsPermanent
+            ? _pFlatController.text
+            : _cFlatController.text,
         'state': _pStateController.text,
         'district': _pDistrictController.text,
         'pinCode': _pPincodeController.text,
@@ -79,16 +82,23 @@ class _AddressPageState extends State<AddressPage> {
       final result = await _apiService.updateProfile(profileData);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address updated successfully')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Address updated successfully')),
+          );
           Navigator.pushNamed(context, '/documents');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Update failed')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Update failed')),
+          );
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -108,7 +118,10 @@ class _AddressPageState extends State<AddressPage> {
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
-        title: const Text('Address Details', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+        title: const Text(
+          'Address Details',
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
@@ -125,20 +138,48 @@ class _AddressPageState extends State<AddressPage> {
                     title: 'Permanent Address',
                     icon: Icons.home_work_outlined,
                     children: [
-                      OtrTextField(label: 'Full Address', hintText: 'Enter permanent address', icon: Icons.map, controller: _pFlatController, maxLines: 3),
+                      OtrTextField(
+                        label: 'Full Address',
+                        hintText: 'Enter permanent address',
+                        icon: Icons.map,
+                        controller: _pFlatController,
+                        maxLines: 3,
+                      ),
                       const SizedBox(height: 24),
-                      OtrTextField(label: 'District', hintText: 'Enter district', icon: Icons.location_city, controller: _pDistrictController),
+                      OtrTextField(
+                        label: 'District',
+                        hintText: 'Enter district',
+                        icon: Icons.location_city,
+                        controller: _pDistrictController,
+                      ),
                       const SizedBox(height: 24),
-                      OtrTextField(label: 'State', hintText: 'Enter state', icon: Icons.flag, controller: _pStateController),
+                      OtrTextField(
+                        label: 'State',
+                        hintText: 'Enter state',
+                        icon: Icons.flag,
+                        controller: _pStateController,
+                      ),
                       const SizedBox(height: 24),
-                      OtrTextField(label: 'Pincode', hintText: '6 digit pincode', icon: Icons.pin_drop, controller: _pPincodeController, keyboardType: TextInputType.number),
+                      OtrTextField(
+                        label: 'Pincode',
+                        hintText: '6 digit pincode',
+                        icon: Icons.pin_drop,
+                        controller: _pPincodeController,
+                        keyboardType: TextInputType.number,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   CheckboxListTile(
                     value: _isSameAsPermanent,
                     onChanged: _handleCheckbox,
-                    title: const Text('Same as Permanent Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                    title: const Text(
+                      'Same as Permanent Address',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     activeColor: OtrTheme.primaryBlue,
                   ),
                   const SizedBox(height: 8),
@@ -148,14 +189,27 @@ class _AddressPageState extends State<AddressPage> {
                       title: 'Correspondence Address',
                       icon: Icons.mail_outline,
                       children: [
-                        OtrTextField(label: 'Full Address', hintText: 'Enter correspondence address', icon: Icons.map, controller: _cFlatController, maxLines: 3),
+                        OtrTextField(
+                          label: 'Full Address',
+                          hintText: 'Enter correspondence address',
+                          icon: Icons.map,
+                          controller: _cFlatController,
+                          maxLines: 3,
+                        ),
                       ],
                     ),
                   const SizedBox(height: 32),
                   ElevatedButton(
                     onPressed: _isSaving ? null : _handleSave,
                     child: _isSaving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
                         : const Text('SAVE & CONTINUE'),
                   ),
                   const SizedBox(height: 60),
@@ -165,28 +219,53 @@ class _AddressPageState extends State<AddressPage> {
     );
   }
 
-  Widget _buildCollapsibleSection({required int index, required String title, required IconData icon, required List<Widget> children}) {
+  Widget _buildCollapsibleSection({
+    required int index,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
     bool isExpanded = _expandedIndex == index;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white, 
-        borderRadius: BorderRadius.circular(24), 
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: OtrTheme.softShadow,
       ),
       child: Column(
         children: [
           ListTile(
-            onTap: () => setState(() => _expandedIndex = isExpanded ? -1 : index),
+            onTap: () =>
+                setState(() => _expandedIndex = isExpanded ? -1 : index),
             leading: Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: OtrTheme.primaryBlue.withOpacity(0.08), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(
+                color: OtrTheme.primaryBlue.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Icon(icon, color: OtrTheme.primaryBlue, size: 20),
             ),
-            title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900, color: OtrTheme.darkNavy, fontSize: 15)),
-            trailing: Icon(isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+            title: Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                color: OtrTheme.darkNavy,
+                fontSize: 15,
+              ),
+            ),
+            trailing: Icon(
+              isExpanded
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              color: Colors.grey,
+            ),
           ),
-          if (isExpanded) Padding(padding: const EdgeInsets.all(20), child: Column(children: children)),
+          if (isExpanded)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(children: children),
+            ),
         ],
       ),
     );
