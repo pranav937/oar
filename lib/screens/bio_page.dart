@@ -23,7 +23,7 @@ class _BioPageState extends State<BioPage> {
   bool _isLoading = true;
   bool _isSaving = false;
 
-  final TextEditingController _titleController = TextEditingController();
+  String? _selectedTitle;
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _surnameController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
@@ -85,7 +85,7 @@ class _BioPageState extends State<BioPage> {
       if (result['success'] == true) {
         final data = result['data'];
         setState(() {
-          _titleController.text = data['title'] ?? '';
+          _selectedTitle = data['title'];
           _firstNameController.text = data['firstName'] ?? '';
           _surnameController.text = data['surname'] ?? '';
           _nameController.text = data['fullName'] ?? '';
@@ -146,7 +146,7 @@ class _BioPageState extends State<BioPage> {
     setState(() => _isSaving = true);
     try {
       final profileData = {
-        'title': _titleController.text,
+        'title': _selectedTitle,
         'firstName': _firstNameController.text,
         'surname': _surnameController.text,
         'fullName': '${_firstNameController.text} ${_surnameController.text}'.trim(),
@@ -237,7 +237,14 @@ class _BioPageState extends State<BioPage> {
                               children: [
                                 Expanded(
                                   flex: 1,
-                                  child: OtrTextField(label: 'Title', hintText: 'Mr.', icon: Icons.title_rounded, controller: _titleController),
+                                  child: _buildFunctionalDropdown(
+                                    label: 'Title',
+                                    hint: 'Mr.',
+                                    icon: Icons.title_rounded,
+                                    value: _selectedTitle,
+                                    items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
+                                    onChanged: (val) => setState(() => _selectedTitle = val),
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
@@ -551,12 +558,40 @@ class _BioPageState extends State<BioPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: OtrTheme.darkNavy,
+          ),
+        ),
+        const SizedBox(height: 10),
         InkWell(
           onTap: onTap,
-          child: IgnorePointer(
-            child: OtrTextField(label: '', hintText: value, icon: icon),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200, width: 1.5),
+              boxShadow: OtrTheme.softShadow,
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: OtrTheme.primaryBlue, size: 22),
+                const SizedBox(width: 12),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: value == 'DD/MM/YYYY' ? Colors.grey.shade400 : OtrTheme.darkNavy,
+                    fontWeight: value == 'DD/MM/YYYY' ? FontWeight.normal : FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -567,20 +602,38 @@ class _BioPageState extends State<BioPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: items.contains(value) ? value : null,
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: OtrTheme.primaryBlue),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            filled: true,
-            fillColor: OtrTheme.background,
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: OtrTheme.darkNavy,
           ),
-          hint: Text(hint),
-          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          onChanged: onChanged,
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            boxShadow: OtrTheme.softShadow,
+          ),
+          child: DropdownButtonFormField<String>(
+            value: items.contains(value) ? value : null,
+            decoration: InputDecoration(
+              prefixIcon: Icon(icon, color: OtrTheme.primaryBlue, size: 22),
+              contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+            ),
+            hint: Text(hint, style: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.normal)),
+            style: const TextStyle(fontSize: 15, color: OtrTheme.darkNavy, fontWeight: FontWeight.w600),
+            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            onChanged: onChanged,
+            iconSize: 24,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+          ),
         ),
       ],
     );

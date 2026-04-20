@@ -3,6 +3,8 @@ import '../theme/otr_theme.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+import '../models/dashboard_model.dart';
+
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -13,8 +15,7 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
-  Map<String, dynamic>? _stats;
-  String _userName = 'Candidate';
+  DashboardStats? _stats;
 
   @override
   void initState() {
@@ -25,12 +26,13 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _fetchDashboardData() async {
     try {
       final result = await _apiService.getDashboard();
-      if (result['success'] == true) {
+      if (result['success'] == true && result['data'] != null) {
         setState(() {
-          _stats = result['data'];
-          _userName = _stats?['fullName'] ?? 'Candidate';
+          _stats = DashboardStats.fromJson(result['data']);
           _isLoading = false;
         });
+      } else {  
+        setState(() => _isLoading = false); 
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -109,6 +111,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildProfileCard() {
+    final name = _stats?.fullName ?? 'Candidate';
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -136,9 +139,9 @@ class _DashboardPageState extends State<DashboardPage> {
               shape: BoxShape.circle,
               border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
             ),
-            child: _stats?['photoUrl'] != null
-                ? ClipRRect(borderRadius: BorderRadius.circular(35), child: Image.network(_stats!['photoUrl'], fit: BoxFit.cover))
-                : Center(child: Text(_userName.isNotEmpty ? _userName[0].toUpperCase() : 'C', style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold))),
+            child: _stats?.photoUrl != null
+                ? ClipRRect(borderRadius: BorderRadius.circular(35), child: Image.network(_stats!.photoUrl!, fit: BoxFit.cover))
+                : Center(child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'C', style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold))),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -148,18 +151,25 @@ class _DashboardPageState extends State<DashboardPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(color: OtrTheme.primaryBlue, borderRadius: BorderRadius.circular(6)),
-                  child: Text(_stats?['registrationId'] ?? 'ID-PENDING', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  child: Text(_stats?.registrationId ?? 'ID-PENDING', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
                 ),
                 const SizedBox(height: 8),
-                Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-                Text('Category: ${_stats?['category'] ?? 'N/A'}', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.w500)),
+                Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+                Text('Category: ${_stats?.category ?? 'N/A'}', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-            child: const Icon(Icons.check, color: Colors.white, size: 12),
+            decoration: BoxDecoration(
+              color: _stats?.registrationStatus == 'ACTIVE' ? Colors.green : Colors.orange,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _stats?.registrationStatus == 'ACTIVE' ? Icons.check : Icons.access_time_rounded,
+              color: Colors.white,
+              size: 12,
+            ),
           ),
         ],
       ),
@@ -173,9 +183,9 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildContactItem(Icons.email_outlined, _stats?['email'] ?? 'N/A'),
+          _buildContactItem(Icons.email_outlined, _stats?.email ?? 'N/A'),
           Container(width: 1, height: 20, color: Colors.grey.shade200),
-          _buildContactItem(Icons.phone_iphone_rounded, _stats?['mobileNumber'] ?? 'N/A'),
+          _buildContactItem(Icons.phone_iphone_rounded, _stats?.mobileNumber ?? 'N/A'),
         ],
       ),
     );
@@ -201,7 +211,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Expanded(
           child: _StatCard(
             title: 'Total Applications',
-            count: _stats?['totalApplications']?.toString() ?? '0',
+            count: _stats?.totalApplications.toString() ?? '0',
             color: OtrTheme.primaryBlue,
             icon: Icons.assignment_turned_in_rounded,
           ),
@@ -210,7 +220,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Expanded(
           child: _StatCard(
             title: 'Pending Apps',
-            count: _stats?['pendingApplications']?.toString() ?? '0',
+            count: _stats?.pendingApplications.toString() ?? '0',
             color: Colors.orange,
             icon: Icons.pending_actions_rounded,
           ),

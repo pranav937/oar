@@ -54,13 +54,14 @@ class _AddressPageState extends State<AddressPage> {
           _pPincodeController.text = data['pinCode'] ?? '';
 
           // Correspondence Address
-          _cFlatController.text = data['correspondenceAddress'] ?? data['presentAddress'] ?? '';
+          _cFlatController.text =
+              data['correspondenceAddress'] ?? data['presentAddress'] ?? '';
           _cStateController.text = data['state'] ?? '';
           _cDistrictController.text = data['district'] ?? '';
           _cTalukaController.text = data['taluka'] ?? '';
           _cPincodeController.text = data['pinCode'] ?? '';
 
-          if (_pFlatController.text.isNotEmpty && 
+          if (_pFlatController.text.isNotEmpty &&
               _pFlatController.text == _cFlatController.text) {
             _isSameAsPermanent = true;
           }
@@ -141,7 +142,10 @@ class _AddressPageState extends State<AddressPage> {
                       children: [
                         _buildProgressTracker(),
                         const SizedBox(height: 32),
-                        _buildSectionHeader('Residence Details', 'Update your permanent and current addresses'),
+                        _buildSectionHeader(
+                          'Residence Details',
+                          'Update your permanent and current addresses',
+                        ),
                         const SizedBox(height: 24),
                         _buildCollapsibleSection(
                           index: 0,
@@ -158,32 +162,83 @@ class _AddressPageState extends State<AddressPage> {
                             const SizedBox(height: 20),
                             Row(
                               children: [
-                                Expanded(child: OtrTextField(label: 'Taluka/City', hintText: 'Taluka', icon: Icons.location_on_rounded, controller: _pTalukaController)),
+                                Expanded(
+                                  child: OtrTextField(
+                                    label: 'Taluka/City',
+                                    hintText: 'Taluka',
+                                    icon: Icons.location_on_rounded,
+                                    controller: _pTalukaController,
+                                  ),
+                                ),
                                 const SizedBox(width: 12),
-                                Expanded(child: OtrTextField(label: 'District', hintText: 'District', icon: Icons.location_city_rounded, controller: _pDistrictController)),
+                                Expanded(
+                                  child: OtrTextField(
+                                    label: 'District',
+                                    hintText: 'District',
+                                    icon: Icons.location_city_rounded,
+                                    controller: _pDistrictController,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 20),
                             Row(
                               children: [
-                                Expanded(child: OtrTextField(label: 'State', hintText: 'State', icon: Icons.flag_rounded, controller: _pStateController)),
+                                Expanded(
+                                  child: OtrTextField(
+                                    label: 'State',
+                                    hintText: 'State',
+                                    icon: Icons.flag_rounded,
+                                    controller: _pStateController,
+                                  ),
+                                ),
                                 const SizedBox(width: 12),
-                                Expanded(child: OtrTextField(label: 'Pincode', hintText: '6 digits', icon: Icons.pin_drop_rounded, controller: _pPincodeController, keyboardType: TextInputType.number)),
+                                Expanded(
+                                  child: OtrTextField(
+                                    label: 'Pincode',
+                                    hintText: '6 digits',
+                                    icon: Icons.pin_drop_rounded,
+                                    controller: _pPincodeController,
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
                               ],
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: _isSameAsPermanent ? OtrTheme.primaryBlue.withOpacity(0.3) : Colors.transparent)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _isSameAsPermanent
+                                  ? OtrTheme.primaryBlue.withOpacity(0.3)
+                                  : Colors.transparent,
+                            ),
+                          ),
                           child: CheckboxListTile(
                             value: _isSameAsPermanent,
                             onChanged: _handleCheckbox,
-                            title: const Text('Same as Permanent Address', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: OtrTheme.darkNavy)),
+                            title: const Text(
+                              'Same as Permanent Address',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: OtrTheme.darkNavy,
+                              ),
+                            ),
                             activeColor: OtrTheme.primaryBlue,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -223,7 +278,14 @@ class _AddressPageState extends State<AddressPage> {
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        title: const Text('Address Info', style: TextStyle(color: OtrTheme.darkNavy, fontWeight: FontWeight.w900, fontSize: 18)),
+        title: const Text(
+          'Address Info',
+          style: TextStyle(
+            color: OtrTheme.darkNavy,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
@@ -244,25 +306,54 @@ class _AddressPageState extends State<AddressPage> {
     );
   }
 
-  Widget _buildStepIndicator(String step, String label, bool isActive, bool isDone) {
+  Widget _buildStepIndicator(
+    String step,
+    String label,
+    bool isActive,
+    bool isDone,
+  ) {
     return Column(
       children: [
         Container(
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isActive ? OtrTheme.primaryBlue : Colors.grey.withOpacity(0.2),
+            color: isActive
+                ? OtrTheme.primaryBlue
+                : Colors.grey.withOpacity(0.2),
             shape: BoxShape.circle,
-            boxShadow: isActive ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: OtrTheme.primaryBlue.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
           child: Center(
             child: isDone
                 ? const Icon(Icons.check, color: Colors.white, size: 16)
-                : Text(step, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
+                : Text(
+                    step,
+                    style: TextStyle(
+                      color: isActive ? Colors.white : Colors.grey,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: isActive ? OtrTheme.primaryBlue : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            color: isActive ? OtrTheme.primaryBlue : Colors.grey,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -281,9 +372,24 @@ class _AddressPageState extends State<AddressPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy, letterSpacing: -0.5)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: OtrTheme.darkNavy,
+            letterSpacing: -0.5,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
@@ -300,11 +406,24 @@ class _AddressPageState extends State<AddressPage> {
         shadowColor: OtrTheme.primaryBlue.withOpacity(0.4),
       ),
       child: _isSaving
-          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
           : const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('SAVE & PROCEED', style: TextStyle(letterSpacing: 1, fontWeight: FontWeight.w900)),
+                Text(
+                  'SAVE & PROCEED',
+                  style: TextStyle(
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward_rounded, size: 18),
               ],
@@ -312,7 +431,12 @@ class _AddressPageState extends State<AddressPage> {
     );
   }
 
-  Widget _buildCollapsibleSection({required int index, required String title, required IconData icon, required List<Widget> children}) {
+  Widget _buildCollapsibleSection({
+    required int index,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
     bool isExpanded = _expandedIndex == index;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -322,25 +446,52 @@ class _AddressPageState extends State<AddressPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isExpanded ? OtrTheme.primaryBlue.withOpacity(0.08) : Colors.black.withOpacity(0.03),
+            color: isExpanded
+                ? OtrTheme.primaryBlue.withOpacity(0.08)
+                : Colors.black.withOpacity(0.03),
             blurRadius: 20,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
-        border: Border.all(color: isExpanded ? OtrTheme.primaryBlue.withOpacity(0.3) : Colors.transparent, width: 1.5),
+        border: Border.all(
+          color: isExpanded
+              ? OtrTheme.primaryBlue.withOpacity(0.3)
+              : Colors.transparent,
+          width: 1.5,
+        ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: index == 0,
-          onExpansionChanged: (expanded) => setState(() => _expandedIndex = expanded ? index : -1),
+          onExpansionChanged: (expanded) =>
+              setState(() => _expandedIndex = expanded ? index : -1),
           leading: Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.lightBlue, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: isExpanded ? Colors.white : OtrTheme.primaryBlue, size: 20),
+            decoration: BoxDecoration(
+              color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.lightBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: isExpanded ? Colors.white : OtrTheme.primaryBlue,
+              size: 20,
+            ),
           ),
-          title: Text(title, style: TextStyle(fontWeight: FontWeight.w900, color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.darkNavy, fontSize: 15)),
-          trailing: Icon(isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: isExpanded ? OtrTheme.primaryBlue : Colors.grey),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.darkNavy,
+              fontSize: 15,
+            ),
+          ),
+          trailing: Icon(
+            isExpanded
+                ? Icons.keyboard_arrow_up_rounded
+                : Icons.keyboard_arrow_down_rounded,
+            color: isExpanded ? OtrTheme.primaryBlue : Colors.grey,
+          ),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
