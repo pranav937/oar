@@ -1,0 +1,358 @@
+import 'package:flutter/material.dart';
+import '../theme/otr_theme.dart';
+import '../widgets/otr_text_field.dart';
+import '../services/api_service.dart';
+
+class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
+
+  @override
+  State<RegistrationPage> createState() => _RegistrationPageState();
+}
+
+class _RegistrationPageState extends State<RegistrationPage> {
+  int _currentStep = 0;
+  final ApiService _apiService = ApiService();
+  bool _isLoading = false;
+
+  // Controllers for registration
+  final _usernameController = TextEditingController();
+  final _fullnameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _mobileController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  // Controllers for OTP
+  final _otpControllers = List.generate(6, (index) => TextEditingController());
+
+  Future<void> _handleRegister() async {
+    if (_usernameController.text.isEmpty ||
+        _fullnameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _mobileController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final userData = {
+        "username": _usernameController.text,
+        "email": _emailController.text,
+        "fullname": _fullnameController.text,
+        "mobileNumber": _mobileController.text,
+        "password": _passwordController.text,
+        "role": "USER"
+      };
+
+      final result = await _apiService.register(userData);
+
+      if (result['success'] == true) {
+        // Move to OTP step
+        setState(() => _currentStep = 1);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleVerifyOtp() async {
+    String otp = _otpControllers.map((c) => c.text).join();
+    if (otp.length < 6) return;
+
+    setState(() => _isLoading = true);
+    try {
+      // In a real app, we'd verify both, but here we follow the flow
+      // We'll just verify email OTP for this demo/flow
+      final response = await _apiService.post(
+        '/api/auth/verify-otp',
+        {'email': _emailController.text, 'otp': otp},
+        authenticated: false,
+      );
+
+      final result = await _apiService.post(
+        '/api/auth/verify-mobile-otp',
+        {'mobileNumber': _mobileController.text, 'otp': otp},
+        authenticated: false,
+      );
+
+      _finishRegistration(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _finishRegistration(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 48),
+              ),
+              const SizedBox(height: 16),
+              const Text('Account Created!', style: TextStyle(fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: const Text(
+            'Your registration is complete. Welcome to OTR Model! Please log in to your new account.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: OtrTheme.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Proceed to Login', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: OtrTheme.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom App Bar
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                    onPressed: () {
+                      if (_currentStep > 0) {
+                        setState(() => _currentStep--);
+                      } else {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      }
+                    },
+                  ),
+                  const Expanded(
+                    child: Text(
+                      'Create Account',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: OtrTheme.darkNavy,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
+              ),
+            ),
+
+            _buildProgressIndicator(),
+
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 500),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 400),
+                    child: _buildCurrentStep(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 48),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            height: 4,
+            width: double.infinity,
+            decoration: BoxDecoration(color: OtrTheme.lightBlue, borderRadius: BorderRadius.circular(2)),
+          ),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            height: 4,
+            width: double.infinity,
+            margin: EdgeInsets.only(right: _currentStep == 0 ? 150 : 0),
+            decoration: BoxDecoration(color: OtrTheme.primaryBlue, borderRadius: BorderRadius.circular(2)),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(2, (index) {
+              bool isCompleted = index < _currentStep;
+              bool isActive = index == _currentStep;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                width: isActive ? 16 : 12,
+                height: isActive ? 16 : 12,
+                decoration: BoxDecoration(
+                  color: isCompleted || isActive ? OtrTheme.primaryBlue : Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: isCompleted || isActive ? OtrTheme.primaryBlue : OtrTheme.lightBlue,
+                    width: 2,
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        return _buildStepDetails();
+      case 1:
+        return _buildStepOtp();
+      default:
+        return _buildStepDetails();
+    }
+  }
+
+  Widget _buildStepHeader(String title, String subtitle, IconData icon) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: OtrTheme.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: OtrTheme.primaryBlue, size: 28),
+        ),
+        const SizedBox(height: 20),
+        Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy)),
+        const SizedBox(height: 8),
+        Text(subtitle, style: const TextStyle(fontSize: 15, color: Colors.black54, height: 1.4)),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildStepDetails() {
+    return Column(
+      key: const ValueKey(0),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildStepHeader('Basic Details', 'Join ORA today to discover new opportunities.', Icons.person_add_rounded),
+        OtrTextField(label: 'Username', hintText: 'Choose a username', icon: Icons.alternate_email, controller: _usernameController),
+        const SizedBox(height: 16),
+        OtrTextField(label: 'Full Name', hintText: 'Enter your full name', icon: Icons.person_outline, controller: _fullnameController),
+        const SizedBox(height: 16),
+        OtrTextField(label: 'Email Address', hintText: 'name@example.com', icon: Icons.email_outlined, controller: _emailController, keyboardType: TextInputType.emailAddress),
+        const SizedBox(height: 16),
+        OtrTextField(label: 'Mobile Number', hintText: '10-digit mobile number', icon: Icons.phone_android_rounded, controller: _mobileController, keyboardType: TextInputType.phone),
+        const SizedBox(height: 16),
+        OtrTextField(label: 'Password', hintText: 'Create a password', icon: Icons.lock_outline_rounded, isPassword: true, controller: _passwordController),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _handleRegister,
+          child: _isLoading
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Register & Send OTP'),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildStepOtp() {
+    return Column(
+      key: const ValueKey(1),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildStepHeader('Verification', 'Enter the code sent to your email and mobile.', Icons.verified_user_rounded),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(6, (index) => _buildOtpBox(index)),
+        ),
+        const SizedBox(height: 48),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _handleVerifyOtp,
+          child: _isLoading
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : const Text('Verify & Finish'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtpBox(int index) {
+    return Container(
+      width: 48,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200, width: 2),
+        boxShadow: OtrTheme.softShadow,
+      ),
+      child: TextField(
+        controller: _otpControllers[index],
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        keyboardType: TextInputType.number,
+        maxLength: 1,
+        decoration: const InputDecoration(
+          counterText: '', 
+          border: InputBorder.none,
+          filled: false,
+          contentPadding: EdgeInsets.zero,
+        ),
+        onChanged: (value) {
+          if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
+        },
+      ),
+    );
+  }
+}
+
+
