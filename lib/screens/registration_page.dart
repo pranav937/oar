@@ -16,23 +16,37 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _isLoading = false;
 
   // Controllers for registration
-  final _usernameController = TextEditingController();
-  final _fullnameController = TextEditingController();
   final _emailController = TextEditingController();
   final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _hasAcceptedDeclaration = false;
 
   // Controllers for OTP
-  final _otpControllers = List.generate(6, (index) => TextEditingController());
+  final _emailOtpControllers = List.generate(6, (index) => TextEditingController());
+  final _mobileOtpControllers = List.generate(6, (index) => TextEditingController());
 
   Future<void> _handleRegister() async {
-    if (_usernameController.text.isEmpty ||
-        _fullnameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
+    if (_emailController.text.isEmpty ||
         _mobileController.text.isEmpty ||
-        _passwordController.text.isEmpty) {
+        _passwordController.text.isEmpty ||
+        _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields')),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Passwords do not match')),
+      );
+      return;
+    }
+
+    if (!_hasAcceptedDeclaration) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the declaration')),
       );
       return;
     }
@@ -40,13 +54,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() => _isLoading = true);
     try {
       final userData = {
-        "username": _usernameController.text,
         "email": _emailController.text,
-        "fullname": _fullnameController.text,
         "mobileNumber": _mobileController.text,
         "password": _passwordController.text,
-        "role": "USER"
+        "confirmPassword": _confirmPasswordController.text,
+        "hasAcceptedDeclaration": _hasAcceptedDeclaration,
       };
+
+      print("DEBUG: Sending registration data: $userData");
 
       final result = await _apiService.register(userData);
 
@@ -68,30 +83,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   Future<void> _handleVerifyOtp() async {
-    String otp = _otpControllers.map((c) => c.text).join();
-    if (otp.length < 6) return;
+    String emailOtp = _emailOtpControllers.map((c) => c.text).join();
+    String mobileOtp = _mobileOtpControllers.map((c) => c.text).join();
+
+    if (emailOtp.length < 6 || mobileOtp.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter both code verification values')));
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
-      // In a real app, we'd verify both, but here we follow the flow
-      // We'll just verify email OTP for this demo/flow
-      final response = await _apiService.post(
-        '/api/auth/verify-otp',
-        {'email': _emailController.text, 'otp': otp},
-        authenticated: false,
-      );
+      final emailResult = await _apiService.verifyEmailOtp(_emailController.text, emailOtp);
+      final mobileResult = await _apiService.verifyMobileOtp(_mobileController.text, mobileOtp);
 
-      final result = await _apiService.post(
-        '/api/auth/verify-mobile-otp',
-        {'mobileNumber': _mobileController.text, 'otp': otp},
-        authenticated: false,
-      );
-
-      _finishRegistration(context);
+      if (emailResult['success'] == true && mobileResult['success'] == true) {
+        _finishRegistration(context);
+      } else {
+        String msg = "";
+        if (emailResult['success'] != true) msg += "Email OTP: ${emailResult['message']}. ";
+        if (mobileResult['success'] != true) msg += "Mobile OTP: ${mobileResult['message']}. ";
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -282,16 +296,23 @@ class _RegistrationPageState extends State<RegistrationPage> {
       key: const ValueKey(0),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStepHeader('Basic Details', 'Join ORA today to discover new opportunities.', Icons.person_add_rounded),
-        OtrTextField(label: 'Username', hintText: 'Choose a username', icon: Icons.alternate_email, controller: _usernameController),
-        const SizedBox(height: 16),
-        OtrTextField(label: 'Full Name', hintText: 'Enter your full name', icon: Icons.person_outline, controller: _fullnameController),
-        const SizedBox(height: 16),
+        _buildStepHeader('Account Details', 'Create your ORA account to get started.', Icons.person_add_rounded),
         OtrTextField(label: 'Email Address', hintText: 'name@example.com', icon: Icons.email_outlined, controller: _emailController, keyboardType: TextInputType.emailAddress),
         const SizedBox(height: 16),
         OtrTextField(label: 'Mobile Number', hintText: '10-digit mobile number', icon: Icons.phone_android_rounded, controller: _mobileController, keyboardType: TextInputType.phone),
         const SizedBox(height: 16),
         OtrTextField(label: 'Password', hintText: 'Create a password', icon: Icons.lock_outline_rounded, isPassword: true, controller: _passwordController),
+        const SizedBox(height: 16),
+        OtrTextField(label: 'Confirm Password', hintText: 'Re-enter your password', icon: Icons.lock_reset_rounded, isPassword: true, controller: _confirmPasswordController),
+        const SizedBox(height: 24),
+        CheckboxListTile(
+          title: const Text('I hereby declare that the information provided is correct.', style: TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w600)),
+          value: _hasAcceptedDeclaration,
+          onChanged: (val) => setState(() => _hasAcceptedDeclaration = val ?? false),
+          controlAffinity: ListTileControlAffinity.leading,
+          activeColor: OtrTheme.primaryBlue,
+          contentPadding: EdgeInsets.zero,
+        ),
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: _isLoading ? null : _handleRegister,
@@ -309,11 +330,24 @@ class _RegistrationPageState extends State<RegistrationPage> {
       key: const ValueKey(1),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildStepHeader('Verification', 'Enter the code sent to your email and mobile.', Icons.verified_user_rounded),
+        _buildStepHeader('Final Verification', 'Enter the codes sent to your email and phone.', Icons.verified_user_rounded),
+        
+        const Text('EMAIL OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black38, letterSpacing: 1)),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(6, (index) => _buildOtpBox(index)),
+          children: List.generate(6, (index) => _buildOtpBox(index, _emailOtpControllers)),
         ),
+        
+        const SizedBox(height: 32),
+        
+        const Text('MOBILE OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black38, letterSpacing: 1)),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(6, (index) => _buildOtpBox(index, _mobileOtpControllers)),
+        ),
+        
         const SizedBox(height: 48),
         ElevatedButton(
           onPressed: _isLoading ? null : _handleVerifyOtp,
@@ -321,14 +355,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
               : const Text('Verify & Finish'),
         ),
+        const SizedBox(height: 40),
       ],
     );
   }
 
-  Widget _buildOtpBox(int index) {
+  Widget _buildOtpBox(int index, List<TextEditingController> controllers) {
     return Container(
-      width: 48,
-      height: 56,
+      width: 44,
+      height: 52,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
@@ -336,9 +371,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         boxShadow: OtrTheme.softShadow,
       ),
       child: TextField(
-        controller: _otpControllers[index],
+        controller: controllers[index],
         textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: OtrTheme.darkNavy),
         keyboardType: TextInputType.number,
         maxLength: 1,
         decoration: const InputDecoration(

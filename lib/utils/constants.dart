@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = "http://192.168.1.9:8000"; // Default base URL, can be updated
+  static const String baseUrl = "http://192.168.1.4:3000"; // Updated local API URL
 
   // ORA Candidate Endpoints
   static const String candidateRegister = "/api/ora/candidates/register";

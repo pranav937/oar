@@ -27,25 +27,30 @@ class ApiService {
   }
 
   // Generic request methods
-  Future<http.Response> get(String endpoint, {bool authenticated = true, Map<String, String>? queryParams}) async {
+  Future<http.Response> get(
+    String endpoint, {
+    bool authenticated = true,
+    Map<String, String>? queryParams,
+  }) async {
     String? token;
     if (authenticated) {
       token = await _getToken();
     }
-    
+
     Uri uri = Uri.parse('${ApiConstants.baseUrl}$endpoint');
     if (queryParams != null) {
       uri = uri.replace(queryParameters: queryParams);
     }
 
-    final response = await http.get(
-      uri,
-      headers: _headers(token),
-    );
+    final response = await http.get(uri, headers: _headers(token));
     return response;
   }
 
-  Future<http.Response> post(String endpoint, Map<String, dynamic> body, {bool authenticated = true}) async {
+  Future<http.Response> post(
+    String endpoint,
+    Map<String, dynamic> body, {
+    bool authenticated = true,
+  }) async {
     String? token;
     if (authenticated) {
       token = await _getToken();
@@ -58,7 +63,11 @@ class ApiService {
     return response;
   }
 
-  Future<http.Response> put(String endpoint, Map<String, dynamic> body, {bool authenticated = true}) async {
+  Future<http.Response> put(
+    String endpoint,
+    Map<String, dynamic> body, {
+    bool authenticated = true,
+  }) async {
     String? token;
     if (authenticated) {
       token = await _getToken();
@@ -74,61 +83,173 @@ class ApiService {
   // --- ORA Candidate Auth ---
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    // Mock for offline mode
-    await Future.delayed(const Duration(milliseconds: 500));
-    await _saveToken("mock_access_token");
-    return {'success': true, 'message': 'Login successful (Offline)', 'data': {'token': 'mock_access_token'}};
+    try {
+      final response = await post(ApiConstants.candidateLogin, {
+        'email': email,
+        'password': password,
+      }, authenticated: false);
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (data['success'] == true && data['data'] != null) {
+          final token = data['data']['token'];
+          if (token != null) {
+            await _saveToken(token);
+          }
+        }
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {'success': false, 'message': data['message'] ?? 'Login failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
-  Future<Map<String, dynamic>> register(Map<String, dynamic> candidateData) async {
-    // Mock for offline mode
-    await Future.delayed(const Duration(milliseconds: 500));
-    return {'success': true, 'message': 'Registration successful (Offline)'};
+  Future<Map<String, dynamic>> register(
+    Map<String, dynamic> candidateData,
+  ) async {
+    try {
+      final response = await post(
+        ApiConstants.candidateRegister,
+        candidateData,
+        authenticated: false,
+      );
+
+      print(
+        "DEBUG: Registration Response (${response.statusCode}): ${response.body}",
+      );
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      // Check for success - the API usually returns 200 or 201 for success
+      // If the API response structure has 'success' field, we use that
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Registration failed',
+          'data': data,
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> sendEmailOtp(String email) async {
-    // Mock for offline mode
-    return {'success': true, 'message': 'OTP sent (Offline)'};
+    try {
+      final response = await post(ApiConstants.candidateSendOtp, {
+        'email': email,
+      }, authenticated: false);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> verifyEmailOtp(String email, String otp) async {
-    // Mock for offline mode
-    return {'success': true, 'message': 'OTP verified (Offline)'};
+    try {
+      final response = await post(ApiConstants.candidateVerifyOtp, {
+        'email': email,
+        'otp': otp,
+      }, authenticated: false);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> sendMobileOtp(String mobileNumber) async {
+    try {
+      final response = await post(ApiConstants.candidateSendMobileOtp, {
+        'mobileNumber': mobileNumber,
+      }, authenticated: false);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyMobileOtp(
+    String mobileNumber,
+    String otp,
+  ) async {
+    try {
+      final response = await post(ApiConstants.candidateVerifyMobileOtp, {
+        'mobileNumber': mobileNumber,
+        'otp': otp,
+      }, authenticated: false);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   // --- ORA Dashboard & Profile ---
 
   Future<Map<String, dynamic>> getDashboard() async {
-    // Mock for offline mode
-    return {
-      'success': true,
-      'data': {
-        'totalApplications': 5,
-        'approvedApplications': 2,
-        'pendingApplications': 3
+    try {
+      final response = await get(ApiConstants.candidateDashboard);
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch dashboard',
+        };
       }
-    };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> getProfile() async {
-    // Mock for offline mode
-    return {
-      'success': true,
-      'data': {
-        'fullname': 'Demo User',
-        'email': 'demo@example.com',
-        'mobileNumber': '9876543210',
-        'permanentAddress': '123 Main St, City',
-        'state': 'Bihar',
-        'district': 'Patna',
-        'pinCode': '800001'
+    try {
+      final response = await get(ApiConstants.candidateProfile);
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to fetch profile',
+        };
       }
-    };
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
-  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> profileData) async {
-    // Mock for offline mode
-    return {'success': true, 'message': 'Profile updated (Offline)'};
+  Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> profileData,
+  ) async {
+    try {
+      final response = await put(ApiConstants.candidateProfile, profileData);
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Failed to update profile',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   // --- ORA Jobs & Applications ---
@@ -143,58 +264,66 @@ class ApiService {
           'title': 'Junior Associate',
           'department': 'Operations',
           'applicationFee': 500.0,
-          'lastDate': '2026-05-20'
+          'lastDate': '2026-05-20',
         },
         {
           'uuid': 'job2',
           'title': 'Field Officer',
           'department': 'Logistics',
           'applicationFee': 400.0,
-          'lastDate': '2026-05-25'
-        }
-      ]
+          'lastDate': '2026-05-25',
+        },
+      ],
     };
   }
 
-  Future<Map<String, dynamic>> getApplicationForm(String advertisementUuid) async {
+  Future<Map<String, dynamic>> getApplicationForm(
+    String advertisementUuid,
+  ) async {
     // Mock for offline mode
     return {
       'success': true,
-      'data': {
-        'formFields': [] 
-      }
+      'data': {'formFields': []},
     };
   }
 
-  Future<Map<String, dynamic>> submitApplication(Map<String, dynamic> appData) async {
+  Future<Map<String, dynamic>> submitApplication(
+    Map<String, dynamic> appData,
+  ) async {
     // Mock for offline mode
     return {
       'success': true,
       'message': 'Application submitted (Offline)',
-      'data': {'applicationUuid': 'mock_app_uuid'}
+      'data': {'applicationUuid': 'mock_app_uuid'},
     };
   }
 
-  Future<Map<String, dynamic>> getMyApplications({int page = 1, int pageSize = 10}) async {
+  Future<Map<String, dynamic>> getMyApplications({
+    int page = 1,
+    int pageSize = 10,
+  }) async {
     // Mock for offline mode
-    return {
-      'success': true,
-      'data': []
-    };
+    return {'success': true, 'data': []};
   }
 
   // --- ORA Payments ---
 
-  Future<Map<String, dynamic>> initiatePayment(String appUuid, double amount) async {
+  Future<Map<String, dynamic>> initiatePayment(
+    String appUuid,
+    double amount,
+  ) async {
     final response = await post(ApiConstants.initiatePayment, {
       'applicationUuid': appUuid,
       'amount': amount,
-      'paymentMode': 'ONLINE'
+      'paymentMode': 'ONLINE',
     });
     return jsonDecode(response.body);
   }
 
-  Future<Map<String, dynamic>> verifyPayment(String paymentUuid, String transactionId) async {
+  Future<Map<String, dynamic>> verifyPayment(
+    String paymentUuid,
+    String transactionId,
+  ) async {
     // Stub for offline mode
     return {'success': true, 'message': 'Payment verified (Offline)'};
   }
@@ -202,9 +331,9 @@ class ApiService {
   Future<Map<String, dynamic>> uploadDocument(File file, String type) async {
     // Stub for offline mode
     return {
-      'success': true, 
+      'success': true,
       'message': 'Document uploaded (Offline)',
-      'data': {'fileUrl': 'https://example.com/mock_file.pdf'}
+      'data': {'fileUrl': 'https://example.com/mock_file.pdf'},
     };
   }
 

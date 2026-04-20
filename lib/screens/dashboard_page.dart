@@ -28,7 +28,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (result['success'] == true) {
         setState(() {
           _stats = result['data'];
-          _userName = _stats?['candidateName'] ?? 'Candidate';
+          _userName = _stats?['fullName'] ?? 'Candidate';
           _isLoading = false;
         });
       }
@@ -74,24 +74,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome, $_userName',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy),
-                    ),
-                    const Text(
-                      'Manage your registrations and applications here.',
-                      style: TextStyle(fontSize: 14, color: Colors.black54, fontWeight: FontWeight.w500),
-                    ),
+                    _buildProfileCard(),
+                    const SizedBox(height: 24),
+                    _buildContactBar(),
                     const SizedBox(height: 32),
-
+                    _buildSectionHeader('Application Overview'),
+                    const SizedBox(height: 16),
                     _buildStatCards(),
                     const SizedBox(height: 32),
-
                     _DashboardSection(
                       title: 'Registration & Profile',
                       items: [
-                        _GridItemData('Bio', Icons.person_outline_rounded),
-                        _GridItemData('Address', Icons.map_outlined),
+                        _GridItemData('Bio', Icons.person_pin_rounded),
+                        _GridItemData('Address', Icons.home_work_rounded),
                         _GridItemData('Documents', Icons.file_present_outlined),
                         _GridItemData('Education', Icons.school_outlined),
                       ],
@@ -113,33 +108,114 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildStatCards() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+  Widget _buildProfileCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [OtrTheme.darkNavy, Color(0xFF1E293B)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: OtrTheme.darkNavy.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
       child: Row(
         children: [
-          _StatCard(
-            title: 'Active Jobs',
-            count: _stats?['activeAdvertisementsCount']?.toString() ?? '0',
-            color: OtrTheme.primaryBlue,
-            icon: Icons.work_outline,
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+            ),
+            child: _stats?['photoUrl'] != null
+                ? ClipRRect(borderRadius: BorderRadius.circular(35), child: Image.network(_stats!['photoUrl'], fit: BoxFit.cover))
+                : Center(child: Text(_userName.isNotEmpty ? _userName[0].toUpperCase() : 'C', style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold))),
           ),
-          const SizedBox(width: 16),
-          _StatCard(
-            title: 'Applications',
-            count: _stats?['myApplicationsCount']?.toString() ?? '0',
-            color: Colors.green,
-            icon: Icons.description_outlined,
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(color: OtrTheme.primaryBlue, borderRadius: BorderRadius.circular(6)),
+                  child: Text(_stats?['registrationId'] ?? 'ID-PENDING', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                ),
+                const SizedBox(height: 8),
+                Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+                Text('Category: ${_stats?['category'] ?? 'N/A'}', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.w500)),
+              ],
+            ),
           ),
-          const SizedBox(width: 16),
-          _StatCard(
-            title: 'Approved',
-            count: '2',
-            color: Colors.orange,
-            icon: Icons.check_circle_outline,
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+            child: const Icon(Icons.check, color: Colors.white, size: 12),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContactBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildContactItem(Icons.email_outlined, _stats?['email'] ?? 'N/A'),
+          Container(width: 1, height: 20, color: Colors.grey.shade200),
+          _buildContactItem(Icons.phone_iphone_rounded, _stats?['mobileNumber'] ?? 'N/A'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactItem(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: OtrTheme.mediumBlue),
+        const SizedBox(width: 8),
+        Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: OtrTheme.darkNavy)),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy, letterSpacing: -0.5));
+  }
+
+  Widget _buildStatCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            title: 'Total Applications',
+            count: _stats?['totalApplications']?.toString() ?? '0',
+            color: OtrTheme.primaryBlue,
+            icon: Icons.assignment_turned_in_rounded,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _StatCard(
+            title: 'Pending Apps',
+            count: _stats?['pendingApplications']?.toString() ?? '0',
+            color: Colors.orange,
+            icon: Icons.pending_actions_rounded,
+          ),
+        ),
+      ],
     );
   }
 }
