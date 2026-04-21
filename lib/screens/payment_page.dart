@@ -17,7 +17,8 @@ class _PaymentPageState extends State<PaymentPage> {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
     final String? appUuid = args?['applicationUuid'];
     final String title = args?['title'] ?? 'Application Fee';
     final double amount = args?['amount'] ?? 500.0;
@@ -25,7 +26,10 @@ class _PaymentPageState extends State<PaymentPage> {
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
-        title: const Text('Online Payment', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'Online Payment',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
@@ -40,16 +44,26 @@ class _PaymentPageState extends State<PaymentPage> {
             _buildPaymentMethods(),
             const SizedBox(height: 48),
             ElevatedButton(
-              onPressed: _isProcessing ? null : () => _handlePayment(appUuid, amount),
+              onPressed: _isProcessing
+                  ? null
+                  : () => _handlePayment(appUuid, amount),
               style: ElevatedButton.styleFrom(
                 backgroundColor: OtrTheme.primaryBlue,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(60),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               child: _isProcessing
                   ? const SpinKitThreeBounce(color: Colors.white, size: 20)
-                  : Text('Pay ₹$amount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  : Text(
+                      'Pay ₹$amount',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
             ),
           ],
         ),
@@ -61,18 +75,38 @@ class _PaymentPageState extends State<PaymentPage> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [OtrTheme.primaryBlue, OtrTheme.darkNavy]),
+        gradient: const LinearGradient(
+          colors: [OtrTheme.primaryBlue, OtrTheme.darkNavy],
+        ),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         children: [
-          const Text('Payable Amount', style: TextStyle(color: Colors.white70, fontSize: 14)),
+          const Text(
+            'Payable Amount',
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
           const SizedBox(height: 8),
-          Text('₹$amount', style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900)),
+          Text(
+            '₹$amount',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
           const SizedBox(height: 16),
           const Divider(color: Colors.white24),
           const SizedBox(height: 16),
-          Text(title.toUpperCase(), textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            title.toUpperCase(),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -82,7 +116,14 @@ class _PaymentPageState extends State<PaymentPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('SELECT PAYMENT METHOD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.black45)),
+        const Text(
+          'SELECT PAYMENT METHOD',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.black45,
+          ),
+        ),
         const SizedBox(height: 16),
         _buildMethodItem('UPI', Icons.mobile_friendly),
         _buildMethodItem('Card', Icons.credit_card),
@@ -101,15 +142,27 @@ class _PaymentPageState extends State<PaymentPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? OtrTheme.primaryBlue : Colors.transparent, width: 2),
+          border: Border.all(
+            color: isSelected ? OtrTheme.primaryBlue : Colors.transparent,
+            width: 2,
+          ),
         ),
         child: Row(
           children: [
             Icon(icon, color: isSelected ? OtrTheme.primaryBlue : Colors.grey),
             const SizedBox(width: 16),
-            Text(method, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? OtrTheme.primaryBlue : OtrTheme.darkNavy)),
+            Text(
+              method,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isSelected ? OtrTheme.primaryBlue : OtrTheme.darkNavy,
+              ),
+            ),
             const Spacer(),
-            Icon(isSelected ? Icons.radio_button_checked : Icons.radio_button_off, color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300),
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300,
+            ),
           ],
         ),
       ),
@@ -118,37 +171,54 @@ class _PaymentPageState extends State<PaymentPage> {
 
   Future<void> _handlePayment(String? appUuid, double amount) async {
     if (appUuid == null) return;
-    
+
     setState(() => _isProcessing = true);
-    
+
     try {
       // Mocking payment for offline demo
       await Future.delayed(const Duration(seconds: 1));
       final Map<String, dynamic> initResult = {
         'success': true,
-        'data': {'paymentUuid': 'mock_payment_uuid'}
+        'data': {'paymentUuid': 'mock_payment_uuid'},
       };
-      
+
       if (initResult['success'] == true) {
         // 2. Simulate Payment Delay
         await Future.delayed(const Duration(seconds: 2));
-        
+
         // 3. Mock Verification
         final Map<String, dynamic> verifyResult = {
           'success': true,
-          'message': 'Payment verified (Offline Mode)'
+          'message': 'Payment verified (Offline Mode)',
         };
-        
+
         if (verifyResult['success'] == true) {
           if (mounted) _showSuccessDialog();
         } else {
-          if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(verifyResult['message'] as String? ?? 'Verification failed')));
+          if (mounted)
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  verifyResult['message'] as String? ?? 'Verification failed',
+                ),
+              ),
+            );
         }
       } else {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(initResult['message'] as String? ?? 'Failed to initiate')));
+        if (mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                initResult['message'] as String? ?? 'Failed to initiate',
+              ),
+            ),
+          );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -166,15 +236,39 @@ class _PaymentPageState extends State<PaymentPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.green, size: 100),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.green,
+                  size: 100,
+                ),
                 const SizedBox(height: 24),
-                const Text('Payment Successful!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                const Text(
+                  'Payment Successful!',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 12),
-                const Text('Your application has been submitted.', style: TextStyle(color: Colors.black54)),
+                const Text(
+                  'Your application has been submitted.',
+                  style: TextStyle(color: Colors.black54),
+                ),
                 const SizedBox(height: 48),
                 ElevatedButton(
-                  onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false),
-                  style: ElevatedButton.styleFrom(backgroundColor: OtrTheme.primaryBlue, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                    context,
+                    '/dashboard',
+                    (route) => false,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: OtrTheme.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                   child: const Text('Back to Dashboard'),
                 ),
               ],

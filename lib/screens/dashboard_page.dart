@@ -45,7 +45,7 @@ class _DashboardPageState extends State<DashboardPage> {
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
         title: const Text(
-          'OTR Portal',
+          'OAR Portal',
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
         centerTitle: true,
