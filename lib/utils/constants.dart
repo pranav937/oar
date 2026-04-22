@@ -8,7 +8,7 @@ class ApiConstants {
   static const String candidateDashboard = "/api/ora/candidates/dashboard";
   static const String candidateUploadPhoto = "/api/ora/candidates/upload-photo";
   static const String candidateUploadSignature = "/api/ora/candidates/upload-signature";
-  static const String candidateUploadDocs = "/api/ora/candidates/upload-documents";
+  static const String candidateUploadDocs = "/api/ora/candidates/documents";
   static const String candidateSendOtp = "/api/ora/candidates/send-otp";
   static const String candidateVerifyOtp = "/api/ora/candidates/verify-otp";
   static const String candidateSendMobileOtp = "/api/ora/candidates/send-mobile-otp";

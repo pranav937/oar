@@ -97,7 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         _GridItemData('Bio', Icons.person_pin_rounded),
                         _GridItemData('Address', Icons.home_work_rounded),
                         _GridItemData('Documents', Icons.file_present_outlined),
-                        _GridItemData('Education', Icons.school_outlined),
+                        _GridItemData('Profile', Icons.account_box_outlined),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -201,6 +201,8 @@ class _DashboardPageState extends State<DashboardPage> {
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Category: ${_stats?.category ?? 'N/A'}',
@@ -411,7 +413,7 @@ class _DashboardSection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
-              childAspectRatio: 0.8,
+              childAspectRatio: 0.75, // Slightly taller for text breathing room
               crossAxisSpacing: 10,
               mainAxisSpacing: 15,
             ),
@@ -442,6 +444,9 @@ class _DashboardSection extends StatelessWidget {
                       onRefresh?.call();
                     } else if (t == 'Payment') {
                       await Navigator.pushNamed(context, '/payment');
+                      onRefresh?.call();
+                    } else if (t == 'Profile') {
+                      await Navigator.pushNamed(context, '/status');
                       onRefresh?.call();
                     }
                   }

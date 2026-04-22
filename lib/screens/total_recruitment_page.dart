@@ -125,93 +125,176 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
 
   Widget _buildRecruitmentCard(BuildContext context, Advertisement data) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8))
+          BoxShadow(
+            color: OtrTheme.darkNavy.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: OtrTheme.primaryBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  data.status,
-                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: OtrTheme.primaryBlue),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Column(
+          children: [
+            // Top Section with Gradient Accent
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [OtrTheme.primaryBlue.withOpacity(0.05), Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
-              const Icon(Icons.bookmark_border_rounded, color: Colors.black26),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            data.postName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            data.organization,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: OtrTheme.primaryBlue),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(Icons.calendar_month_outlined, size: 14, color: Colors.black38),
-              const SizedBox(width: 4),
-              Text('Ends: ${data.lastDateToApply}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
-              const SizedBox(width: 16),
-              const Icon(Icons.account_balance_wallet_outlined, size: 14, color: Colors.black38),
-              const SizedBox(width: 4),
-              Text(data.payScale, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/recruitment-detail', arguments: data);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey.shade100,
-                    foregroundColor: OtrTheme.darkNavy,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    data.advNumber,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.grey.shade400,
+                      letterSpacing: 1,
+                    ),
                   ),
-                  child: const Text('View Info', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+                  _buildStatusBadge(data.status),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/apply-now', arguments: data);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: OtrTheme.primaryBlue,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    data.postName.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: OtrTheme.darkNavy,
+                      letterSpacing: -0.5,
+                      height: 1.2,
+                    ),
                   ),
-                  child: const Text('Apply Now', style: TextStyle(fontWeight: FontWeight.bold)),
-                ),
+                  const SizedBox(height: 6),
+                  Text(
+                    data.organization,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: OtrTheme.primaryBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Info Grid
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildInfoItem(Icons.group_outlined, 'Vacancies', '${data.vacancies}'),
+                      _buildInfoItem(Icons.payments_outlined, 'Salary', data.payScale),
+                      _buildInfoItem(Icons.event_available_outlined, 'Last Date', 
+                        _formatDate(data.lastDateToApply)),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 28),
+                  
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pushNamed(context, '/recruitment-detail', arguments: data),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(color: Colors.grey.shade200),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('DETAILS', style: TextStyle(fontWeight: FontWeight.w900, color: OtrTheme.darkNavy)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pushNamed(context, '/apply-now', arguments: data),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: OtrTheme.primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            elevation: 4,
+                            shadowColor: OtrTheme.primaryBlue.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          child: const Text('APPLY NOW', style: TextStyle(fontWeight: FontWeight.w900)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    final isOpen = status.toUpperCase() == 'OPEN' || status.toUpperCase() == 'PUBLISHED';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isOpen ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: isOpen ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3)),
+      ),
+      child: Text(
+        isOpen ? 'OPEN' : status.toUpperCase(),
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w900,
+          color: isOpen ? Colors.green.shade700 : Colors.orange.shade700,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(IconData icon, String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 14, color: Colors.grey.shade400),
+            const SizedBox(width: 6),
+            Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: OtrTheme.darkNavy),
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.day}/${date.month}';
+    } catch (_) {
+      return dateStr;
+    }
   }
 }

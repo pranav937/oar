@@ -264,7 +264,12 @@ class ApiService {
     return _uploadMultipartFile(file, ApiConstants.candidateUploadSignature, 'signature');
   }
 
-  Future<Map<String, dynamic>> _uploadMultipartFile(File file, String endpoint, String fieldName) async {
+  Future<Map<String, dynamic>> _uploadMultipartFile(
+    File file,
+    String endpoint,
+    String fieldName, {
+    Map<String, String>? extraFields,
+  }) async {
     try {
       final token = await _getToken();
       if (token == null) return {'success': false, 'message': 'Auth token not found'};
@@ -273,10 +278,15 @@ class ApiService {
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
       }
-      
+
+      // Add extra fields (like documentType, documentName)
+      if (extraFields != null) {
+        request.fields.addAll(extraFields);
+      }
+
       final length = await file.length();
       
-      // Enforce 5MB limit as per DocumentUploadSchema
+      // Enforce 5MB limit
       if (length > 5 * 1024 * 1024) {
         return {'success': false, 'message': 'File size must not exceed 5 MB'};
       }
@@ -313,26 +323,9 @@ class ApiService {
   // --- ORA Jobs & Applications ---
 
   Future<Map<String, dynamic>> getJobs() async {
-    // Mock for offline mode
-    return {
-      'success': true,
-      'data': [
-        {
-          'uuid': 'job1',
-          'title': 'Junior Associate',
-          'department': 'Operations',
-          'applicationFee': 500.0,
-          'lastDate': '2026-05-20',
-        },
-        {
-          'uuid': 'job2',
-          'title': 'Field Officer',
-          'department': 'Logistics',
-          'applicationFee': 400.0,
-          'lastDate': '2026-05-25',
-        },
-      ],
-    };
+    final response = await get(ApiConstants.advertisementsActive);
+    final decoded = jsonDecode(response.body);
+    return decoded;
   }
 
   Future<Map<String, dynamic>> getApplicationForm(
@@ -387,12 +380,29 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> uploadDocument(File file, String type) async {
-    // Stub for offline mode
-    return {
-      'success': true,
-      'message': 'Document uploaded (Offline)',
-      'data': {'fileUrl': 'https://example.com/mock_file.pdf'},
-    };
+    return _uploadMultipartFile(
+      file, 
+      ApiConstants.candidateUploadDocs, 
+      'document',
+      extraFields: {
+        'documentType': type,
+        'documentName': file.path.split('/').last,
+      },
+    );
+  }
+
+  Future<Map<String, dynamic>> getDocuments() async {
+    try {
+      final response = await get(ApiConstants.candidateUploadDocs);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success') ? decoded : {'success': true, 'data': decoded};
+      } else {
+        return {'success': false, 'message': decoded['message'] ?? 'Failed to fetch documents'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<void> logout() async {
