@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/otr_theme.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -50,18 +51,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Sleek Logo
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: OtrTheme.primaryBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Icon(
-                  Icons.shield_rounded,
-                  size: 64,
-                  color: OtrTheme.primaryBlue,
-                ),
+              // JadeEd Logo
+              SvgPicture.asset(
+                'assets/images/jadeE.svg',
+                width: 206,
+                height: 106,
               ),
               const SizedBox(height: 24),
               const Text(

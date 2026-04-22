@@ -8,6 +8,7 @@ import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import '../utils/constants.dart';
 
 class BioPage extends StatefulWidget {
   const BioPage({super.key});
@@ -39,6 +40,23 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _twelfthBoardController = TextEditingController();
   final TextEditingController _twelfthYearController = TextEditingController();
 
+  // Social Category Details
+  final TextEditingController _disabilityTypeController = TextEditingController();
+  final TextEditingController _disabilityPercentController = TextEditingController();
+  final TextEditingController _sportsNameController = TextEditingController();
+  final TextEditingController _sportsLevelController = TextEditingController();
+  final TextEditingController _sportsYearController = TextEditingController();
+  final TextEditingController _sportsAuthController = TextEditingController();
+  final TextEditingController _widowCertController = TextEditingController();
+  final TextEditingController _widowDateController = TextEditingController();
+  final TextEditingController _widowAuthController = TextEditingController();
+  final TextEditingController _exSoldierFromController = TextEditingController();
+  final TextEditingController _exSoldierToController = TextEditingController();
+  final TextEditingController _exSoldierIdController = TextEditingController();
+  final TextEditingController _exSoldierCatController = TextEditingController();
+  final TextEditingController _govtJoinDateController = TextEditingController();
+  final TextEditingController _govtDeptController = TextEditingController();
+
   String? _selectedGender;
   String? _selectedCommunity;
   String? _selectedNationality;
@@ -52,6 +70,12 @@ class _BioPageState extends State<BioPage> {
   bool _isWidow = false;
   bool _isExSoldier = false;
   bool _isGovtEmployee = false;
+
+  // Media
+  File? _photoFile;
+  File? _signatureFile;
+  String? _remotePhotoUrl;
+  String? _remoteSignatureUrl;
 
   // Language Proficiency
   bool _engRead = false, _engWrite = false, _engSpeak = false;
@@ -114,6 +138,23 @@ class _BioPageState extends State<BioPage> {
           _isExSoldier = data['isExSoldier'] ?? false;
           _isGovtEmployee = data['isGovtEmployee'] ?? false;
 
+          // Social Details
+          _disabilityTypeController.text = data['disabilityType'] ?? '';
+          _disabilityPercentController.text = data['disabilityPercentage']?.toString() ?? '';
+          _sportsNameController.text = data['sportsName'] ?? '';
+          _sportsLevelController.text = data['sportsLevel'] ?? '';
+          _sportsYearController.text = data['sportsPassingYear']?.toString() ?? '';
+          _sportsAuthController.text = data['sportsAuthority'] ?? '';
+          _widowCertController.text = data['widowCertificateNo'] ?? '';
+          _widowDateController.text = data['widowCertificateDate'] ?? '';
+          _widowAuthController.text = data['widowAuthority'] ?? '';
+          _exSoldierFromController.text = data['exSoldierServiceFrom'] ?? '';
+          _exSoldierToController.text = data['exSoldierServiceTo'] ?? '';
+          _exSoldierIdController.text = data['exSoldierIdCardNo'] ?? '';
+          _exSoldierCatController.text = data['exSoldierCategory'] ?? '';
+          _govtJoinDateController.text = data['govtServiceJoinDate'] ?? '';
+          _govtDeptController.text = data['govtDeptName'] ?? '';
+
           // Languages
           if (data['englishProficiency'] != null) {
             _engRead = data['englishProficiency']['read'] ?? false;
@@ -134,6 +175,19 @@ class _BioPageState extends State<BioPage> {
           if (data['dateOfBirth'] != null) {
             _selectedDate = DateTime.parse(data['dateOfBirth']);
           }
+
+          // Handle remote images
+          if (data['photoUrl'] != null) {
+            _remotePhotoUrl = data['photoUrl'].startsWith('http') 
+                ? data['photoUrl'] 
+                : '${ApiConstants.baseUrl}${data['photoUrl']}';
+          }
+          if (data['signatureUrl'] != null) {
+            _remoteSignatureUrl = data['signatureUrl'].startsWith('http') 
+                ? data['signatureUrl'] 
+                : '${ApiConstants.baseUrl}${data['signatureUrl']}';
+          }
+
           _isLoading = false;
         });
       }
@@ -143,6 +197,51 @@ class _BioPageState extends State<BioPage> {
   }
 
   Future<void> _handleSave() async {
+    // Validation based on Backend OTRProfileUpdateSchema
+    
+    // 1. Age Validation (18 to 65)
+    if (_selectedDate != null) {
+      final now = DateTime.now();
+      int age = now.year - _selectedDate!.year;
+      if (now.month < _selectedDate!.month || (now.month == _selectedDate!.month && now.day < _selectedDate!.day)) {
+        age--;
+      }
+      if (age < 18 || age > 65) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Candidate must be between 18 and 65 years old')));
+        return;
+      }
+    }
+
+    // 2. Aadhaar Validation (12 digits)
+    final aadhaar = _aadhaarController.text;
+    if (aadhaar.isNotEmpty && !RegExp(r'^\d{12}$').hasMatch(aadhaar)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid Aadhaar number (must be 12 digits)')));
+      return;
+    }
+
+    // 3. Disability Percentage Validation (0-100)
+    if (_isPhysicallyDisabled) {
+      final percent = int.tryParse(_disabilityPercentController.text);
+      if (percent == null || percent < 0 || percent > 100) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Disability percentage must be between 0 and 100')));
+        return;
+      }
+    }
+
+    // 4. Educational Years Validation (1980 to current year)
+    final currentYear = DateTime.now().year;
+    final tenthYear = int.tryParse(_tenthYearController.text);
+    final twelfthYear = int.tryParse(_twelfthYearController.text);
+
+    if (tenthYear != null && (tenthYear < 1980 || tenthYear > currentYear)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('10th passing year must be between 1980 and $currentYear')));
+      return;
+    }
+    if (twelfthYear != null && (twelfthYear < 1980 || twelfthYear > currentYear)) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('12th passing year must be between 1980 and $currentYear')));
+      return;
+    }
+
     setState(() => _isSaving = true);
     try {
       final profileData = {
@@ -174,6 +273,23 @@ class _BioPageState extends State<BioPage> {
         'tenthPassingYear': int.tryParse(_tenthYearController.text),
         'twelfthBoardName': _twelfthBoardController.text,
         'twelfthPassingYear': int.tryParse(_twelfthYearController.text),
+
+        // Social Details
+        'disabilityType': _isPhysicallyDisabled ? _disabilityTypeController.text : null,
+        'disabilityPercentage': _isPhysicallyDisabled ? int.tryParse(_disabilityPercentController.text) : null,
+        'sportsName': _isSportsPerson ? _sportsNameController.text : null,
+        'sportsLevel': _isSportsPerson ? _sportsLevelController.text : null,
+        'sportsPassingYear': _isSportsPerson ? int.tryParse(_sportsYearController.text) : null,
+        'sportsAuthority': _isSportsPerson ? _sportsAuthController.text : null,
+        'widowCertificateNo': _isWidow ? _widowCertController.text : null,
+        'widowCertificateDate': _isWidow ? _widowDateController.text : null,
+        'widowAuthority': _isWidow ? _widowAuthController.text : null,
+        'exSoldierServiceFrom': _isExSoldier ? _exSoldierFromController.text : null,
+        'exSoldierServiceTo': _isExSoldier ? _exSoldierToController.text : null,
+        'exSoldierIdCardNo': _isExSoldier ? _exSoldierIdController.text : null,
+        'exSoldierCategory': _isExSoldier ? _exSoldierCatController.text : null,
+        'govtServiceJoinDate': _isGovtEmployee ? _govtJoinDateController.text : null,
+        'govtDeptName': _isGovtEmployee ? _govtDeptController.text : null,
       };
 
       final result = await _apiService.updateProfile(profileData);
@@ -191,6 +307,70 @@ class _BioPageState extends State<BioPage> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _pickImage(bool isPhoto) async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (image != null) {
+      final file = File(image.path);
+      setState(() {
+        if (isPhoto) _photoFile = file;
+        else _signatureFile = file;
+      });
+
+      // Show loading
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Uploading ${isPhoto ? 'photo' : 'signature'}...'),
+          duration: const Duration(seconds: 1),
+        ));
+      }
+
+      try {
+        final result = isPhoto 
+            ? await _apiService.uploadPhoto(file)
+            : await _apiService.uploadSignature(file);
+
+        if (mounted) {
+          if (result['success'] == true) {
+            // Update the remote URL if the server returned it
+            if (result['data'] != null && result['data']['photoUrl'] != null) {
+              setState(() {
+                final url = result['data']['photoUrl'];
+                if (isPhoto) {
+                  _remotePhotoUrl = url.startsWith('http') ? url : '${ApiConstants.baseUrl}$url';
+                } else if (result['data']['signatureUrl'] != null) {
+                  final sigUrl = result['data']['signatureUrl'];
+                  _remoteSignatureUrl = sigUrl.startsWith('http') ? sigUrl : '${ApiConstants.baseUrl}$sigUrl';
+                }
+              });
+            } else if (!isPhoto && result['data'] != null && result['data']['signatureUrl'] != null) {
+              setState(() {
+                 final sigUrl = result['data']['signatureUrl'];
+                 _remoteSignatureUrl = sigUrl.startsWith('http') ? sigUrl : '${ApiConstants.baseUrl}$sigUrl';
+              });
+            }
+
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('${isPhoto ? 'Photo' : 'Signature'} uploaded successfully'),
+              backgroundColor: Colors.green,
+            ));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(result['message'] ?? 'Upload failed'),
+              backgroundColor: Colors.red,
+            ));
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload error: $e')));
+        }
+      }
     }
   }
 
@@ -227,6 +407,8 @@ class _BioPageState extends State<BioPage> {
                         _buildProgressTracker(),
                         const SizedBox(height: 32),
                         _buildSectionHeader('Candidate Profile', 'Complete your personal and social details'),
+                        const SizedBox(height: 24),
+                        _buildMediaUploadSection(),
                         const SizedBox(height: 16),
                         _buildCollapsibleSection(
                           index: 0,
@@ -387,11 +569,56 @@ class _BioPageState extends State<BioPage> {
                               ],
                             ),
                             const SizedBox(height: 24),
-                            _buildSwitchTile('Physically Disabled', _isPhysicallyDisabled, (val) => setState(() => _isPhysicallyDisabled = val)),
-                            _buildSwitchTile('Sports Person', _isSportsPerson, (val) => setState(() => _isSportsPerson = val)),
-                            _buildSwitchTile('Widow Person', _isWidow, (val) => setState(() => _isWidow = val)),
-                            _buildSwitchTile('Ex-Soldier', _isExSoldier, (val) => setState(() => _isExSoldier = val)),
-                            _buildSwitchTile('Govt Employee', _isGovtEmployee, (val) => setState(() => _isGovtEmployee = val)),
+                             _buildSwitchTile('Physically Disabled', _isPhysicallyDisabled, (val) => setState(() => _isPhysicallyDisabled = val)),
+                             if (_isPhysicallyDisabled) ...[
+                               OtrTextField(label: 'Disability Type', hintText: 'Type', icon: Icons.accessibility_new_rounded, controller: _disabilityTypeController),
+                               const SizedBox(height: 12),
+                               OtrTextField(label: 'Percentage (%)', hintText: '40', icon: Icons.percent_rounded, controller: _disabilityPercentController, keyboardType: TextInputType.number),
+                             ],
+                             _buildSwitchTile('Sports Person', _isSportsPerson, (val) => setState(() => _isSportsPerson = val)),
+                             if (_isSportsPerson) ...[
+                               OtrTextField(label: 'Sports Name', hintText: 'Name', icon: Icons.emoji_events_rounded, controller: _sportsNameController),
+                               const SizedBox(height: 12),
+                               Row(
+                                 children: [
+                                   Expanded(child: OtrTextField(label: 'Level', hintText: 'State/Nat.', icon: Icons.leaderboard_rounded, controller: _sportsLevelController)),
+                                   const SizedBox(width: 12),
+                                   Expanded(child: OtrTextField(label: 'Year', hintText: '2020', icon: Icons.calendar_today, controller: _sportsYearController, keyboardType: TextInputType.number)),
+                                 ],
+                               ),
+                               const SizedBox(height: 12),
+                               OtrTextField(label: 'Authority', hintText: 'Issuing Org', icon: Icons.account_balance_rounded, controller: _sportsAuthController),
+                             ],
+                             _buildSwitchTile('Widow Person', _isWidow, (val) => setState(() => _isWidow = val)),
+                             if (_isWidow) ...[
+                               OtrTextField(label: 'Certificate No.', hintText: 'Number', icon: Icons.description_rounded, controller: _widowCertController),
+                               const SizedBox(height: 12),
+                               _buildClickableField(label: 'Certificate Date', value: _widowDateController.text.isEmpty ? 'Select Date' : _widowDateController.text, icon: Icons.calendar_month_rounded, onTap: () async {
+                                 final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(1990), lastDate: DateTime.now());
+                                 if (d != null) setState(() => _widowDateController.text = DateFormat('yyyy-MM-dd').format(d));
+                               }),
+                             ],
+                             _buildSwitchTile('Ex-Soldier', _isExSoldier, (val) => setState(() => _isExSoldier = val)),
+                             if (_isExSoldier) ...[
+                               Row(
+                                 children: [
+                                   Expanded(child: OtrTextField(label: 'Service From', hintText: '2010', icon: Icons.login_rounded, controller: _exSoldierFromController)),
+                                   const SizedBox(width: 12),
+                                   Expanded(child: OtrTextField(label: 'Service To', hintText: '2020', icon: Icons.logout_rounded, controller: _exSoldierToController)),
+                                 ],
+                               ),
+                               const SizedBox(height: 12),
+                               OtrTextField(label: 'ID Card No.', hintText: 'Number', icon: Icons.badge_rounded, controller: _exSoldierIdController),
+                             ],
+                             _buildSwitchTile('Govt Employee', _isGovtEmployee, (val) => setState(() => _isGovtEmployee = val)),
+                             if (_isGovtEmployee) ...[
+                               OtrTextField(label: 'Dept Name', hintText: 'Department', icon: Icons.business_rounded, controller: _govtDeptController),
+                               const SizedBox(height: 12),
+                               _buildClickableField(label: 'Join Date', value: _govtJoinDateController.text.isEmpty ? 'Select Date' : _govtJoinDateController.text, icon: Icons.calendar_month_rounded, onTap: () async {
+                                 final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(1990), lastDate: DateTime.now());
+                                 if (d != null) setState(() => _govtJoinDateController.text = DateFormat('yyyy-MM-dd').format(d));
+                               }),
+                             ],
                           ],
                         ),
                         _buildCollapsibleSection(
@@ -684,6 +911,100 @@ class _BioPageState extends State<BioPage> {
         activeColor: OtrTheme.primaryBlue,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         dense: true,
+      ),
+    );
+  }
+
+  Widget _buildMediaUploadSection() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildMediaCard(
+            'Photo',
+            _photoFile,
+            _remotePhotoUrl,
+            Icons.camera_alt_rounded,
+            () => _pickImage(true),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildMediaCard(
+            'Signature',
+            _signatureFile,
+            _remoteSignatureUrl,
+            Icons.edit_note_rounded,
+            () => _pickImage(false),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMediaCard(String label, File? file, String? remoteUrl, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 140,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: OtrTheme.primaryBlue.withOpacity(0.1), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: Stack(
+            children: [
+              if (file != null)
+                Image.file(file, width: double.infinity, height: double.infinity, fit: BoxFit.cover)
+              else if (remoteUrl != null)
+                Image.network(
+                  remoteUrl,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => _buildUploadPlaceholder(label, icon, true),
+                )
+              else
+                _buildUploadPlaceholder(label, icon, false),
+              if (file != null || remoteUrl != null)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    child: const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadPlaceholder(String label, IconData icon, bool isError) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: OtrTheme.lightBlue, shape: BoxShape.circle),
+            child: Icon(isError ? Icons.error_outline_rounded : icon, color: isError ? Colors.red : OtrTheme.primaryBlue, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w800, color: OtrTheme.darkNavy, fontSize: 13)),
+          Text(isError ? 'Reload Required' : 'Upload', style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
+        ],
       ),
     );
   }

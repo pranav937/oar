@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -246,6 +248,62 @@ class ApiService {
           'success': false,
           'message': data['message'] ?? 'Failed to update profile',
         };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // --- ORA File Uploads ---
+
+  Future<Map<String, dynamic>> uploadPhoto(File file) async {
+    return _uploadMultipartFile(file, ApiConstants.candidateUploadPhoto, 'photo');
+  }
+
+  Future<Map<String, dynamic>> uploadSignature(File file) async {
+    return _uploadMultipartFile(file, ApiConstants.candidateUploadSignature, 'signature');
+  }
+
+  Future<Map<String, dynamic>> _uploadMultipartFile(File file, String endpoint, String fieldName) async {
+    try {
+      final token = await _getToken();
+      if (token == null) return {'success': false, 'message': 'Auth token not found'};
+
+      final request = http.MultipartRequest('POST', Uri.parse('${ApiConstants.baseUrl}$endpoint'));
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      
+      final length = await file.length();
+      
+      // Enforce 5MB limit as per DocumentUploadSchema
+      if (length > 5 * 1024 * 1024) {
+        return {'success': false, 'message': 'File size must not exceed 5 MB'};
+      }
+
+      final stream = http.ByteStream(file.openRead());
+      
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      final contentType = MediaType.parse(mimeType);
+
+      final multipartFile = http.MultipartFile(
+        fieldName, 
+        stream, 
+        length, 
+        filename: file.path.split('/').last,
+        contentType: contentType,
+      );
+      
+      request.files.add(multipartFile);
+      
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final decoded = jsonDecode(responseData);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return decoded.containsKey('success') ? decoded : {'success': true, 'data': decoded};
+      } else {
+        return {'success': false, 'message': decoded['message'] ?? 'Upload failed'};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
@@ -19,7 +20,9 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _handleLogin() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter both username and password')),
+        const SnackBar(
+          content: Text('Please enter both username and password'),
+        ),
       );
       return;
     }
@@ -44,9 +47,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('An error occurred: $e')));
       }
     } finally {
       if (mounted) {
@@ -70,32 +73,20 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       const Spacer(),
-                      // Sleek Logo
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: OtrTheme.primaryBlue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: const Icon(
-                          Icons.shield_rounded,
-                          size: 48,
-                          color: OtrTheme.primaryBlue,
-                        ),
+                      // JadeEd Logo
+                      SvgPicture.asset(
+                        'assets/images/jadeE.svg',
+                        width: 206,
+                        height: 106,
                       ),
                       const SizedBox(height: 24),
                       const Text(
-                        'OTR Model',
-                        style: TextStyle(
-                          color: OtrTheme.darkNavy,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -1,
-                        ),
-                      ),
-                      const Text(
                         'Smart Registration System',
-                        style: TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       const SizedBox(height: 60),
                       // Form
@@ -120,7 +111,11 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: () {},
                           child: const Text(
                             'Forgot Password?',
-                            style: TextStyle(color: OtrTheme.primaryBlue, fontWeight: FontWeight.w700, fontSize: 13),
+                            style: TextStyle(
+                              color: OtrTheme.primaryBlue,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
@@ -128,19 +123,33 @@ class _LoginPageState extends State<LoginPage> {
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         child: _isLoading
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : const Text('LOG IN'),
                       ),
                       const SizedBox(height: 32),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("New here? ", style: TextStyle(color: Colors.black54)),
+                          const Text(
+                            "New here? ",
+                            style: TextStyle(color: Colors.black54),
+                          ),
                           GestureDetector(
-                            onTap: () => Navigator.pushNamed(context, '/register'),
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/register'),
                             child: const Text(
                               'Create Account',
-                              style: TextStyle(color: OtrTheme.primaryBlue, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: OtrTheme.primaryBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -158,5 +167,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
-

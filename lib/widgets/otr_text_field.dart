@@ -64,14 +64,22 @@ class _OtrTextFieldState extends State<OtrTextField> {
             obscureText: widget.isPassword ? _obscureText : false,
             maxLines: widget.maxLines,
             style: TextStyle(
-              fontSize: 15, 
-              color: widget.enabled ? OtrTheme.darkNavy : Colors.grey.shade500, 
-              fontWeight: FontWeight.w600
+              fontSize: 15,
+              color: widget.enabled ? OtrTheme.darkNavy : Colors.grey.shade500,
+              fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
               hintText: widget.hintText,
-              hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.normal),
-              prefixIcon: Icon(widget.icon, color: OtrTheme.primaryBlue, size: 22),
+              hintStyle: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+              ),
+              prefixIcon: Icon(
+                widget.icon,
+                color: OtrTheme.primaryBlue,
+                size: 22,
+              ),
               suffixIcon: widget.isPassword
                   ? IconButton(
                       icon: Icon(
@@ -81,10 +89,14 @@ class _OtrTextFieldState extends State<OtrTextField> {
                         color: Colors.grey.shade400,
                         size: 20,
                       ),
-                      onPressed: () => setState(() => _obscureText = !_obscureText),
+                      onPressed: () =>
+                          setState(() => _obscureText = !_obscureText),
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 18,
+                horizontal: 16,
+              ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,

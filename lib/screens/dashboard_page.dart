@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/otr_theme.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -31,8 +32,8 @@ class _DashboardPageState extends State<DashboardPage> {
           _stats = DashboardStats.fromJson(result['data']);
           _isLoading = false;
         });
-      } else {  
-        setState(() => _isLoading = false); 
+      } else {
+        setState(() => _isLoading = false);
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -44,9 +45,9 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
-        title: const Text(
-          'OAR Portal',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+        title: SvgPicture.asset(
+          'assets/images/jadeE.svg',
+          height: 38,
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -67,12 +68,17 @@ class _DashboardPageState extends State<DashboardPage> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: SpinKitDoubleBounce(color: OtrTheme.primaryBlue))
+          ? const Center(
+              child: SpinKitDoubleBounce(color: OtrTheme.primaryBlue),
+            )
           : RefreshIndicator(
               onRefresh: _fetchDashboardData,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 24.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -86,6 +92,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 32),
                     _DashboardSection(
                       title: 'Registration & Profile',
+                      onRefresh: _fetchDashboardData,
                       items: [
                         _GridItemData('Bio', Icons.person_pin_rounded),
                         _GridItemData('Address', Icons.home_work_rounded),
@@ -96,8 +103,12 @@ class _DashboardPageState extends State<DashboardPage> {
                     const SizedBox(height: 24),
                     _DashboardSection(
                       title: 'Applications',
+                      onRefresh: _fetchDashboardData,
                       items: [
-                        _GridItemData('New Job', Icons.assignment_turned_in_outlined),
+                        _GridItemData(
+                          'New Job',
+                          Icons.assignment_turned_in_outlined,
+                        ),
                         _GridItemData('My Apps', Icons.list_alt_rounded),
                         _GridItemData('Payment', Icons.payment_rounded),
                         _GridItemData('Results', Icons.fact_check_outlined),
@@ -126,7 +137,7 @@ class _DashboardPageState extends State<DashboardPage> {
             color: OtrTheme.darkNavy.withOpacity(0.2),
             blurRadius: 15,
             offset: const Offset(0, 10),
-          )
+          ),
         ],
       ),
       child: Row(
@@ -137,11 +148,26 @@ class _DashboardPageState extends State<DashboardPage> {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 2),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 2,
+              ),
             ),
             child: _stats?.photoUrl != null
-                ? ClipRRect(borderRadius: BorderRadius.circular(35), child: Image.network(_stats!.photoUrl!, fit: BoxFit.cover))
-                : Center(child: Text(name.isNotEmpty ? name[0].toUpperCase() : 'C', style: const TextStyle(fontSize: 28, color: Colors.white, fontWeight: FontWeight.bold))),
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(35),
+                    child: Image.network(_stats!.photoUrl!, fit: BoxFit.cover),
+                  )
+                : Center(
+                    child: Text(
+                      name.isNotEmpty ? name[0].toUpperCase() : 'C',
+                      style: const TextStyle(
+                        fontSize: 28,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -149,24 +175,56 @@ class _DashboardPageState extends State<DashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: OtrTheme.primaryBlue, borderRadius: BorderRadius.circular(6)),
-                  child: Text(_stats?.registrationId ?? 'ID-PENDING', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: OtrTheme.primaryBlue,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _stats?.registrationId ?? 'ID-PENDING',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-                Text('Category: ${_stats?.category ?? 'N/A'}', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12, fontWeight: FontWeight.w500)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  'Category: ${_stats?.category ?? 'N/A'}',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.6),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: _stats?.registrationStatus == 'ACTIVE' ? Colors.green : Colors.orange,
+              color: _stats?.registrationStatus == 'ACTIVE'
+                  ? Colors.green
+                  : Colors.orange,
               shape: BoxShape.circle,
             ),
             child: Icon(
-              _stats?.registrationStatus == 'ACTIVE' ? Icons.check : Icons.access_time_rounded,
+              _stats?.registrationStatus == 'ACTIVE'
+                  ? Icons.check
+                  : Icons.access_time_rounded,
               color: Colors.white,
               size: 12,
             ),
@@ -179,13 +237,20 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildContactBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildContactItem(Icons.email_outlined, _stats?.email ?? 'N/A'),
           Container(width: 1, height: 20, color: Colors.grey.shade200),
-          _buildContactItem(Icons.phone_iphone_rounded, _stats?.mobileNumber ?? 'N/A'),
+          _buildContactItem(
+            Icons.phone_iphone_rounded,
+            _stats?.mobileNumber ?? 'N/A',
+          ),
         ],
       ),
     );
@@ -196,13 +261,28 @@ class _DashboardPageState extends State<DashboardPage> {
       children: [
         Icon(icon, size: 16, color: OtrTheme.mediumBlue),
         const SizedBox(width: 8),
-        Text(text, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: OtrTheme.darkNavy)),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: OtrTheme.darkNavy,
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildSectionHeader(String title) {
-    return Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy, letterSpacing: -0.5));
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 17,
+        fontWeight: FontWeight.w900,
+        color: OtrTheme.darkNavy,
+        letterSpacing: -0.5,
+      ),
+    );
   }
 
   Widget _buildStatCards() {
@@ -236,7 +316,12 @@ class _StatCard extends StatelessWidget {
   final Color color;
   final IconData icon;
 
-  const _StatCard({required this.title, required this.count, required this.color, required this.icon});
+  const _StatCard({
+    required this.title,
+    required this.count,
+    required this.color,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -253,12 +338,29 @@ class _StatCard extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 16),
-          Text(count, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy)),
-          Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.bold)),
+          Text(
+            count,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: OtrTheme.darkNavy,
+            ),
+          ),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black54,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -275,8 +377,9 @@ class _GridItemData {
 class _DashboardSection extends StatelessWidget {
   final String title;
   final List<_GridItemData> items;
+  final VoidCallback? onRefresh;
 
-  const _DashboardSection({required this.title, required this.items});
+  const _DashboardSection({required this.title, required this.items, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -287,7 +390,12 @@ class _DashboardSection extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4),
           child: Text(
             title,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy, letterSpacing: -0.2),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              color: OtrTheme.darkNavy,
+              letterSpacing: -0.2,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -311,17 +419,31 @@ class _DashboardSection extends StatelessWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return InkWell(
-                onTap: () {
+                onTap: () async {
                   if (item.route != null) {
-                    Navigator.pushNamed(context, item.route!);
+                    await Navigator.pushNamed(context, item.route!);
+                    onRefresh?.call();
                   } else {
                     final t = item.title;
-                    if (t == 'Bio') Navigator.pushNamed(context, '/bio');
-                    else if (t == 'Address') Navigator.pushNamed(context, '/address');
-                    else if (t == 'Documents') Navigator.pushNamed(context, '/documents');
-                    else if (t == 'New Job') Navigator.pushNamed(context, '/total-recruitment');
-                    else if (t == 'My Apps') Navigator.pushNamed(context, '/applied-recruitment');
-                    else if (t == 'Payment') Navigator.pushNamed(context, '/payment');
+                    if (t == 'Bio') {
+                      await Navigator.pushNamed(context, '/bio');
+                      onRefresh?.call();
+                    } else if (t == 'Address') {
+                      await Navigator.pushNamed(context, '/address');
+                      onRefresh?.call();
+                    } else if (t == 'Documents') {
+                      await Navigator.pushNamed(context, '/documents');
+                      onRefresh?.call();
+                    } else if (t == 'New Job') {
+                      await Navigator.pushNamed(context, '/total-recruitment');
+                      onRefresh?.call();
+                    } else if (t == 'My Apps') {
+                      await Navigator.pushNamed(context, '/applied-recruitment');
+                      onRefresh?.call();
+                    } else if (t == 'Payment') {
+                      await Navigator.pushNamed(context, '/payment');
+                      onRefresh?.call();
+                    }
                   }
                 },
                 child: Column(
@@ -333,13 +455,21 @@ class _DashboardSection extends StatelessWidget {
                         color: OtrTheme.background.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(item.icon, color: OtrTheme.primaryBlue, size: 22),
+                      child: Icon(
+                        item.icon,
+                        color: OtrTheme.primaryBlue,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       item.title,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                 ),

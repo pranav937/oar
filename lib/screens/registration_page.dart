@@ -27,27 +27,59 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _mobileOtpControllers = List.generate(6, (index) => TextEditingController());
 
   Future<void> _handleRegister() async {
-    if (_emailController.text.isEmpty ||
-        _mobileController.text.isEmpty ||
-        _passwordController.text.isEmpty ||
-        _confirmPasswordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
+    final email = _emailController.text;
+    final mobile = _mobileController.text;
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    if (email.isEmpty || mobile.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+    // Email validation
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid email address')));
+      return;
+    }
+
+    // Mobile validation (10 digits)
+    final mobileRegex = RegExp(r'^\d{10}$');
+    if (!mobileRegex.hasMatch(mobile)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mobile number must be exactly 10 digits')));
+      return;
+    }
+
+    // Password complexity validation
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must be at least 8 characters')));
+      return;
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain an uppercase letter')));
+      return;
+    }
+    if (!RegExp(r'[a-z]').hasMatch(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain a lowercase letter')));
+      return;
+    }
+    if (!RegExp(r'[0-9]').hasMatch(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain a number')));
+      return;
+    }
+    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain a special character')));
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
     if (!_hasAcceptedDeclaration) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the declaration')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please accept the declaration')));
       return;
     }
 
@@ -164,25 +196,28 @@ class _RegistrationPageState extends State<RegistrationPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Custom App Bar
+            // Custom App Bar with Logo
             Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                    onPressed: () {
-                      if (_currentStep > 0) {
-                        setState(() => _currentStep--);
-                      } else {
-                        Navigator.pushReplacementNamed(context, '/login');
-                      }
-                    },
+                   Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                      onPressed: () {
+                        if (_currentStep > 0) {
+                          setState(() => _currentStep--);
+                        } else {
+                          Navigator.pushReplacementNamed(context, '/login');
+                        }
+                      },
+                    ),
                   ),
-                  const Expanded(
+                  const Center(
                     child: Text(
                       'Create Account',
-                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
@@ -191,7 +226,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48),
                 ],
               ),
             ),

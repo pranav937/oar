@@ -1,3 +1,5 @@
+import '../utils/constants.dart';
+
 class DashboardStats {
   final String uuid;
   final String registrationId;
@@ -24,6 +26,11 @@ class DashboardStats {
   });
 
   factory DashboardStats.fromJson(Map<String, dynamic> json) {
+    String? photoPath = json['photoUrl'];
+    if (photoPath != null && !photoPath.startsWith('http')) {
+      photoPath = '${ApiConstants.baseUrl}$photoPath';
+    }
+
     return DashboardStats(
       uuid: json['uuid'] ?? '',
       registrationId: json['registrationId'] ?? '',
@@ -31,7 +38,7 @@ class DashboardStats {
       email: json['email'] ?? '',
       mobileNumber: json['mobileNumber'] ?? '',
       category: json['category'] ?? '',
-      photoUrl: json['photoUrl'],
+      photoUrl: photoPath,
       totalApplications: json['totalApplications'] ?? 0,
       pendingApplications: json['pendingApplications'] ?? 0,
       registrationStatus: json['registrationStatus'] ?? '',
