@@ -230,7 +230,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               ),
             ),
 
-            _buildProgressIndicator(),
+              _buildProgressIndicator(),
 
             const SizedBox(height: 20),
 

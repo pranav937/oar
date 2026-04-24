@@ -17,6 +17,8 @@ class _DashboardPageState extends State<DashboardPage> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
   DashboardStats? _stats;
+  int _totalFromApi = 0;
+  int _pendingFromApi = 0;
 
   @override
   void initState() {
@@ -26,17 +28,40 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<void> _fetchDashboardData() async {
     try {
-      final result = await _apiService.getDashboard();
-      if (result['success'] == true && result['data'] != null) {
+      // 1. Fetch Summary Stats
+      final dashboardResult = await _apiService.getDashboard();
+      
+      // 2. Fetch Detailed Applications to refine counts
+      final appsResult = await _apiService.getMyApplications(pageSize: 100);
+
+      if (mounted) {
         setState(() {
-          _stats = DashboardStats.fromJson(result['data']);
+          if (dashboardResult['success'] == true && dashboardResult['data'] != null) {
+            _stats = DashboardStats.fromJson(dashboardResult['data']);
+          }
+
+          if (appsResult['success'] == true && appsResult['data'] != null) {
+            final data = appsResult['data'];
+            List applications = [];
+            if (data is Map && data.containsKey('applications')) {
+              applications = data['applications'];
+              _totalFromApi = data['total'] ?? applications.length;
+            } else if (data is List) {
+              applications = data;
+              _totalFromApi = applications.length;
+            }
+            
+            // Calculate pending (Draft or Pending Payment)
+            _pendingFromApi = applications.where((app) => 
+               app['status'] == 'PENDING_PAYMENT' || app['status'] == 'DRAFT'
+            ).length;
+          }
+          
           _isLoading = false;
         });
-      } else {
-        setState(() => _isLoading = false);
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -45,10 +70,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
-        title: SvgPicture.asset(
-          'assets/images/jadeE.svg',
-          height: 38,
-        ),
+        title: SvgPicture.asset('assets/images/jadeE.svg', height: 38),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
@@ -288,12 +310,16 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildStatCards() {
+    // Priority to calculated counts if non-zero, else use stats from dashboard summary
+    final total = _totalFromApi > 0 ? _totalFromApi : (_stats?.totalApplications ?? 0);
+    final pending = _pendingFromApi > 0 ? _pendingFromApi : (_stats?.pendingApplications ?? 0);
+
     return Row(
       children: [
         Expanded(
           child: _StatCard(
             title: 'Total Applications',
-            count: _stats?.totalApplications.toString() ?? '0',
+            count: total.toString(),
             color: OtrTheme.primaryBlue,
             icon: Icons.assignment_turned_in_rounded,
           ),
@@ -302,7 +328,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Expanded(
           child: _StatCard(
             title: 'Pending Apps',
-            count: _stats?.pendingApplications.toString() ?? '0',
+            count: pending.toString(),
             color: Colors.orange,
             icon: Icons.pending_actions_rounded,
           ),
@@ -381,7 +407,11 @@ class _DashboardSection extends StatelessWidget {
   final List<_GridItemData> items;
   final VoidCallback? onRefresh;
 
-  const _DashboardSection({required this.title, required this.items, this.onRefresh});
+  const _DashboardSection({
+    required this.title,
+    required this.items,
+    this.onRefresh,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -440,7 +470,10 @@ class _DashboardSection extends StatelessWidget {
                       await Navigator.pushNamed(context, '/total-recruitment');
                       onRefresh?.call();
                     } else if (t == 'My Apps') {
-                      await Navigator.pushNamed(context, '/applied-recruitment');
+                      await Navigator.pushNamed(
+                        context,
+                        '/applied-recruitment',
+                      );
                       onRefresh?.call();
                     } else if (t == 'Payment') {
                       await Navigator.pushNamed(context, '/payment');
