@@ -34,7 +34,9 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         setState(() => _isLoading = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Failed to load profile')),
+            SnackBar(
+              content: Text(result['message'] ?? 'Failed to load profile'),
+            ),
           );
         }
       }
@@ -52,11 +54,14 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     }
 
     final p = _profileData ?? {};
-    
+
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
-        title: const Text('Profile Details', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+        title: const Text(
+          'Profile Details',
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
@@ -65,6 +70,15 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/bio'),
+            icon: const Icon(Icons.edit_note_rounded, size: 18),
+            label: const Text('EDIT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+            style: TextButton.styleFrom(foregroundColor: OtrTheme.primaryBlue),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchProfile,
@@ -79,7 +93,11 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
               const SizedBox(height: 24),
               _buildSectionHeader('Personal Information', Icons.person_rounded),
               _buildInfoTable([
-                _InfoRow('Name', '${p['firstName'] ?? ''} ${p['middleName'] ?? ''} ${p['lastName'] ?? ''}'.trim()),
+                _InfoRow(
+                  'Name',
+                  '${p['firstName'] ?? ''} ${p['middleName'] ?? ''} ${p['lastName'] ?? ''}'
+                      .trim(),
+                ),
                 _InfoRow('Father\'s Name', p['fatherName'] ?? 'N/A'),
                 _InfoRow('Mother\'s Name', p['motherName'] ?? 'N/A'),
                 _InfoRow('Phone', p['mobileNumber'] ?? 'N/A'),
@@ -93,7 +111,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
                 _InfoRow('Registration ID', p['registrationId'] ?? 'N/A'),
               ]),
               const SizedBox(height: 32),
-              _buildSectionHeader('Permanent Address', Icons.location_on_rounded),
+              _buildSectionHeader(
+                'Permanent Address',
+                Icons.location_on_rounded,
+              ),
               _buildInfoTable([
                 _InfoRow('House No.', p['permanentHouseNo'] ?? 'N/A'),
                 _InfoRow('Street', p['permanentStreet'] ?? 'N/A'),
@@ -114,7 +135,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
                     ),
                   );
                 },
-                child: const Text('Submit For Verification', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                child: const Text(
+                  'Submit For Verification',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                ),
               ),
               const SizedBox(height: 60),
             ],
@@ -125,10 +149,12 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   }
 
   Widget _buildProfileHeader(Map<String, dynamic> p) {
-    final name = '${p['firstName'] ?? ''} ${p['lastName'] ?? 'Candidate'}'.trim();
+    final name = '${p['firstName'] ?? ''} ${p['lastName'] ?? 'Candidate'}'
+        .trim();
     String? photoUrl = p['photoUrl'];
     if (photoUrl != null && !photoUrl.startsWith('http')) {
-      photoUrl = '${ApiConstants.baseUrl}${photoUrl.startsWith('/') ? '' : '/'}$photoUrl';
+      photoUrl =
+          '${ApiConstants.baseUrl}${photoUrl.startsWith('/') ? '' : '/'}$photoUrl';
     }
 
     return Container(
@@ -136,7 +162,13 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 8))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -146,27 +178,53 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             decoration: BoxDecoration(
               color: OtrTheme.primaryBlue.withOpacity(0.05),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: OtrTheme.primaryBlue.withOpacity(0.1), width: 2),
+              border: Border.all(
+                color: OtrTheme.primaryBlue.withOpacity(0.1),
+                width: 2,
+              ),
             ),
-            child: photoUrl != null 
+            child: photoUrl != null
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(20), 
+                    borderRadius: BorderRadius.circular(20),
                     child: Image.network(
-                      photoUrl, 
+                      photoUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person_outline_rounded, size: 45, color: OtrTheme.primaryBlue),
-                    )
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.person_outline_rounded,
+                        size: 45,
+                        color: OtrTheme.primaryBlue,
+                      ),
+                    ),
                   )
-                : const Icon(Icons.person_outline_rounded, size: 45, color: OtrTheme.primaryBlue),
+                : const Icon(
+                    Icons.person_outline_rounded,
+                    size: 45,
+                    color: OtrTheme.primaryBlue,
+                  ),
           ),
           const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: OtrTheme.darkNavy, letterSpacing: -0.5)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                    color: OtrTheme.darkNavy,
+                    letterSpacing: -0.5,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('ID: ${p['registrationId'] ?? 'PENDING'}', style: const TextStyle(fontSize: 13, color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+                Text(
+                  'ID: ${p['registrationId'] ?? 'PENDING'}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.blueAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -184,18 +242,44 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       decoration: BoxDecoration(
         color: isActive ? Colors.green.shade50 : Colors.amber.shade50,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isActive ? Colors.green.shade300 : Colors.amber.shade300, width: 1.5),
+        border: Border.all(
+          color: isActive ? Colors.green.shade300 : Colors.amber.shade300,
+          width: 1.5,
+        ),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: isActive ? Colors.green.shade200 : Colors.amber.shade200, shape: BoxShape.circle),
-            child: Icon(isActive ? Icons.check_circle_rounded : Icons.warning_amber_rounded, color: isActive ? Colors.green.shade900 : Colors.brown, size: 20),
+            decoration: BoxDecoration(
+              color: isActive ? Colors.green.shade200 : Colors.amber.shade200,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isActive
+                  ? Icons.check_circle_rounded
+                  : Icons.warning_amber_rounded,
+              color: isActive ? Colors.green.shade900 : Colors.brown,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 16),
-          const Text('STATUS: ', style: TextStyle(fontWeight: FontWeight.bold, color: OtrTheme.darkNavy, fontSize: 16)),
-          Text(status, style: TextStyle(fontWeight: FontWeight.w900, color: isActive ? Colors.green : Colors.orange, fontSize: 18)),
+          const Text(
+            'STATUS: ',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: OtrTheme.darkNavy,
+              fontSize: 16,
+            ),
+          ),
+          Text(
+            status,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: isActive ? Colors.green : Colors.orange,
+              fontSize: 18,
+            ),
+          ),
         ],
       ),
     );
@@ -208,7 +292,14 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         children: [
           Icon(icon, color: OtrTheme.primaryBlue, size: 22),
           const SizedBox(width: 12),
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: OtrTheme.darkNavy)),
+          Text(
+            title,
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 17,
+              color: OtrTheme.darkNavy,
+            ),
+          ),
         ],
       ),
     );
@@ -228,18 +319,40 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey.withOpacity(0.05))),
+                border: Border(
+                  bottom: BorderSide(color: Colors.grey.withOpacity(0.05)),
+                ),
               ),
               child: Row(
                 children: [
                   SizedBox(
                     width: 130,
-                    child: Text(row.label, style: const TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      row.label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  const Text(':', style: TextStyle(color: Colors.black26, fontWeight: FontWeight.bold)),
+                  const Text(
+                    ':',
+                    style: TextStyle(
+                      color: Colors.black26,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(width: 18),
                   Expanded(
-                    child: Text(row.value, style: const TextStyle(fontSize: 14, color: OtrTheme.darkNavy, fontWeight: FontWeight.w900)),
+                    child: Text(
+                      row.value,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: OtrTheme.darkNavy,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -263,15 +376,31 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: Colors.blue.shade700, size: 24),
+              Icon(
+                Icons.info_outline_rounded,
+                color: Colors.blue.shade700,
+                size: 24,
+              ),
               const SizedBox(width: 12),
-              Text('Important Note', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: Colors.blue.shade900)),
+              Text(
+                'Important Note',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                  color: Colors.blue.shade900,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
           const Text(
             'Ensure all your provided information matches your official documents.',
-            style: TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.bold, height: 1.5),
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+              height: 1.5,
+            ),
           ),
         ],
       ),

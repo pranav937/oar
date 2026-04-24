@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = "http://192.168.1.22:3000"; // Updated local API URL
+  static const String baseUrl = "http://192.168.1.3:3000"; // Updated local API URL
 
   // ORA Candidate Endpoints++
   static const String candidateRegister = "/api/ora/candidates/register";
@@ -9,6 +9,8 @@ class ApiConstants {
   static const String candidateUploadPhoto = "/api/ora/candidates/upload-photo";
   static const String candidateUploadSignature = "/api/ora/candidates/upload-signature";
   static const String candidateUploadDocs = "/api/ora/candidates/documents";
+  static const String candidateDeletePhoto = "/api/ora/candidates/photo";
+  static const String candidateDeleteSignature = "/api/ora/candidates/signature";
   static const String candidateSendOtp = "/api/ora/candidates/send-otp";
   static const String candidateVerifyOtp = "/api/ora/candidates/verify-otp";
   static const String candidateSendMobileOtp = "/api/ora/candidates/send-mobile-otp";

@@ -82,6 +82,21 @@ class ApiService {
     return response;
   }
 
+  Future<http.Response> delete(
+    String endpoint, {
+    bool authenticated = true,
+  }) async {
+    String? token;
+    if (authenticated) {
+      token = await _getToken();
+    }
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}$endpoint'),
+      headers: _headers(token),
+    );
+    return response;
+  }
+
   // --- ORA Candidate Auth ---
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -257,11 +272,37 @@ class ApiService {
   // --- ORA File Uploads ---
 
   Future<Map<String, dynamic>> uploadPhoto(File file) async {
-    return _uploadMultipartFile(file, ApiConstants.candidateUploadPhoto, 'photo');
+    return _uploadMultipartFile(
+      file,
+      ApiConstants.candidateUploadPhoto,
+      'photo',
+    );
   }
 
   Future<Map<String, dynamic>> uploadSignature(File file) async {
-    return _uploadMultipartFile(file, ApiConstants.candidateUploadSignature, 'signature');
+    return _uploadMultipartFile(
+      file,
+      ApiConstants.candidateUploadSignature,
+      'signature',
+    );
+  }
+
+  Future<Map<String, dynamic>> deletePhoto() async {
+    try {
+      final response = await delete(ApiConstants.candidateDeletePhoto);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteSignature() async {
+    try {
+      final response = await delete(ApiConstants.candidateDeleteSignature);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> _uploadMultipartFile(
@@ -272,9 +313,13 @@ class ApiService {
   }) async {
     try {
       final token = await _getToken();
-      if (token == null) return {'success': false, 'message': 'Auth token not found'};
+      if (token == null)
+        return {'success': false, 'message': 'Auth token not found'};
 
-      final request = http.MultipartRequest('POST', Uri.parse('${ApiConstants.baseUrl}$endpoint'));
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}$endpoint'),
+      );
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
       }
@@ -285,35 +330,40 @@ class ApiService {
       }
 
       final length = await file.length();
-      
+
       // Enforce 5MB limit
       if (length > 5 * 1024 * 1024) {
         return {'success': false, 'message': 'File size must not exceed 5 MB'};
       }
 
       final stream = http.ByteStream(file.openRead());
-      
+
       final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
       final contentType = MediaType.parse(mimeType);
 
       final multipartFile = http.MultipartFile(
-        fieldName, 
-        stream, 
-        length, 
+        fieldName,
+        stream,
+        length,
         filename: file.path.split('/').last,
         contentType: contentType,
       );
-      
+
       request.files.add(multipartFile);
-      
+
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
       final decoded = jsonDecode(responseData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return decoded.containsKey('success') ? decoded : {'success': true, 'data': decoded};
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
       } else {
-        return {'success': false, 'message': decoded['message'] ?? 'Upload failed'};
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Upload failed',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -331,30 +381,56 @@ class ApiService {
   Future<Map<String, dynamic>> getApplicationForm(
     String advertisementUuid,
   ) async {
-    // Mock for offline mode
-    return {
-      'success': true,
-      'data': {'formFields': []},
-    };
+    try {
+      final response = await get(
+        ApiConstants.applicationForm,
+        queryParams: {'advertisementUuid': advertisementUuid},
+      );
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded;
+      } else {
+        return {'success': false, 'message': decoded['message'] ?? 'Failed to load form'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> submitApplication(
     Map<String, dynamic> appData,
   ) async {
-    // Mock for offline mode
-    return {
-      'success': true,
-      'message': 'Application submitted (Offline)',
-      'data': {'applicationUuid': 'mock_app_uuid'},
-    };
+    try {
+      final response = await post(ApiConstants.applicationSubmit, appData);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return decoded;
+      } else {
+        return {'success': false, 'message': decoded['message'] ?? 'Submission failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> getMyApplications({
     int page = 1,
     int pageSize = 10,
   }) async {
-    // Mock for offline mode
-    return {'success': true, 'data': []};
+    try {
+      final response = await get(
+        ApiConstants.myApplications,
+        queryParams: {'page': page.toString(), 'pageSize': pageSize.toString()},
+      );
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded;
+      } else {
+        return {'success': false, 'message': decoded['message'] ?? 'Failed to load applications'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   // --- ORA Payments ---
@@ -381,8 +457,8 @@ class ApiService {
 
   Future<Map<String, dynamic>> uploadDocument(File file, String type) async {
     return _uploadMultipartFile(
-      file, 
-      ApiConstants.candidateUploadDocs, 
+      file,
+      ApiConstants.candidateUploadDocs,
       'document',
       extraFields: {
         'documentType': type,
@@ -396,9 +472,14 @@ class ApiService {
       final response = await get(ApiConstants.candidateUploadDocs);
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        return decoded.containsKey('success') ? decoded : {'success': true, 'data': decoded};
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
       } else {
-        return {'success': false, 'message': decoded['message'] ?? 'Failed to fetch documents'};
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch documents',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};

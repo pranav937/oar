@@ -33,7 +33,8 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _aadhaarController = TextEditingController();
-  final TextEditingController _idProofNumberController = TextEditingController();
+  final TextEditingController _idProofNumberController =
+      TextEditingController();
   final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _tenthBoardController = TextEditingController();
   final TextEditingController _tenthYearController = TextEditingController();
@@ -41,8 +42,10 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _twelfthYearController = TextEditingController();
 
   // Social Category Details
-  final TextEditingController _disabilityTypeController = TextEditingController();
-  final TextEditingController _disabilityPercentController = TextEditingController();
+  final TextEditingController _disabilityTypeController =
+      TextEditingController();
+  final TextEditingController _disabilityPercentController =
+      TextEditingController();
   final TextEditingController _sportsNameController = TextEditingController();
   final TextEditingController _sportsLevelController = TextEditingController();
   final TextEditingController _sportsYearController = TextEditingController();
@@ -50,7 +53,8 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _widowCertController = TextEditingController();
   final TextEditingController _widowDateController = TextEditingController();
   final TextEditingController _widowAuthController = TextEditingController();
-  final TextEditingController _exSoldierFromController = TextEditingController();
+  final TextEditingController _exSoldierFromController =
+      TextEditingController();
   final TextEditingController _exSoldierToController = TextEditingController();
   final TextEditingController _exSoldierIdController = TextEditingController();
   final TextEditingController _exSoldierCatController = TextEditingController();
@@ -92,7 +96,8 @@ class _BioPageState extends State<BioPage> {
 
   void _updateFullName() {
     setState(() {
-      _nameController.text = '${_firstNameController.text} ${_surnameController.text}'.trim();
+      _nameController.text =
+          '${_firstNameController.text} ${_surnameController.text}'.trim();
     });
   }
 
@@ -121,9 +126,11 @@ class _BioPageState extends State<BioPage> {
           _idProofNumberController.text = data['idProofNumber'] ?? '';
           _subCategoryController.text = data['subCategory'] ?? '';
           _tenthBoardController.text = data['tenthBoardName'] ?? '';
-          _tenthYearController.text = data['tenthPassingYear']?.toString() ?? '';
+          _tenthYearController.text =
+              data['tenthPassingYear']?.toString() ?? '';
           _twelfthBoardController.text = data['twelfthBoardName'] ?? '';
-          _twelfthYearController.text = data['twelfthPassingYear']?.toString() ?? '';
+          _twelfthYearController.text =
+              data['twelfthPassingYear']?.toString() ?? '';
 
           _selectedGender = data['gender'];
           _selectedCommunity = data['category'];
@@ -140,10 +147,12 @@ class _BioPageState extends State<BioPage> {
 
           // Social Details
           _disabilityTypeController.text = data['disabilityType'] ?? '';
-          _disabilityPercentController.text = data['disabilityPercentage']?.toString() ?? '';
+          _disabilityPercentController.text =
+              data['disabilityPercentage']?.toString() ?? '';
           _sportsNameController.text = data['sportsName'] ?? '';
           _sportsLevelController.text = data['sportsLevel'] ?? '';
-          _sportsYearController.text = data['sportsPassingYear']?.toString() ?? '';
+          _sportsYearController.text =
+              data['sportsPassingYear']?.toString() ?? '';
           _sportsAuthController.text = data['sportsAuthority'] ?? '';
           _widowCertController.text = data['widowCertificateNo'] ?? '';
           _widowDateController.text = data['widowCertificateDate'] ?? '';
@@ -178,13 +187,13 @@ class _BioPageState extends State<BioPage> {
 
           // Handle remote images
           if (data['photoUrl'] != null) {
-            _remotePhotoUrl = data['photoUrl'].startsWith('http') 
-                ? data['photoUrl'] 
+            _remotePhotoUrl = data['photoUrl'].startsWith('http')
+                ? data['photoUrl']
                 : '${ApiConstants.baseUrl}${data['photoUrl']}';
           }
           if (data['signatureUrl'] != null) {
-            _remoteSignatureUrl = data['signatureUrl'].startsWith('http') 
-                ? data['signatureUrl'] 
+            _remoteSignatureUrl = data['signatureUrl'].startsWith('http')
+                ? data['signatureUrl']
                 : '${ApiConstants.baseUrl}${data['signatureUrl']}';
           }
 
@@ -198,16 +207,21 @@ class _BioPageState extends State<BioPage> {
 
   Future<void> _handleSave() async {
     // Validation based on Backend OTRProfileUpdateSchema
-    
+
     // 1. Age Validation (18 to 65)
     if (_selectedDate != null) {
       final now = DateTime.now();
       int age = now.year - _selectedDate!.year;
-      if (now.month < _selectedDate!.month || (now.month == _selectedDate!.month && now.day < _selectedDate!.day)) {
+      if (now.month < _selectedDate!.month ||
+          (now.month == _selectedDate!.month && now.day < _selectedDate!.day)) {
         age--;
       }
       if (age < 18 || age > 65) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Candidate must be between 18 and 65 years old')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Candidate must be between 18 and 65 years old'),
+          ),
+        );
         return;
       }
     }
@@ -215,7 +229,11 @@ class _BioPageState extends State<BioPage> {
     // 2. Aadhaar Validation (12 digits)
     final aadhaar = _aadhaarController.text;
     if (aadhaar.isNotEmpty && !RegExp(r'^\d{12}$').hasMatch(aadhaar)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid Aadhaar number (must be 12 digits)')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Invalid Aadhaar number (must be 12 digits)'),
+        ),
+      );
       return;
     }
 
@@ -223,7 +241,11 @@ class _BioPageState extends State<BioPage> {
     if (_isPhysicallyDisabled) {
       final percent = int.tryParse(_disabilityPercentController.text);
       if (percent == null || percent < 0 || percent > 100) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Disability percentage must be between 0 and 100')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Disability percentage must be between 0 and 100'),
+          ),
+        );
         return;
       }
     }
@@ -234,11 +256,24 @@ class _BioPageState extends State<BioPage> {
     final twelfthYear = int.tryParse(_twelfthYearController.text);
 
     if (tenthYear != null && (tenthYear < 1980 || tenthYear > currentYear)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('10th passing year must be between 1980 and $currentYear')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '10th passing year must be between 1980 and $currentYear',
+          ),
+        ),
+      );
       return;
     }
-    if (twelfthYear != null && (twelfthYear < 1980 || twelfthYear > currentYear)) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('12th passing year must be between 1980 and $currentYear')));
+    if (twelfthYear != null &&
+        (twelfthYear < 1980 || twelfthYear > currentYear)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '12th passing year must be between 1980 and $currentYear',
+          ),
+        ),
+      );
       return;
     }
 
@@ -248,7 +283,8 @@ class _BioPageState extends State<BioPage> {
         'title': _selectedTitle,
         'firstName': _firstNameController.text,
         'surname': _surnameController.text,
-        'fullName': '${_firstNameController.text} ${_surnameController.text}'.trim(),
+        'fullName': '${_firstNameController.text} ${_surnameController.text}'
+            .trim(),
         'fatherName': _fatherController.text,
         'motherName': _motherController.text,
         'gender': _selectedGender,
@@ -265,9 +301,21 @@ class _BioPageState extends State<BioPage> {
         'isWidow': _isWidow,
         'isExSoldier': _isExSoldier,
         'isGovtEmployee': _isGovtEmployee,
-        'englishProficiency': {'read': _engRead, 'write': _engWrite, 'speak': _engSpeak},
-        'hindiProficiency': {'read': _hinRead, 'write': _hinWrite, 'speak': _hinSpeak},
-        'gujaratiProficiency': {'read': _gujRead, 'write': _gujWrite, 'speak': _gujSpeak},
+        'englishProficiency': {
+          'read': _engRead,
+          'write': _engWrite,
+          'speak': _engSpeak,
+        },
+        'hindiProficiency': {
+          'read': _hinRead,
+          'write': _hinWrite,
+          'speak': _hinSpeak,
+        },
+        'gujaratiProficiency': {
+          'read': _gujRead,
+          'write': _gujWrite,
+          'speak': _gujSpeak,
+        },
         'highestQualification': _selectedQualification,
         'tenthBoardName': _tenthBoardController.text,
         'tenthPassingYear': int.tryParse(_tenthYearController.text),
@@ -275,36 +323,56 @@ class _BioPageState extends State<BioPage> {
         'twelfthPassingYear': int.tryParse(_twelfthYearController.text),
 
         // Social Details
-        'disabilityType': _isPhysicallyDisabled ? _disabilityTypeController.text : null,
-        'disabilityPercentage': _isPhysicallyDisabled ? int.tryParse(_disabilityPercentController.text) : null,
+        'disabilityType': _isPhysicallyDisabled
+            ? _disabilityTypeController.text
+            : null,
+        'disabilityPercentage': _isPhysicallyDisabled
+            ? int.tryParse(_disabilityPercentController.text)
+            : null,
         'sportsName': _isSportsPerson ? _sportsNameController.text : null,
         'sportsLevel': _isSportsPerson ? _sportsLevelController.text : null,
-        'sportsPassingYear': _isSportsPerson ? int.tryParse(_sportsYearController.text) : null,
+        'sportsPassingYear': _isSportsPerson
+            ? int.tryParse(_sportsYearController.text)
+            : null,
         'sportsAuthority': _isSportsPerson ? _sportsAuthController.text : null,
         'widowCertificateNo': _isWidow ? _widowCertController.text : null,
         'widowCertificateDate': _isWidow ? _widowDateController.text : null,
         'widowAuthority': _isWidow ? _widowAuthController.text : null,
-        'exSoldierServiceFrom': _isExSoldier ? _exSoldierFromController.text : null,
+        'exSoldierServiceFrom': _isExSoldier
+            ? _exSoldierFromController.text
+            : null,
         'exSoldierServiceTo': _isExSoldier ? _exSoldierToController.text : null,
         'exSoldierIdCardNo': _isExSoldier ? _exSoldierIdController.text : null,
         'exSoldierCategory': _isExSoldier ? _exSoldierCatController.text : null,
-        'govtServiceJoinDate': _isGovtEmployee ? _govtJoinDateController.text : null,
+        'govtServiceJoinDate': _isGovtEmployee
+            ? _govtJoinDateController.text
+            : null,
         'govtDeptName': _isGovtEmployee ? _govtDeptController.text : null,
       };
 
       final result = await _apiService.updateProfile(profileData);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated successfully')));
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddressPage()));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile updated successfully')),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddressPage()),
+          );
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message'] ?? 'Update failed')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Update failed')),
+          );
         }
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -318,20 +386,24 @@ class _BioPageState extends State<BioPage> {
     if (image != null) {
       final file = File(image.path);
       setState(() {
-        if (isPhoto) _photoFile = file;
-        else _signatureFile = file;
+        if (isPhoto)
+          _photoFile = file;
+        else
+          _signatureFile = file;
       });
 
       // Show loading
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Uploading ${isPhoto ? 'photo' : 'signature'}...'),
-          duration: const Duration(seconds: 1),
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Uploading ${isPhoto ? 'photo' : 'signature'}...'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
 
       try {
-        final result = isPhoto 
+        final result = isPhoto
             ? await _apiService.uploadPhoto(file)
             : await _apiService.uploadSignature(file);
 
@@ -342,33 +414,49 @@ class _BioPageState extends State<BioPage> {
               setState(() {
                 final url = result['data']['photoUrl'];
                 if (isPhoto) {
-                  _remotePhotoUrl = url.startsWith('http') ? url : '${ApiConstants.baseUrl}$url';
+                  _remotePhotoUrl = url.startsWith('http')
+                      ? url
+                      : '${ApiConstants.baseUrl}$url';
                 } else if (result['data']['signatureUrl'] != null) {
                   final sigUrl = result['data']['signatureUrl'];
-                  _remoteSignatureUrl = sigUrl.startsWith('http') ? sigUrl : '${ApiConstants.baseUrl}$sigUrl';
+                  _remoteSignatureUrl = sigUrl.startsWith('http')
+                      ? sigUrl
+                      : '${ApiConstants.baseUrl}$sigUrl';
                 }
               });
-            } else if (!isPhoto && result['data'] != null && result['data']['signatureUrl'] != null) {
+            } else if (!isPhoto &&
+                result['data'] != null &&
+                result['data']['signatureUrl'] != null) {
               setState(() {
-                 final sigUrl = result['data']['signatureUrl'];
-                 _remoteSignatureUrl = sigUrl.startsWith('http') ? sigUrl : '${ApiConstants.baseUrl}$sigUrl';
+                final sigUrl = result['data']['signatureUrl'];
+                _remoteSignatureUrl = sigUrl.startsWith('http')
+                    ? sigUrl
+                    : '${ApiConstants.baseUrl}$sigUrl';
               });
             }
 
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('${isPhoto ? 'Photo' : 'Signature'} uploaded successfully'),
-              backgroundColor: Colors.green,
-            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '${isPhoto ? 'Photo' : 'Signature'} uploaded successfully',
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(result['message'] ?? 'Upload failed'),
-              backgroundColor: Colors.red,
-            ));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(result['message'] ?? 'Upload failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
           }
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload error: $e')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Upload error: $e')));
         }
       }
     }
@@ -406,7 +494,10 @@ class _BioPageState extends State<BioPage> {
                       children: [
                         _buildProgressTracker(),
                         const SizedBox(height: 32),
-                        _buildSectionHeader('Candidate Profile', 'Complete your personal and social details'),
+                        _buildSectionHeader(
+                          'Candidate Profile',
+                          'Complete your personal and social details',
+                        ),
                         const SizedBox(height: 24),
                         _buildMediaUploadSection(),
                         const SizedBox(height: 16),
@@ -425,24 +516,51 @@ class _BioPageState extends State<BioPage> {
                                     icon: Icons.title_rounded,
                                     value: _selectedTitle,
                                     items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
-                                    onChanged: (val) => setState(() => _selectedTitle = val),
+                                    onChanged: (val) =>
+                                        setState(() => _selectedTitle = val),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   flex: 2,
-                                  child: OtrTextField(label: 'Surname', hintText: 'Surname', icon: Icons.person_outline_rounded, controller: _surnameController),
+                                  child: OtrTextField(
+                                    label: 'Surname',
+                                    hintText: 'Surname',
+                                    icon: Icons.person_outline_rounded,
+                                    controller: _surnameController,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 20),
-                            OtrTextField(label: 'First Name', hintText: 'Enter first name', icon: Icons.person_rounded, controller: _firstNameController),
+                            OtrTextField(
+                              label: 'First Name',
+                              hintText: 'Enter first name',
+                              icon: Icons.person_rounded,
+                              controller: _firstNameController,
+                            ),
                             const SizedBox(height: 20),
-                            OtrTextField(label: 'Full Name', hintText: 'Auto-generated', icon: Icons.badge_rounded, controller: _nameController, enabled: false),
+                            OtrTextField(
+                              label: 'Full Name',
+                              hintText: 'Auto-generated',
+                              icon: Icons.badge_rounded,
+                              controller: _nameController,
+                              enabled: false,
+                            ),
                             const SizedBox(height: 20),
-                            OtrTextField(label: 'Father\'s Name', hintText: 'Father\'s Name', icon: Icons.person_add_rounded, controller: _fatherController),
+                            OtrTextField(
+                              label: 'Father\'s Name',
+                              hintText: 'Father\'s Name',
+                              icon: Icons.person_add_rounded,
+                              controller: _fatherController,
+                            ),
                             const SizedBox(height: 20),
-                            OtrTextField(label: 'Mother\'s Name', hintText: 'Mother\'s Name', icon: Icons.person_add_rounded, controller: _motherController),
+                            OtrTextField(
+                              label: 'Mother\'s Name',
+                              hintText: 'Mother\'s Name',
+                              icon: Icons.person_add_rounded,
+                              controller: _motherController,
+                            ),
                           ],
                         ),
                         _buildCollapsibleSection(
@@ -455,13 +573,29 @@ class _BioPageState extends State<BioPage> {
                               hint: 'Select ID Type',
                               icon: Icons.badge,
                               value: _selectedIdProofType,
-                              items: ['Aadhaar Card', 'PAN Card', 'Voter ID', 'Driving License'],
-                              onChanged: (val) => setState(() => _selectedIdProofType = val),
+                              items: [
+                                'Aadhaar Card',
+                                'PAN Card',
+                                'Voter ID',
+                                'Driving License',
+                              ],
+                              onChanged: (val) =>
+                                  setState(() => _selectedIdProofType = val),
                             ),
                             const SizedBox(height: 20),
-                            OtrTextField(label: 'ID Proof Number', hintText: 'Enter ID number', icon: Icons.tag_rounded, controller: _idProofNumberController),
+                            OtrTextField(
+                              label: 'ID Proof Number',
+                              hintText: 'Enter ID number',
+                              icon: Icons.tag_rounded,
+                              controller: _idProofNumberController,
+                            ),
                             const SizedBox(height: 20),
-                            OtrTextField(label: 'Aadhaar Number', hintText: '12-digit number', icon: Icons.credit_card_rounded, controller: _aadhaarController),
+                            OtrTextField(
+                              label: 'Aadhaar Number',
+                              hintText: '12-digit number',
+                              icon: Icons.credit_card_rounded,
+                              controller: _aadhaarController,
+                            ),
                           ],
                         ),
                         _buildCollapsibleSection(
@@ -478,7 +612,8 @@ class _BioPageState extends State<BioPage> {
                                     icon: Icons.transgender_rounded,
                                     value: _selectedGender,
                                     items: ['MALE', 'FEMALE', 'OTHER'],
-                                    onChanged: (val) => setState(() => _selectedGender = val),
+                                    onChanged: (val) =>
+                                        setState(() => _selectedGender = val),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -499,7 +634,8 @@ class _BioPageState extends State<BioPage> {
                               icon: Icons.favorite_rounded,
                               value: _selectedMaritalStatus,
                               items: ['Single', 'Married', 'Divorced', 'Widow'],
-                              onChanged: (val) => setState(() => _selectedMaritalStatus = val),
+                              onChanged: (val) =>
+                                  setState(() => _selectedMaritalStatus = val),
                             ),
                             const SizedBox(height: 20),
                             _buildFunctionalDropdown(
@@ -508,7 +644,8 @@ class _BioPageState extends State<BioPage> {
                               icon: Icons.flag_rounded,
                               value: _selectedNationality,
                               items: ['Indian', 'Other'],
-                              onChanged: (val) => setState(() => _selectedNationality = val),
+                              onChanged: (val) =>
+                                  setState(() => _selectedNationality = val),
                             ),
                           ],
                         ),
@@ -522,18 +659,37 @@ class _BioPageState extends State<BioPage> {
                               hint: 'Select Highest',
                               icon: Icons.school_rounded,
                               value: _selectedQualification,
-                              items: ['10th', '12th', 'B.Tech', 'B.Sc', 'M.Tech', 'PhD'],
-                              onChanged: (val) => setState(() => _selectedQualification = val),
+                              items: [
+                                '10th',
+                                '12th',
+                                'B.Tech',
+                                'B.Sc',
+                                'M.Tech',
+                                'PhD',
+                              ],
+                              onChanged: (val) =>
+                                  setState(() => _selectedQualification = val),
                             ),
                             const SizedBox(height: 20),
                             Row(
                               children: [
                                 Expanded(
-                                  child: OtrTextField(label: '10th Board', hintText: 'Education Board', icon: Icons.history_edu_rounded, controller: _tenthBoardController),
+                                  child: OtrTextField(
+                                    label: '10th Board',
+                                    hintText: 'Education Board',
+                                    icon: Icons.history_edu_rounded,
+                                    controller: _tenthBoardController,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: OtrTextField(label: 'Year', hintText: '2010', icon: Icons.calendar_today, controller: _tenthYearController, keyboardType: TextInputType.number),
+                                  child: OtrTextField(
+                                    label: 'Year',
+                                    hintText: '2010',
+                                    icon: Icons.calendar_today,
+                                    controller: _tenthYearController,
+                                    keyboardType: TextInputType.number,
+                                  ),
                                 ),
                               ],
                             ),
@@ -541,11 +697,22 @@ class _BioPageState extends State<BioPage> {
                             Row(
                               children: [
                                 Expanded(
-                                  child: OtrTextField(label: '12th Board', hintText: 'Education Board', icon: Icons.history_edu_rounded, controller: _twelfthBoardController),
+                                  child: OtrTextField(
+                                    label: '12th Board',
+                                    hintText: 'Education Board',
+                                    icon: Icons.history_edu_rounded,
+                                    controller: _twelfthBoardController,
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: OtrTextField(label: 'Year', hintText: '2012', icon: Icons.calendar_today, controller: _twelfthYearController, keyboardType: TextInputType.number),
+                                  child: OtrTextField(
+                                    label: 'Year',
+                                    hintText: '2012',
+                                    icon: Icons.calendar_today,
+                                    controller: _twelfthYearController,
+                                    keyboardType: TextInputType.number,
+                                  ),
                                 ),
                               ],
                             ),
@@ -559,66 +726,191 @@ class _BioPageState extends State<BioPage> {
                                     icon: Icons.groups_rounded,
                                     value: _selectedCommunity,
                                     items: ['UR', 'SC', 'ST', 'OBC', 'EWS'],
-                                    onChanged: (val) => setState(() => _selectedCommunity = val),
+                                    onChanged: (val) => setState(
+                                      () => _selectedCommunity = val,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                  child: OtrTextField(label: 'Sub Category', hintText: 'Sub-category', icon: Icons.category_rounded, controller: _subCategoryController),
+                                  child: OtrTextField(
+                                    label: 'Sub Category',
+                                    hintText: 'Sub-category',
+                                    icon: Icons.category_rounded,
+                                    controller: _subCategoryController,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 24),
-                             _buildSwitchTile('Physically Disabled', _isPhysicallyDisabled, (val) => setState(() => _isPhysicallyDisabled = val)),
-                             if (_isPhysicallyDisabled) ...[
-                               OtrTextField(label: 'Disability Type', hintText: 'Type', icon: Icons.accessibility_new_rounded, controller: _disabilityTypeController),
-                               const SizedBox(height: 12),
-                               OtrTextField(label: 'Percentage (%)', hintText: '40', icon: Icons.percent_rounded, controller: _disabilityPercentController, keyboardType: TextInputType.number),
-                             ],
-                             _buildSwitchTile('Sports Person', _isSportsPerson, (val) => setState(() => _isSportsPerson = val)),
-                             if (_isSportsPerson) ...[
-                               OtrTextField(label: 'Sports Name', hintText: 'Name', icon: Icons.emoji_events_rounded, controller: _sportsNameController),
-                               const SizedBox(height: 12),
-                               Row(
-                                 children: [
-                                   Expanded(child: OtrTextField(label: 'Level', hintText: 'State/Nat.', icon: Icons.leaderboard_rounded, controller: _sportsLevelController)),
-                                   const SizedBox(width: 12),
-                                   Expanded(child: OtrTextField(label: 'Year', hintText: '2020', icon: Icons.calendar_today, controller: _sportsYearController, keyboardType: TextInputType.number)),
-                                 ],
-                               ),
-                               const SizedBox(height: 12),
-                               OtrTextField(label: 'Authority', hintText: 'Issuing Org', icon: Icons.account_balance_rounded, controller: _sportsAuthController),
-                             ],
-                             _buildSwitchTile('Widow Person', _isWidow, (val) => setState(() => _isWidow = val)),
-                             if (_isWidow) ...[
-                               OtrTextField(label: 'Certificate No.', hintText: 'Number', icon: Icons.description_rounded, controller: _widowCertController),
-                               const SizedBox(height: 12),
-                               _buildClickableField(label: 'Certificate Date', value: _widowDateController.text.isEmpty ? 'Select Date' : _widowDateController.text, icon: Icons.calendar_month_rounded, onTap: () async {
-                                 final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(1990), lastDate: DateTime.now());
-                                 if (d != null) setState(() => _widowDateController.text = DateFormat('yyyy-MM-dd').format(d));
-                               }),
-                             ],
-                             _buildSwitchTile('Ex-Soldier', _isExSoldier, (val) => setState(() => _isExSoldier = val)),
-                             if (_isExSoldier) ...[
-                               Row(
-                                 children: [
-                                   Expanded(child: OtrTextField(label: 'Service From', hintText: '2010', icon: Icons.login_rounded, controller: _exSoldierFromController)),
-                                   const SizedBox(width: 12),
-                                   Expanded(child: OtrTextField(label: 'Service To', hintText: '2020', icon: Icons.logout_rounded, controller: _exSoldierToController)),
-                                 ],
-                               ),
-                               const SizedBox(height: 12),
-                               OtrTextField(label: 'ID Card No.', hintText: 'Number', icon: Icons.badge_rounded, controller: _exSoldierIdController),
-                             ],
-                             _buildSwitchTile('Govt Employee', _isGovtEmployee, (val) => setState(() => _isGovtEmployee = val)),
-                             if (_isGovtEmployee) ...[
-                               OtrTextField(label: 'Dept Name', hintText: 'Department', icon: Icons.business_rounded, controller: _govtDeptController),
-                               const SizedBox(height: 12),
-                               _buildClickableField(label: 'Join Date', value: _govtJoinDateController.text.isEmpty ? 'Select Date' : _govtJoinDateController.text, icon: Icons.calendar_month_rounded, onTap: () async {
-                                 final d = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(1990), lastDate: DateTime.now());
-                                 if (d != null) setState(() => _govtJoinDateController.text = DateFormat('yyyy-MM-dd').format(d));
-                               }),
-                             ],
+                            _buildSwitchTile(
+                              'Physically Disabled',
+                              _isPhysicallyDisabled,
+                              (val) =>
+                                  setState(() => _isPhysicallyDisabled = val),
+                            ),
+                            if (_isPhysicallyDisabled) ...[
+                              OtrTextField(
+                                label: 'Disability Type',
+                                hintText: 'Type',
+                                icon: Icons.accessibility_new_rounded,
+                                controller: _disabilityTypeController,
+                              ),
+                              const SizedBox(height: 12),
+                              OtrTextField(
+                                label: 'Percentage (%)',
+                                hintText: '40',
+                                icon: Icons.percent_rounded,
+                                controller: _disabilityPercentController,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ],
+                            _buildSwitchTile(
+                              'Sports Person',
+                              _isSportsPerson,
+                              (val) => setState(() => _isSportsPerson = val),
+                            ),
+                            if (_isSportsPerson) ...[
+                              OtrTextField(
+                                label: 'Sports Name',
+                                hintText: 'Name',
+                                icon: Icons.emoji_events_rounded,
+                                controller: _sportsNameController,
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'Level',
+                                      hintText: 'State/Nat.',
+                                      icon: Icons.leaderboard_rounded,
+                                      controller: _sportsLevelController,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'Year',
+                                      hintText: '2020',
+                                      icon: Icons.calendar_today,
+                                      controller: _sportsYearController,
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              OtrTextField(
+                                label: 'Authority',
+                                hintText: 'Issuing Org',
+                                icon: Icons.account_balance_rounded,
+                                controller: _sportsAuthController,
+                              ),
+                            ],
+                            _buildSwitchTile(
+                              'Widow Person',
+                              _isWidow,
+                              (val) => setState(() => _isWidow = val),
+                            ),
+                            if (_isWidow) ...[
+                              OtrTextField(
+                                label: 'Certificate No.',
+                                hintText: 'Number',
+                                icon: Icons.description_rounded,
+                                controller: _widowCertController,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildClickableField(
+                                label: 'Certificate Date',
+                                value: _widowDateController.text.isEmpty
+                                    ? 'Select Date'
+                                    : _widowDateController.text,
+                                icon: Icons.calendar_month_rounded,
+                                onTap: () async {
+                                  final d = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime(1990),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (d != null)
+                                    setState(
+                                      () => _widowDateController.text =
+                                          DateFormat('yyyy-MM-dd').format(d),
+                                    );
+                                },
+                              ),
+                            ],
+                            _buildSwitchTile(
+                              'Ex-Soldier',
+                              _isExSoldier,
+                              (val) => setState(() => _isExSoldier = val),
+                            ),
+                            if (_isExSoldier) ...[
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'Service From',
+                                      hintText: '2010',
+                                      icon: Icons.login_rounded,
+                                      controller: _exSoldierFromController,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'Service To',
+                                      hintText: '2020',
+                                      icon: Icons.logout_rounded,
+                                      controller: _exSoldierToController,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              OtrTextField(
+                                label: 'ID Card No.',
+                                hintText: 'Number',
+                                icon: Icons.badge_rounded,
+                                controller: _exSoldierIdController,
+                              ),
+                            ],
+                            _buildSwitchTile(
+                              'Govt Employee',
+                              _isGovtEmployee,
+                              (val) => setState(() => _isGovtEmployee = val),
+                            ),
+                            if (_isGovtEmployee) ...[
+                              OtrTextField(
+                                label: 'Dept Name',
+                                hintText: 'Department',
+                                icon: Icons.business_rounded,
+                                controller: _govtDeptController,
+                              ),
+                              const SizedBox(height: 12),
+                              _buildClickableField(
+                                label: 'Join Date',
+                                value: _govtJoinDateController.text.isEmpty
+                                    ? 'Select Date'
+                                    : _govtJoinDateController.text,
+                                icon: Icons.calendar_month_rounded,
+                                onTap: () async {
+                                  final d = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime(1990),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (d != null)
+                                    setState(
+                                      () => _govtJoinDateController.text =
+                                          DateFormat('yyyy-MM-dd').format(d),
+                                    );
+                                },
+                              ),
+                            ],
                           ],
                         ),
                         _buildCollapsibleSection(
@@ -626,11 +918,41 @@ class _BioPageState extends State<BioPage> {
                           title: 'Language Proficiency',
                           icon: Icons.translate_rounded,
                           children: [
-                            _buildLanguageCard('English', _engRead, _engWrite, _engSpeak, (r, w, s) => setState(() { _engRead = r; _engWrite = w; _engSpeak = s; })),
+                            _buildLanguageCard(
+                              'English',
+                              _engRead,
+                              _engWrite,
+                              _engSpeak,
+                              (r, w, s) => setState(() {
+                                _engRead = r;
+                                _engWrite = w;
+                                _engSpeak = s;
+                              }),
+                            ),
                             const SizedBox(height: 12),
-                            _buildLanguageCard('Hindi', _hinRead, _hinWrite, _hinSpeak, (r, w, s) => setState(() { _hinRead = r; _hinWrite = w; _hinSpeak = s; })),
+                            _buildLanguageCard(
+                              'Hindi',
+                              _hinRead,
+                              _hinWrite,
+                              _hinSpeak,
+                              (r, w, s) => setState(() {
+                                _hinRead = r;
+                                _hinWrite = w;
+                                _hinSpeak = s;
+                              }),
+                            ),
                             const SizedBox(height: 12),
-                            _buildLanguageCard('Gujarati', _gujRead, _gujWrite, _gujSpeak, (r, w, s) => setState(() { _gujRead = r; _gujWrite = w; _gujSpeak = s; })),
+                            _buildLanguageCard(
+                              'Gujarati',
+                              _gujRead,
+                              _gujWrite,
+                              _gujSpeak,
+                              (r, w, s) => setState(() {
+                                _gujRead = r;
+                                _gujWrite = w;
+                                _gujSpeak = s;
+                              }),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 40),
@@ -655,7 +977,14 @@ class _BioPageState extends State<BioPage> {
       elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        title: const Text('Personal Bio', style: TextStyle(color: OtrTheme.darkNavy, fontWeight: FontWeight.w900, fontSize: 18)),
+        title: const Text(
+          'Personal Bio',
+          style: TextStyle(
+            color: OtrTheme.darkNavy,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
         background: Container(color: Colors.white),
       ),
       leading: IconButton(
@@ -684,14 +1013,40 @@ class _BioPageState extends State<BioPage> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isActive ? OtrTheme.primaryBlue : Colors.grey.withOpacity(0.2),
+            color: isActive
+                ? OtrTheme.primaryBlue
+                : Colors.grey.withOpacity(0.2),
             shape: BoxShape.circle,
-            boxShadow: isActive ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: OtrTheme.primaryBlue.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [],
           ),
-          child: Center(child: Text(step, style: TextStyle(color: isActive ? Colors.white : Colors.grey, fontWeight: FontWeight.bold, fontSize: 12))),
+          child: Center(
+            child: Text(
+              step,
+              style: TextStyle(
+                color: isActive ? Colors.white : Colors.grey,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: isActive ? OtrTheme.primaryBlue : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            color: isActive ? OtrTheme.primaryBlue : Colors.grey,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ],
     );
   }
@@ -710,9 +1065,24 @@ class _BioPageState extends State<BioPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy, letterSpacing: -0.5)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: OtrTheme.darkNavy,
+            letterSpacing: -0.5,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(subtitle, style: TextStyle(fontSize: 14, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
@@ -733,7 +1103,13 @@ class _BioPageState extends State<BioPage> {
           : const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('SAVE & PROCEED', style: TextStyle(letterSpacing: 1, fontWeight: FontWeight.w900)),
+                Text(
+                  'SAVE & PROCEED',
+                  style: TextStyle(
+                    letterSpacing: 1,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward_rounded, size: 18),
               ],
@@ -741,7 +1117,12 @@ class _BioPageState extends State<BioPage> {
     );
   }
 
-  Widget _buildCollapsibleSection({required int index, required String title, required IconData icon, required List<Widget> children}) {
+  Widget _buildCollapsibleSection({
+    required int index,
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
     bool isExpanded = _expandedIndex == index;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -751,25 +1132,52 @@ class _BioPageState extends State<BioPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: isExpanded ? OtrTheme.primaryBlue.withOpacity(0.08) : Colors.black.withOpacity(0.03),
+            color: isExpanded
+                ? OtrTheme.primaryBlue.withOpacity(0.08)
+                : Colors.black.withOpacity(0.03),
             blurRadius: 20,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
-        border: Border.all(color: isExpanded ? OtrTheme.primaryBlue.withOpacity(0.3) : Colors.transparent, width: 1.5),
+        border: Border.all(
+          color: isExpanded
+              ? OtrTheme.primaryBlue.withOpacity(0.3)
+              : Colors.transparent,
+          width: 1.5,
+        ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: index == 0,
-          onExpansionChanged: (expanded) => setState(() => _expandedIndex = expanded ? index : -1),
+          onExpansionChanged: (expanded) =>
+              setState(() => _expandedIndex = expanded ? index : -1),
           leading: Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.lightBlue, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: isExpanded ? Colors.white : OtrTheme.primaryBlue, size: 20),
+            decoration: BoxDecoration(
+              color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.lightBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: isExpanded ? Colors.white : OtrTheme.primaryBlue,
+              size: 20,
+            ),
           ),
-          title: Text(title, style: TextStyle(fontWeight: FontWeight.w900, color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.darkNavy, fontSize: 15)),
-          trailing: Icon(isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, color: isExpanded ? OtrTheme.primaryBlue : Colors.grey),
+          title: Text(
+            title,
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              color: isExpanded ? OtrTheme.primaryBlue : OtrTheme.darkNavy,
+              fontSize: 15,
+            ),
+          ),
+          trailing: Icon(
+            isExpanded
+                ? Icons.keyboard_arrow_up_rounded
+                : Icons.keyboard_arrow_down_rounded,
+            color: isExpanded ? OtrTheme.primaryBlue : Colors.grey,
+          ),
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
@@ -781,7 +1189,12 @@ class _BioPageState extends State<BioPage> {
     );
   }
 
-  Widget _buildClickableField({required String label, required String value, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildClickableField({
+    required String label,
+    required String value,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -813,8 +1226,12 @@ class _BioPageState extends State<BioPage> {
                   value,
                   style: TextStyle(
                     fontSize: 15,
-                    color: value == 'DD/MM/YYYY' ? Colors.grey.shade400 : OtrTheme.darkNavy,
-                    fontWeight: value == 'DD/MM/YYYY' ? FontWeight.normal : FontWeight.w600,
+                    color: value == 'DD/MM/YYYY'
+                        ? Colors.grey.shade400
+                        : OtrTheme.darkNavy,
+                    fontWeight: value == 'DD/MM/YYYY'
+                        ? FontWeight.normal
+                        : FontWeight.w600,
                   ),
                 ),
               ],
@@ -825,7 +1242,14 @@ class _BioPageState extends State<BioPage> {
     );
   }
 
-  Widget _buildFunctionalDropdown({required String label, required String hint, required IconData icon, required String? value, required List<String> items, required ValueChanged<String?> onChanged}) {
+  Widget _buildFunctionalDropdown({
+    required String label,
+    required String hint,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -849,38 +1273,86 @@ class _BioPageState extends State<BioPage> {
             value: items.contains(value) ? value : null,
             decoration: InputDecoration(
               prefixIcon: Icon(icon, color: OtrTheme.primaryBlue, size: 22),
-              contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 18,
+                horizontal: 16,
+              ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
             ),
-            hint: Text(hint, style: TextStyle(color: Colors.grey.shade400, fontSize: 14, fontWeight: FontWeight.normal)),
-            style: const TextStyle(fontSize: 15, color: OtrTheme.darkNavy, fontWeight: FontWeight.w600),
-            items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            hint: Text(
+              hint,
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 14,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+            style: const TextStyle(
+              fontSize: 15,
+              color: OtrTheme.darkNavy,
+              fontWeight: FontWeight.w600,
+            ),
+            items: items
+                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .toList(),
             onChanged: onChanged,
             iconSize: 24,
-            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.grey,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildLanguageCard(String language, bool read, bool write, bool speak, Function(bool, bool, bool) onChanged) {
+  Widget _buildLanguageCard(
+    String language,
+    bool read,
+    bool write,
+    bool speak,
+    Function(bool, bool, bool) onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: OtrTheme.background, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
+      decoration: BoxDecoration(
+        color: OtrTheme.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(language, style: const TextStyle(fontWeight: FontWeight.bold, color: OtrTheme.darkNavy, fontSize: 14)),
+          Text(
+            language,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: OtrTheme.darkNavy,
+              fontSize: 14,
+            ),
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildProficiencyChip('Read', read, (val) => onChanged(val, write, speak)),
-              _buildProficiencyChip('Write', write, (val) => onChanged(read, val, speak)),
-              _buildProficiencyChip('Speak', speak, (val) => onChanged(read, write, val)),
+              _buildProficiencyChip(
+                'Read',
+                read,
+                (val) => onChanged(val, write, speak),
+              ),
+              _buildProficiencyChip(
+                'Write',
+                write,
+                (val) => onChanged(read, val, speak),
+              ),
+              _buildProficiencyChip(
+                'Speak',
+                speak,
+                (val) => onChanged(read, write, val),
+              ),
             ],
           ),
         ],
@@ -888,24 +1360,50 @@ class _BioPageState extends State<BioPage> {
     );
   }
 
-  Widget _buildProficiencyChip(String label, bool isSelected, ValueChanged<bool> onTap) {
+  Widget _buildProficiencyChip(
+    String label,
+    bool isSelected,
+    ValueChanged<bool> onTap,
+  ) {
     return FilterChip(
-      label: Text(label, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
       selected: isSelected,
       onSelected: onTap,
       selectedColor: OtrTheme.primaryBlue.withOpacity(0.1),
       checkmarkColor: OtrTheme.primaryBlue,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      side: BorderSide(color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300),
+      side: BorderSide(
+        color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300,
+      ),
     );
   }
 
-  Widget _buildSwitchTile(String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildSwitchTile(
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(color: OtrTheme.background, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: OtrTheme.background,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: SwitchListTile(
-        title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: OtrTheme.darkNavy)),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: OtrTheme.darkNavy,
+          ),
+        ),
         value: value,
         onChanged: onChanged,
         activeColor: OtrTheme.primaryBlue,
@@ -925,6 +1423,7 @@ class _BioPageState extends State<BioPage> {
             _remotePhotoUrl,
             Icons.camera_alt_rounded,
             () => _pickImage(true),
+            () => _handleDelete(true),
           ),
         ),
         const SizedBox(width: 16),
@@ -935,59 +1434,157 @@ class _BioPageState extends State<BioPage> {
             _remoteSignatureUrl,
             Icons.edit_note_rounded,
             () => _pickImage(false),
+            () => _handleDelete(false),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMediaCard(String label, File? file, String? remoteUrl, IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 140,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: OtrTheme.primaryBlue.withOpacity(0.1), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: Stack(
-            children: [
-              if (file != null)
-                Image.file(file, width: double.infinity, height: double.infinity, fit: BoxFit.cover)
-              else if (remoteUrl != null)
-                Image.network(
-                  remoteUrl,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => _buildUploadPlaceholder(label, icon, true),
-                )
-              else
-                _buildUploadPlaceholder(label, icon, false),
-              if (file != null || remoteUrl != null)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                  ),
+  Future<void> _handleDelete(bool isPhoto) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete ${isPhoto ? 'Photo' : 'Signature'}?'),
+        content: const Text('Are you sure you want to permanently remove this image?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('DELETE', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        final result = isPhoto 
+            ? await _apiService.deletePhoto() 
+            : await _apiService.deleteSignature();
+            
+        if (mounted) {
+          if (result['success'] == true) {
+            setState(() {
+              if (isPhoto) {
+                _photoFile = null;
+                _remotePhotoUrl = null;
+              } else {
+                _signatureFile = null;
+                _remoteSignatureUrl = null;
+              }
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('${isPhoto ? 'Photo' : 'Signature'} deleted successfully'), backgroundColor: Colors.green),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(result['message'] ?? 'Delete failed'), backgroundColor: Colors.red),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Widget _buildMediaCard(
+    String label,
+    File? file,
+    String? remoteUrl,
+    IconData icon,
+    VoidCallback onTap,
+    VoidCallback onDelete,
+  ) {
+    bool hasMedia = file != null || remoteUrl != null;
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 140,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: OtrTheme.primaryBlue.withOpacity(0.1),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
-            ],
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: Stack(
+                children: [
+                  if (file != null)
+                    Image.file(
+                      file,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  else if (remoteUrl != null)
+                    Image.network(
+                      remoteUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          _buildUploadPlaceholder(label, icon, true),
+                    )
+                  else
+                    _buildUploadPlaceholder(label, icon, false),
+                  if (hasMedia)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
+        if (hasMedia)
+          Positioned(
+            top: -5,
+            left: -5,
+            child: IconButton(
+              onPressed: onDelete,
+              icon: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.red.shade100),
+                ),
+                child: Icon(Icons.delete_forever_rounded, color: Colors.red.shade700, size: 18),
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -998,12 +1595,29 @@ class _BioPageState extends State<BioPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: OtrTheme.lightBlue, shape: BoxShape.circle),
-            child: Icon(isError ? Icons.error_outline_rounded : icon, color: isError ? Colors.red : OtrTheme.primaryBlue, size: 24),
+            decoration: BoxDecoration(
+              color: OtrTheme.lightBlue,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isError ? Icons.error_outline_rounded : icon,
+              color: isError ? Colors.red : OtrTheme.primaryBlue,
+              size: 24,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w800, color: OtrTheme.darkNavy, fontSize: 13)),
-          Text(isError ? 'Reload Required' : 'Upload', style: TextStyle(color: Colors.grey.shade400, fontSize: 11)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w800,
+              color: OtrTheme.darkNavy,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            isError ? 'Reload Required' : 'Upload',
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+          ),
         ],
       ),
     );
