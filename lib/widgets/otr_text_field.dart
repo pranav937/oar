@@ -41,20 +41,27 @@ class _OtrTextFieldState extends State<OtrTextField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: OtrTheme.darkNavy,
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            widget.label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: OtrTheme.darkNavy,
+              letterSpacing: -0.2,
+            ),
           ),
         ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
             color: widget.enabled ? Colors.white : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.enabled ? Colors.grey.shade100 : Colors.grey.shade200,
+              width: 1.5,
+            ),
             boxShadow: OtrTheme.softShadow,
           ),
           child: TextField(
@@ -73,12 +80,15 @@ class _OtrTextFieldState extends State<OtrTextField> {
               hintStyle: TextStyle(
                 color: Colors.grey.shade400,
                 fontSize: 14,
-                fontWeight: FontWeight.normal,
+                fontWeight: FontWeight.w500,
               ),
-              prefixIcon: Icon(
-                widget.icon,
-                color: OtrTheme.primaryBlue,
-                size: 22,
+              prefixIcon: Container(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  widget.icon,
+                  color: OtrTheme.primaryBlue,
+                  size: 22,
+                ),
               ),
               suffixIcon: widget.isPassword
                   ? IconButton(
@@ -87,7 +97,7 @@ class _OtrTextFieldState extends State<OtrTextField> {
                             ? Icons.visibility_off_rounded
                             : Icons.visibility_rounded,
                         color: Colors.grey.shade400,
-                        size: 20,
+                        size: 22,
                       ),
                       onPressed: () =>
                           setState(() => _obscureText = !_obscureText),
@@ -95,7 +105,7 @@ class _OtrTextFieldState extends State<OtrTextField> {
                   : null,
               contentPadding: const EdgeInsets.symmetric(
                 vertical: 18,
-                horizontal: 16,
+                horizontal: 20,
               ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -107,3 +117,4 @@ class _OtrTextFieldState extends State<OtrTextField> {
     );
   }
 }
+

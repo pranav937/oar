@@ -45,7 +45,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
             // Reverse mapping from Type (AADHAAR) back to Title (Aadhaar Card)
             String? title;
-            _documentMap.forEach((key, value) {
+            _documentMap.forEach((key, value) { 
               if (value == type) title = key;
             });
 
@@ -200,8 +200,13 @@ class _DocumentsPageState extends State<DocumentsPage> {
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),

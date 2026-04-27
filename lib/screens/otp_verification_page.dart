@@ -14,6 +14,10 @@ class OtpVerificationPage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(

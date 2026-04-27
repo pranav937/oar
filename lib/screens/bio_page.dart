@@ -481,24 +481,39 @@ class _BioPageState extends State<BioPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OtrTheme.background,
+      appBar: AppBar(
+        title: const Text(
+          'Personal Bio',
+          style: TextStyle(
+            color: OtrTheme.darkNavy,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: OtrTheme.darkNavy,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: _isLoading
           ? const Center(child: SpinKitRing(color: OtrTheme.primaryBlue))
-          : CustomScrollView(
-              slivers: [
-                _buildSliverAppBar(),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildProgressTracker(),
-                        const SizedBox(height: 32),
-                        _buildSectionHeader(
-                          'Candidate Profile',
-                          'Complete your personal and social details',
-                        ),
-                        const SizedBox(height: 24),
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProgressTracker(),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader(
+                    'Candidate Profile',
+                    'Complete your personal and social details',
+                  ),
+                  const SizedBox(height: 24),
                         _buildMediaUploadSection(),
                         const SizedBox(height: 16),
                         _buildCollapsibleSection(
@@ -961,36 +976,6 @@ class _BioPageState extends State<BioPage> {
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
-      pinned: true,
-      backgroundColor: Colors.white,
-      foregroundColor: OtrTheme.darkNavy,
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        title: const Text(
-          'Personal Bio',
-          style: TextStyle(
-            color: OtrTheme.darkNavy,
-            fontWeight: FontWeight.w900,
-            fontSize: 18,
-          ),
-        ),
-        background: Container(color: Colors.white),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-        onPressed: () => Navigator.pop(context),
-      ),
     );
   }
 

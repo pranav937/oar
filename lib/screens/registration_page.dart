@@ -193,103 +193,173 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OtrTheme.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Custom App Bar with Logo
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                   Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                      onPressed: () {
-                        if (_currentStep > 0) {
-                          setState(() => _currentStep--);
-                        } else {
-                          Navigator.pushReplacementNamed(context, '/login');
-                        }
-                      },
-                    ),
+      body: Stack(
+        children: [
+          // Background Elements
+          Positioned(
+            top: -50,
+            left: -50,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                color: OtrTheme.primaryBlue.withValues(alpha: 0.03),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Column(
+              children: [
+                // Custom App Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
                   ),
-                  const Center(
-                    child: Text(
-                      'Create Account',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: OtrTheme.darkNavy,
-                        letterSpacing: -0.5,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          if (_currentStep > 0) {
+                            setState(() => _currentStep--);
+                          } else {
+                            Navigator.pushReplacementNamed(context, '/login');
+                          }
+                        },
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'Create Account',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: OtrTheme.darkNavy,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 48), // Balance for back button
+                    ],
+                  ),
+                ),
+
+                _buildProgressIndicator(),
+
+                const SizedBox(height: 24),
+
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 500),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        child: _buildCurrentStep(),
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-              _buildProgressIndicator(),
-
-            const SizedBox(height: 20),
-
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 500),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 400),
-                    child: _buildCurrentStep(),
-                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildProgressIndicator() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: Stack(
-        alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 60),
+      child: Column(
         children: [
-          Container(
-            height: 4,
-            width: double.infinity,
-            decoration: BoxDecoration(color: OtrTheme.lightBlue, borderRadius: BorderRadius.circular(2)),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: 3,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(2, (index) {
+                  bool isCompleted = index < _currentStep;
+                  bool isActive = index == _currentStep;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: isCompleted || isActive
+                          ? OtrTheme.primaryBlue
+                          : Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isCompleted || isActive
+                            ? OtrTheme.primaryBlue
+                            : Colors.grey.shade300,
+                        width: 2,
+                      ),
+                      boxShadow: isActive ? OtrTheme.intenseShadow : null,
+                    ),
+                    child: Center(
+                      child: isCompleted
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 14,
+                            )
+                          : Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isActive
+                                    ? Colors.white
+                                    : Colors.grey.shade400,
+                              ),
+                            ),
+                    ),
+                  );
+                }),
+              ),
+            ],
           ),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 400),
-            height: 4,
-            width: double.infinity,
-            margin: EdgeInsets.only(right: _currentStep == 0 ? 150 : 0),
-            decoration: BoxDecoration(color: OtrTheme.primaryBlue, borderRadius: BorderRadius.circular(2)),
-          ),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(2, (index) {
-              bool isCompleted = index < _currentStep;
-              bool isActive = index == _currentStep;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
-                width: isActive ? 16 : 12,
-                height: isActive ? 16 : 12,
-                decoration: BoxDecoration(
-                  color: isCompleted || isActive ? OtrTheme.primaryBlue : Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isCompleted || isActive ? OtrTheme.primaryBlue : OtrTheme.lightBlue,
-                    width: 2,
-                  ),
+            children: [
+              Text(
+                'Registration',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: _currentStep >= 0
+                      ? OtrTheme.primaryBlue
+                      : Colors.grey.shade400,
                 ),
-              );
-            }),
+              ),
+              Text(
+                'Verification',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: _currentStep >= 1
+                      ? OtrTheme.primaryBlue
+                      : Colors.grey.shade400,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -312,14 +382,33 @@ class _RegistrationPageState extends State<RegistrationPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(color: OtrTheme.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: OtrTheme.primaryBlue, size: 28),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: OtrTheme.primaryBlue.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(icon, color: OtrTheme.primaryBlue, size: 32),
         ),
-        const SizedBox(height: 20),
-        Text(title, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy)),
+        const SizedBox(height: 24),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.w900,
+            color: OtrTheme.darkNavy,
+            letterSpacing: -1,
+          ),
+        ),
         const SizedBox(height: 8),
-        Text(subtitle, style: const TextStyle(fontSize: 15, color: Colors.black54, height: 1.4)),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontSize: 15,
+            color: Colors.black45,
+            height: 1.5,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: 32),
       ],
     );
@@ -328,33 +417,97 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget _buildStepDetails() {
     return Column(
       key: const ValueKey(0),
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildStepHeader('Account Details', 'Create your ORA account to get started.', Icons.person_add_rounded),
-        OtrTextField(label: 'Email Address', hintText: 'name@example.com', icon: Icons.email_outlined, controller: _emailController, keyboardType: TextInputType.emailAddress),
-        const SizedBox(height: 16),
-        OtrTextField(label: 'Mobile Number', hintText: '10-digit mobile number', icon: Icons.phone_android_rounded, controller: _mobileController, keyboardType: TextInputType.phone),
-        const SizedBox(height: 16),
-        OtrTextField(label: 'Password', hintText: 'Create a password', icon: Icons.lock_outline_rounded, isPassword: true, controller: _passwordController),
-        const SizedBox(height: 16),
-        OtrTextField(label: 'Confirm Password', hintText: 'Re-enter your password', icon: Icons.lock_reset_rounded, isPassword: true, controller: _confirmPasswordController),
+        _buildStepHeader(
+          'Join Us',
+          'Create your secure account to access the system.',
+          Icons.person_add_rounded,
+        ),
+        OtrTextField(
+          label: 'Email Address',
+          hintText: 'name@example.com',
+          icon: Icons.alternate_email_rounded,
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 20),
+        OtrTextField(
+          label: 'Mobile Number',
+          hintText: '10-digit mobile number',
+          icon: Icons.phone_iphone_rounded,
+          controller: _mobileController,
+          keyboardType: TextInputType.phone,
+        ),
+        const SizedBox(height: 20),
+        OtrTextField(
+          label: 'Password',
+          hintText: 'Create a strong password',
+          icon: Icons.lock_person_outlined,
+          isPassword: true,
+          controller: _passwordController,
+        ),
+        const SizedBox(height: 20),
+        OtrTextField(
+          label: 'Confirm Password',
+          hintText: 'Verify your password',
+          icon: Icons.verified_user_outlined,
+          isPassword: true,
+          controller: _confirmPasswordController,
+        ),
         const SizedBox(height: 24),
-        CheckboxListTile(
-          title: const Text('I hereby declare that the information provided is correct.', style: TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w600)),
-          value: _hasAcceptedDeclaration,
-          onChanged: (val) => setState(() => _hasAcceptedDeclaration = val ?? false),
-          controlAffinity: ListTileControlAffinity.leading,
-          activeColor: OtrTheme.primaryBlue,
-          contentPadding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade100),
+          ),
+          child: CheckboxListTile(
+            title: const Text(
+              'I declare that all info is correct.',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            value: _hasAcceptedDeclaration,
+            onChanged: (val) =>
+                setState(() => _hasAcceptedDeclaration = val ?? false),
+            controlAffinity: ListTileControlAffinity.leading,
+            activeColor: OtrTheme.primaryBlue,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
         ),
-        const SizedBox(height: 32),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleRegister,
-          child: _isLoading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text('Register & Send OTP'),
+        const SizedBox(height: 40),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: OtrTheme.intenseShadow,
+          ),
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _handleRegister,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text(
+                    'CONTINUE',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+          ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 40),
       ],
     );
   }
@@ -362,32 +515,73 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget _buildStepOtp() {
     return Column(
       key: const ValueKey(1),
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildStepHeader('Final Verification', 'Enter the codes sent to your email and phone.', Icons.verified_user_rounded),
-        
-        const Text('EMAIL OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black38, letterSpacing: 1)),
+        _buildStepHeader(
+          'Verification',
+          'We have sent codes to your email and phone.',
+          Icons.security_rounded,
+        ),
+        const Text(
+          'EMAIL OTP',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: Colors.black38,
+            letterSpacing: 1,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(6, (index) => _buildOtpBox(index, _emailOtpControllers)),
+          children: List.generate(
+            6,
+            (index) => _buildOtpBox(index, _emailOtpControllers),
+          ),
         ),
-        
         const SizedBox(height: 32),
-        
-        const Text('MOBILE OTP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black38, letterSpacing: 1)),
+        const Text(
+          'MOBILE OTP',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            color: Colors.black38,
+            letterSpacing: 1,
+          ),
+        ),
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(6, (index) => _buildOtpBox(index, _mobileOtpControllers)),
+          children: List.generate(
+            6,
+            (index) => _buildOtpBox(index, _mobileOtpControllers),
+          ),
         ),
-        
         const SizedBox(height: 48),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _handleVerifyOtp,
-          child: _isLoading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : const Text('Verify & Finish'),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: OtrTheme.intenseShadow,
+          ),
+          child: ElevatedButton(
+            onPressed: _isLoading ? null : _handleVerifyOtp,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                    ),
+                  )
+                : const Text(
+                    'VERIFY & REGISTER',
+                    style: TextStyle(fontWeight: FontWeight.w900),
+                  ),
+          ),
         ),
         const SizedBox(height: 40),
       ],
@@ -396,32 +590,38 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Widget _buildOtpBox(int index, List<TextEditingController> controllers) {
     return Container(
-      width: 44,
-      height: 52,
+      width: 48,
+      height: 56,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200, width: 2),
+        border: Border.all(color: Colors.grey.shade100, width: 2),
         boxShadow: OtrTheme.softShadow,
       ),
       child: TextField(
         controller: controllers[index],
         textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: OtrTheme.darkNavy),
+        style: const TextStyle(
+          fontWeight: FontWeight.w900,
+          fontSize: 20,
+          color: OtrTheme.darkNavy,
+        ),
         keyboardType: TextInputType.number,
         maxLength: 1,
         decoration: const InputDecoration(
-          counterText: '', 
+          counterText: '',
           border: InputBorder.none,
           filled: false,
           contentPadding: EdgeInsets.zero,
         ),
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
+          if (value.isEmpty && index > 0) FocusScope.of(context).previousFocus();
         },
       ),
     );
   }
 }
+
 
 

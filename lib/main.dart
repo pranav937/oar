@@ -27,6 +27,16 @@ class OtrModelApp extends StatelessWidget {
     return MaterialApp(
       title: 'OTR Model',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(
+              MediaQuery.of(context).textScaler.scale(1.0).clamp(0.8, 1.2),
+            ),
+          ),
+          child: child!,
+        );
+      },
       theme: ThemeData(
         fontFamily: 'Roboto',
         scaffoldBackgroundColor: OtrTheme.background,

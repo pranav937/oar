@@ -30,13 +30,14 @@ class _DashboardPageState extends State<DashboardPage> {
     try {
       // 1. Fetch Summary Stats
       final dashboardResult = await _apiService.getDashboard();
-      
+
       // 2. Fetch Detailed Applications to refine counts
       final appsResult = await _apiService.getMyApplications(pageSize: 100);
 
       if (mounted) {
         setState(() {
-          if (dashboardResult['success'] == true && dashboardResult['data'] != null) {
+          if (dashboardResult['success'] == true &&
+              dashboardResult['data'] != null) {
             _stats = DashboardStats.fromJson(dashboardResult['data']);
           }
 
@@ -50,13 +51,17 @@ class _DashboardPageState extends State<DashboardPage> {
               applications = data;
               _totalFromApi = applications.length;
             }
-            
+
             // Calculate pending (Draft or Pending Payment)
-            _pendingFromApi = applications.where((app) => 
-               app['status'] == 'PENDING_PAYMENT' || app['status'] == 'DRAFT'
-            ).length;
+            _pendingFromApi = applications
+                .where(
+                  (app) =>
+                      app['status'] == 'PENDING_PAYMENT' ||
+                      app['status'] == 'DRAFT',
+                )
+                .length;
           }
-          
+
           _isLoading = false;
         });
       }
@@ -70,72 +75,104 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
-        title: SvgPicture.asset('assets/images/jadeE.svg', height: 38),
+        title: Hero(
+          tag: 'app_logo',
+          child: SvgPicture.asset('assets/images/jadeE.svg', height: 45),
+        ),
         centerTitle: true,
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout_rounded),
+            icon: const Icon(Icons.power_settings_new_rounded, size: 26),
             onPressed: () async {
               await _apiService.logout();
               if (mounted) Navigator.pushReplacementNamed(context, '/login');
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: _isLoading
           ? const Center(
-              child: SpinKitDoubleBounce(color: OtrTheme.primaryBlue),
+              child: SpinKitFadingCube(color: OtrTheme.primaryBlue, size: 40),
             )
           : RefreshIndicator(
               onRefresh: _fetchDashboardData,
+              color: OtrTheme.primaryBlue,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20.0,
-                  vertical: 24.0,
+                  vertical: 20.0,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProfileCard(),
                     const SizedBox(height: 24),
-                    _buildContactBar(),
+                    _buildProfileCompletion(),
                     const SizedBox(height: 32),
-                    _buildSectionHeader('Application Overview'),
+                    _buildSectionHeader('Recruitment Stats'),
                     const SizedBox(height: 16),
                     _buildStatCards(),
                     const SizedBox(height: 32),
                     _DashboardSection(
-                      title: 'Registration & Profile',
+                      title: 'Candidate Profile',
                       onRefresh: _fetchDashboardData,
                       items: [
-                        _GridItemData('Bio', Icons.person_pin_rounded),
-                        _GridItemData('Address', Icons.home_work_rounded),
-                        _GridItemData('Documents', Icons.file_present_outlined),
-                        _GridItemData('Profile', Icons.account_box_outlined),
+                        _GridItemData(
+                          'Bio Data',
+                          Icons.person_outline_rounded,
+                          color: Colors.blue,
+                        ),
+                        _GridItemData(
+                          'Address Details',
+                          Icons.location_on_outlined,
+                          color: Colors.orange,
+                        ),
+                        _GridItemData(
+                          'Upload Documents',
+                          Icons.description_outlined,
+                          color: Colors.purple,
+                        ),
+                        _GridItemData(
+                          'Account Status',
+                          Icons.verified_user_outlined,
+                          color: Colors.green,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
                     _DashboardSection(
-                      title: 'Applications',
+                      title: 'Application Services',
                       onRefresh: _fetchDashboardData,
                       items: [
                         _GridItemData(
-                          'New Job',
-                          Icons.assignment_turned_in_outlined,
+                          'New Openings',
+                          Icons.business_center_outlined,
+                          color: Colors.indigo,
                         ),
-                        _GridItemData('My Apps', Icons.list_alt_rounded),
-                        _GridItemData('Payment', Icons.payment_rounded),
-                        _GridItemData('Results', Icons.fact_check_outlined),
+                        _GridItemData(
+                          'My Applications',
+                          Icons.history_edu_rounded,
+                          color: Colors.teal,
+                        ),
+                        _GridItemData(
+                          'Payment History',
+                          Icons.account_balance_wallet_outlined,
+                          color: Colors.amber,
+                        ),
+                        _GridItemData(
+                          'Help & Support',
+                          Icons.support_agent_rounded,
+                          color: Colors.pink,
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -143,194 +180,315 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildProfileCard() {
-    final name = _stats?.fullName ?? 'Candidate';
+  Widget _buildProfileCompletion() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [OtrTheme.darkNavy, Color(0xFF1E293B)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
+        boxShadow: OtrTheme.softShadow,
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Profile Completion',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: OtrTheme.darkNavy,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: OtrTheme.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  '85%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: OtrTheme.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: 0.85,
+              minHeight: 8,
+              backgroundColor: Colors.grey.shade100,
+              valueColor: const AlwaysStoppedAnimation<Color>(OtrTheme.success),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade400),
+              const SizedBox(width: 6),
+              Text(
+                'Complete documents to reach 100%',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileCard() {
+    final name = _stats?.fullName ?? 'Candidate';
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: OtrTheme.darkGradient,
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: OtrTheme.darkNavy.withOpacity(0.2),
-            blurRadius: 15,
+            color: OtrTheme.darkNavy.withValues(alpha: 0.3),
+            blurRadius: 20,
             offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 2,
+          // Decorative background circles
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
               ),
             ),
-            child: _stats?.photoUrl != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(35),
-                    child: Image.network(_stats!.photoUrl!, fit: BoxFit.cover),
-                  )
-                : Center(
-                    child: Text(
-                      name.isNotEmpty ? name[0].toUpperCase() : 'C',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 75,
+                      height: 75,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 3,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(40),
+                        child: _stats?.photoUrl != null
+                            ? Image.network(
+                                _stats!.photoUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => _buildInitial(name),
+                              )
+                            : _buildInitial(name),
                       ),
                     ),
-                  ),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: OtrTheme.primaryBlue,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _stats?.registrationId ?? 'ID-PENDING',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1,
+                    const SizedBox(width: 18),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: OtrTheme.primaryBlue,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _stats?.registrationId ?? 'N/A',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                              height: 1.1,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            _stats?.category ?? 'General Category',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  'Category: ${_stats?.category ?? 'N/A'}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  child: Row(
+                    children: [
+                      _buildInfoItem(
+                        Icons.alternate_email_rounded,
+                        _stats?.email ?? 'N/A',
+                      ),
+                      Container(
+                        width: 1,
+                        height: 24,
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                      _buildInfoItem(
+                        Icons.phone_android_rounded,
+                        _stats?.mobileNumber ?? 'N/A',
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: _stats?.registrationStatus == 'ACTIVE'
-                  ? Colors.green
-                  : Colors.orange,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _stats?.registrationStatus == 'ACTIVE'
-                  ? Icons.check
-                  : Icons.access_time_rounded,
-              color: Colors.white,
-              size: 12,
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildContactBar() {
+  Widget _buildInitial(String name) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+      color: OtrTheme.primaryBlue.withValues(alpha: 0.2),
+      child: Center(
+        child: Text(
+          name.isNotEmpty ? name[0].toUpperCase() : 'C',
+          style: const TextStyle(
+            fontSize: 32,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildInfoItem(IconData icon, String value) {
+    return Expanded(
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildContactItem(Icons.email_outlined, _stats?.email ?? 'N/A'),
-          Container(width: 1, height: 20, color: Colors.grey.shade200),
-          _buildContactItem(
-            Icons.phone_iphone_rounded,
-            _stats?.mobileNumber ?? 'N/A',
+          Icon(icon, size: 16, color: OtrTheme.mediumBlue),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildContactItem(IconData icon, String text) {
+  Widget _buildSectionHeader(String title) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Icon(icon, size: 16, color: OtrTheme.mediumBlue),
-        const SizedBox(width: 8),
         Text(
-          text,
+          title,
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
             color: OtrTheme.darkNavy,
+            letterSpacing: -0.5,
+          ),
+        ),
+        TextButton(
+          onPressed: () {},
+          child: const Text(
+            'See Details',
+            style: TextStyle(
+              color: OtrTheme.primaryBlue,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 17,
-        fontWeight: FontWeight.w900,
-        color: OtrTheme.darkNavy,
-        letterSpacing: -0.5,
-      ),
-    );
-  }
-
   Widget _buildStatCards() {
-    // Priority to calculated counts if non-zero, else use stats from dashboard summary
-    final total = _totalFromApi > 0 ? _totalFromApi : (_stats?.totalApplications ?? 0);
-    final pending = _pendingFromApi > 0 ? _pendingFromApi : (_stats?.pendingApplications ?? 0);
+    final total = _totalFromApi > 0
+        ? _totalFromApi
+        : (_stats?.totalApplications ?? 0);
+    final pending = _pendingFromApi > 0
+        ? _pendingFromApi
+        : (_stats?.pendingApplications ?? 0);
 
     return Row(
       children: [
         Expanded(
           child: _StatCard(
-            title: 'Total Applications',
+            title: 'Applications',
+            subtitle: 'Total Submitted',
             count: total.toString(),
             color: OtrTheme.primaryBlue,
-            icon: Icons.assignment_turned_in_rounded,
+            icon: Icons.assignment_rounded,
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _StatCard(
-            title: 'Pending Apps',
+            title: 'Pending',
+            subtitle: 'Action Required',
             count: pending.toString(),
             color: Colors.orange,
-            icon: Icons.pending_actions_rounded,
+            icon: Icons.bolt_rounded,
           ),
         ),
       ],
@@ -340,12 +498,14 @@ class _DashboardPageState extends State<DashboardPage> {
 
 class _StatCard extends StatelessWidget {
   final String title;
+  final String subtitle;
   final String count;
   final Color color;
   final IconData icon;
 
   const _StatCard({
     required this.title,
+    required this.subtitle,
     required this.count,
     required this.color,
     required this.icon,
@@ -354,7 +514,6 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 150,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -364,29 +523,49 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              Icon(
+                Icons.trending_up_rounded,
+                color: color.withValues(alpha: 0.3),
+                size: 20,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             count,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 28,
               fontWeight: FontWeight.w900,
+              color: OtrTheme.darkNavy,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
               color: OtrTheme.darkNavy,
             ),
           ),
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.black54,
-              fontWeight: FontWeight.bold,
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade500,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -398,8 +577,8 @@ class _StatCard extends StatelessWidget {
 class _GridItemData {
   final String title;
   final IconData icon;
-  final String? route;
-  _GridItemData(this.title, this.icon, {this.route});
+  final Color color;
+  _GridItemData(this.title, this.icon, {required this.color});
 }
 
 class _DashboardSection extends StatelessWidget {
@@ -418,104 +597,109 @@ class _DashboardSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w900,
-              color: OtrTheme.darkNavy,
-              letterSpacing: -0.2,
-            ),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w900,
+            color: OtrTheme.darkNavy,
+            letterSpacing: -0.2,
           ),
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: OtrTheme.softShadow,
+        const SizedBox(height: 16),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 1.3,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              childAspectRatio: 0.75, // Slightly taller for text breathing room
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 15,
-            ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return InkWell(
-                onTap: () async {
-                  if (item.route != null) {
-                    await Navigator.pushNamed(context, item.route!);
-                    onRefresh?.call();
-                  } else {
-                    final t = item.title;
-                    if (t == 'Bio') {
-                      await Navigator.pushNamed(context, '/bio');
-                      onRefresh?.call();
-                    } else if (t == 'Address') {
-                      await Navigator.pushNamed(context, '/address');
-                      onRefresh?.call();
-                    } else if (t == 'Documents') {
-                      await Navigator.pushNamed(context, '/documents');
-                      onRefresh?.call();
-                    } else if (t == 'New Job') {
-                      await Navigator.pushNamed(context, '/total-recruitment');
-                      onRefresh?.call();
-                    } else if (t == 'My Apps') {
-                      await Navigator.pushNamed(
-                        context,
-                        '/applied-recruitment',
-                      );
-                      onRefresh?.call();
-                    } else if (t == 'Payment') {
-                      await Navigator.pushNamed(context, '/payment');
-                      onRefresh?.call();
-                    } else if (t == 'Profile') {
-                      await Navigator.pushNamed(context, '/status');
-                      onRefresh?.call();
-                    }
-                  }
-                },
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return InkWell(
+              onTap: () async {
+                final t = item.title;
+                if (t == 'Bio Data') {
+                  await Navigator.pushNamed(context, '/bio');
+                } else if (t == 'Address Details') {
+                  await Navigator.pushNamed(context, '/address');
+                } else if (t == 'Upload Documents') {
+                  await Navigator.pushNamed(context, '/documents');
+                } else if (t == 'New Openings') {
+                  await Navigator.pushNamed(context, '/total-recruitment');
+                } else if (t == 'My Applications') {
+                  await Navigator.pushNamed(context, '/applied-recruitment');
+                } else if (t == 'Payment History') {
+                  await Navigator.pushNamed(context, '/payment');
+                } else if (t == 'Account Status') {
+                  await Navigator.pushNamed(context, '/status');
+                }
+                onRefresh?.call();
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: OtrTheme.softShadow,
+                  border: Border.all(
+                    color: item.color.withValues(alpha: 0.05),
+                    width: 2,
+                  ),
+                ),
+                child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: OtrTheme.background.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(14),
+                        color: item.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        item.icon,
-                        color: OtrTheme.primaryBlue,
-                        size: 22,
-                      ),
+                      child: Icon(item.icon, color: item.color, size: 22),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            item.title,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: OtrTheme.darkNavy,
+                              height: 1.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'View Details',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ],
     );
   }
 }
+
+
+

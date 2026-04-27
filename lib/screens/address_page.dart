@@ -129,29 +129,44 @@ class _AddressPageState extends State<AddressPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: OtrTheme.background,
+      appBar: AppBar(
+        title: const Text(
+          'Address Info',
+          style: TextStyle(
+            color: OtrTheme.darkNavy,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: OtrTheme.darkNavy,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: _isLoading
           ? const Center(child: SpinKitRing(color: OtrTheme.primaryBlue))
-          : CustomScrollView(
-              slivers: [
-                _buildSliverAppBar(),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildProgressTracker(),
-                        const SizedBox(height: 32),
-                        _buildSectionHeader(
-                          'Residence Details',
-                          'Update your permanent and current addresses',
-                        ),
-                        const SizedBox(height: 24),
-                        _buildCollapsibleSection(
-                          index: 0,
-                          title: 'Permanent Address',
-                          icon: Icons.home_work_rounded,
-                          children: [
+          : SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProgressTracker(),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader(
+                    'Residence Details',
+                    'Update your permanent and current addresses',
+                  ),
+                  const SizedBox(height: 24),
+                  _buildCollapsibleSection(
+                    index: 0,
+                    title: 'Permanent Address',
+                    icon: Icons.home_work_rounded,
+                    children: [
                             OtrTextField(
                               label: 'Full Address',
                               hintText: 'Enter permanent address',
@@ -263,34 +278,6 @@ class _AddressPageState extends State<AddressPage> {
                       ],
                     ),
                   ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildSliverAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120,
-      pinned: true,
-      backgroundColor: Colors.white,
-      foregroundColor: OtrTheme.darkNavy,
-      elevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        title: const Text(
-          'Address Info',
-          style: TextStyle(
-            color: OtrTheme.darkNavy,
-            fontWeight: FontWeight.w900,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-        onPressed: () => Navigator.pop(context),
-      ),
     );
   }
 

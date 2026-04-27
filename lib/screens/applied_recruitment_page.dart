@@ -62,10 +62,14 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       appBar: AppBar(
         title: const Text(
           'My Applications',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
         leading: IconButton(
@@ -78,20 +82,24 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
               child: SpinKitWave(color: OtrTheme.primaryBlue, size: 30),
             )
           : _error.isNotEmpty
-          ? _buildErrorPlaceholder()
-          : _applications.isEmpty
-          ? _buildEmptyPlaceholder()
-          : RefreshIndicator(
-              onRefresh: _fetchApplications,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: _applications.length,
-                itemBuilder: (context, index) {
-                  return _buildRecruitmentCard(context, _applications[index]);
-                },
-              ),
-            ),
+              ? _buildErrorPlaceholder()
+              : _applications.isEmpty
+                  ? _buildEmptyPlaceholder()
+                  : RefreshIndicator(
+                      onRefresh: _fetchApplications,
+                      color: OtrTheme.primaryBlue,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(20),
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: _applications.length,
+                        itemBuilder: (context, index) {
+                          return _buildRecruitmentCard(
+                            context,
+                            _applications[index],
+                          );
+                        },
+                      ),
+                    ),
     );
   }
 
@@ -100,23 +108,44 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.assignment_late_outlined,
-            size: 64,
-            color: Colors.grey.shade300,
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: OtrTheme.softShadow,
+            ),
+            child: Icon(
+              Icons.assignment_late_outlined,
+              size: 50,
+              color: Colors.grey.shade300,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           const Text(
             'No applications found.',
             style: TextStyle(
-              color: Colors.black54,
-              fontWeight: FontWeight.w500,
+              color: OtrTheme.darkNavy,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Text(
+            "You haven't applied for any jobs yet.",
+            style: TextStyle(
+              color: Colors.grey.shade500,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () => Navigator.pushNamed(context, '/total-recruitment'),
-            child: const Text('View Available Jobs'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: OtrTheme.primaryBlue,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            ),
+            child: const Text('EXPLORE JOBS'),
           ),
         ],
       ),
@@ -131,7 +160,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
           const Icon(
             Icons.error_outline_rounded,
             size: 64,
-            color: Colors.redAccent,
+            color: OtrTheme.error,
           ),
           const SizedBox(height: 16),
           Text(_error, style: const TextStyle(color: Colors.black54)),
@@ -148,141 +177,190 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   Widget _buildRecruitmentCard(BuildContext context, dynamic app) {
     String status = app['status'] ?? 'SUBMITTED';
     Color statusColor = OtrTheme.primaryBlue;
-    if (status == 'APPROVED' || status == 'SUCCESS') statusColor = Colors.green;
-    if (status == 'REJECTED' || status == 'FAILED') statusColor = Colors.red;
+    if (status == 'APPROVED' || status == 'SUCCESS') statusColor = OtrTheme.success;
+    if (status == 'REJECTED' || status == 'FAILED') statusColor = OtrTheme.error;
     if (status == 'PENDING_PAYMENT') statusColor = Colors.orange;
 
     String dateStr = 'N/A';
     try {
       if (app['submittedAt'] != null) {
-        dateStr = DateFormat(
-          'dd MMM yyyy',
-        ).format(DateTime.parse(app['submittedAt']));
+        dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(app['submittedAt']));
       } else if (app['createdAt'] != null) {
-        dateStr = DateFormat(
-          'dd MMM yyyy',
-        ).format(DateTime.parse(app['createdAt']));
+        dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(app['createdAt']));
       }
     } catch (_) {}
 
-    String appNo =
-        app['applicationNumber'] ??
-        (app['uuid'] ?? 'N/A').toString().substring(0, 8).toUpperCase();
+    String appNo = app['applicationNumber'] ?? (app['uuid'] ?? 'N/A').toString().substring(0, 8).toUpperCase();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: OtrTheme.cardShadow,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      app['postName'] ?? app['postPreference1'] ?? 'Title N/A',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: OtrTheme.darkNavy,
-                        letterSpacing: -0.5,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            app['postName'] ?? app['postPreference1'] ?? 'Title N/A',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: OtrTheme.darkNavy,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(Icons.business_rounded, size: 12, color: OtrTheme.primaryBlue),
+                              const SizedBox(width: 6),
+                              Text(
+                                app['advertisementName'] != null && app['advertisementName'].toString().isNotEmpty
+                                    ? app['advertisementName']
+                                    : 'Department of Recruitment',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      app['advertisementName'] != null && app['advertisementName'].toString().isNotEmpty
-                          ? app['advertisementName']
-                          : 'Education Department',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    _buildStatusBadge(status, statusColor),
                   ],
                 ),
-              ),
-              _buildStatusBadge(status, statusColor),
-            ],
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Divider(height: 1, thickness: 1, color: Color(0xFFF3F4F6)),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildCompactInfo('SUBMITTED DATE', dateStr),
-              _buildCompactInfo('APPLICATION NO', appNo),
-            ],
-          ),
-          if (status == 'PENDING_PAYMENT') ...[
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(
-                  context,
-                  '/payment',
-                  arguments: {
-                    'applicationUuid': app['uuid'],
-                    'amount': 500.0,
-                    'title': app['postPreference1'],
-                  },
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
                 ),
-              ),
-              child: const Text(
-                'PAY NOW - ₹500',
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildCompactInfo('SUBMITTED ON', dateStr, Icons.event_note_rounded),
+                    _buildCompactInfo('APPLICATION ID', appNo, Icons.fingerprint_rounded),
+                  ],
+                ),
+                if (status == 'PENDING_PAYMENT') ...[
+                  const SizedBox(height: 24),
+                  Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withValues(alpha: 0.2),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/payment',
+                          arguments: {
+                            'applicationUuid': app['uuid'],
+                            'amount': 500.0,
+                            'title': app['postPreference1'],
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        minimumSize: const Size.fromHeight(54),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.payment_rounded, size: 18),
+                          const SizedBox(width: 10),
+                          Text(
+                            'COMPLETE PAYMENT - ₹500',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          // Bottom action bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: OtrTheme.background.withValues(alpha: 0.5),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
               ),
             ),
-          ],
+            child: Row(
+              children: [
+                Text(
+                  'Tap to view tracking details',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey.shade500,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCompactInfo(String label, String value) {
+  Widget _buildCompactInfo(String label, String value, IconData icon) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 9,
-            color: Colors.grey,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
-          ),
+        Row(
+          children: [
+            Icon(icon, size: 10, color: Colors.grey.shade400),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                color: Colors.grey.shade400,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13,
             color: OtrTheme.darkNavy,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],
@@ -291,20 +369,21 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
 
   Widget _buildStatusBadge(String status, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Text(
-        status.replaceAll('_', ' '),
+        status.replaceAll('_', ' ').toUpperCase(),
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: FontWeight.w900,
           color: color,
+          letterSpacing: 0.5,
         ),
       ),
     );
   }
 }
+

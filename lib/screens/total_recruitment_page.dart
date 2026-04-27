@@ -52,11 +52,15 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
         title: const Text(
-          'Available Jobs',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
+          'Recruitment Openings',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
         leading: IconButton(
@@ -74,12 +78,16 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
                     ? _buildErrorPlaceholder()
                     : RefreshIndicator(
                         onRefresh: _fetchRecruitments,
+                        color: OtrTheme.primaryBlue,
                         child: ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           physics: const BouncingScrollPhysics(),
                           itemCount: _recruitments.length,
                           itemBuilder: (context, index) {
-                            return _buildRecruitmentCard(context, _recruitments[index]);
+                            return _buildRecruitmentCard(
+                              context,
+                              _recruitments[index],
+                            );
                           },
                         ),
                       ),
@@ -90,19 +98,22 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
   }
 
   Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: OtrTheme.softShadow,
+      ),
       child: TextField(
         decoration: InputDecoration(
-          hintText: 'Search recruitments...',
-          prefixIcon: const Icon(Icons.search_rounded, color: Colors.black38),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          hintText: 'Search by post or department...',
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          prefixIcon: const Icon(Icons.search_rounded, color: OtrTheme.primaryBlue),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
       ),
     );
@@ -113,11 +124,25 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.error_outline_rounded, size: 64, color: Colors.redAccent),
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: OtrTheme.error.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.error_outline_rounded, size: 40, color: OtrTheme.error),
+          ),
           const SizedBox(height: 16),
-          Text(_error, style: const TextStyle(color: Colors.black54)),
+          Text(_error, style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w500)),
           const SizedBox(height: 16),
-          TextButton(onPressed: _fetchRecruitments, child: const Text('Try Again')),
+          ElevatedButton(
+            onPressed: _fetchRecruitments,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: OtrTheme.primaryBlue,
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+            ),
+            child: const Text('Try Again'),
+          ),
         ],
       ),
     );
@@ -129,121 +154,147 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: OtrTheme.darkNavy.withOpacity(0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        boxShadow: OtrTheme.cardShadow,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: Column(
-          children: [
-            // Top Section with Gradient Accent
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [OtrTheme.primaryBlue.withOpacity(0.05), Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header with Status
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: OtrTheme.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
                     data.advNumber,
-                    style: TextStyle(
-                      fontSize: 11,
+                    style: const TextStyle(
+                      fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      color: Colors.grey.shade400,
-                      letterSpacing: 1,
+                      color: Colors.grey,
+                      letterSpacing: 0.5,
                     ),
                   ),
-                  _buildStatusBadge(data.status),
-                ],
-              ),
+                ),
+                _buildStatusBadge(data.status),
+              ],
             ),
+          ),
 
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Text(
-                    data.postName.toUpperCase(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: OtrTheme.darkNavy,
-                      letterSpacing: -0.5,
-                      height: 1.2,
-                    ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.postName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: OtrTheme.darkNavy,
+                    letterSpacing: -0.5,
+                    height: 1.1,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    data.organization,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: OtrTheme.primaryBlue,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.account_balance_rounded, size: 14, color: OtrTheme.primaryBlue),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        data.organization,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: OtrTheme.primaryBlue,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
+                  ],
+                ),
+                
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                ),
 
-                  // Info Grid
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildInfoItem(Icons.group_outlined, 'Vacancies', '${data.vacancies}'),
-                      _buildInfoItem(Icons.payments_outlined, 'Salary', data.payScale),
-                      _buildInfoItem(Icons.event_available_outlined, 'Last Date', 
-                        _formatDate(data.lastDateToApply)),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 28),
-                  
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pushNamed(context, '/recruitment-detail', arguments: data),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(color: Colors.grey.shade200),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                // Info Grid
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildInfoItem(Icons.group_rounded, 'Vacancies', '${data.vacancies}'),
+                    _buildInfoItem(Icons.currency_rupee_rounded, 'Salary', data.payScale),
+                    _buildInfoItem(Icons.calendar_today_rounded, 'Deadline', _formatDate(data.lastDateToApply)),
+                  ],
+                ),
+                
+                const SizedBox(height: 28),
+                
+                // Actions
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pushNamed(context, '/recruitment-detail', arguments: data),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: Colors.grey.shade200),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text(
+                          'DETAILS',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: OtrTheme.darkNavy,
+                            fontSize: 13,
                           ),
-                          child: const Text('DETAILS', style: TextStyle(fontWeight: FontWeight.w900, color: OtrTheme.darkNavy)),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: OtrTheme.primaryBlue.withValues(alpha: 0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
                         child: ElevatedButton(
                           onPressed: () => Navigator.pushNamed(context, '/apply-now', arguments: data),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: OtrTheme.primaryBlue,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            elevation: 4,
-                            shadowColor: OtrTheme.primaryBlue.withOpacity(0.4),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
-                          child: const Text('APPLY NOW', style: TextStyle(fontWeight: FontWeight.w900)),
+                          child: const Text(
+                            'APPLY NOW',
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -251,20 +302,33 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
   Widget _buildStatusBadge(String status) {
     final isOpen = status.toUpperCase() == 'OPEN' || status.toUpperCase() == 'PUBLISHED';
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isOpen ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: isOpen ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3)),
+        color: isOpen ? OtrTheme.success.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        isOpen ? 'OPEN' : status.toUpperCase(),
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w900,
-          color: isOpen ? Colors.green.shade700 : Colors.orange.shade700,
-          letterSpacing: 0.5,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: isOpen ? OtrTheme.success : Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            isOpen ? 'OPEN' : status.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: isOpen ? OtrTheme.success : Colors.orange,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -273,17 +337,29 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          label.toUpperCase(),
+          style: TextStyle(
+            fontSize: 9,
+            color: Colors.grey.shade400,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
         Row(
           children: [
-            Icon(icon, size: 14, color: Colors.grey.shade400),
+            Icon(icon, size: 14, color: OtrTheme.primaryBlue.withValues(alpha: 0.5)),
             const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade500, fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: OtrTheme.darkNavy,
+              ),
+            ),
           ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: OtrTheme.darkNavy),
         ),
       ],
     );
@@ -292,9 +368,11 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      return '${date.day}/${date.month}';
+      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return '${date.day} ${months[date.month - 1]}';
     } catch (_) {
       return dateStr;
     }
   }
 }
+
