@@ -210,12 +210,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: OtrTheme.success.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.check_circle_rounded,
-                  color: Colors.green,
+                  color: OtrTheme.success,
                   size: 48,
                 ),
               ),
@@ -226,10 +226,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
               ),
             ],
           ),
-          content: const Text(
+          content: Text(
             'Your registration is complete. Welcome to OTR Model! Please log in to your new account.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.5,
+              color: Colors.black87,
+            ),
           ),
           actions: [
             SizedBox(
@@ -372,7 +376,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     decoration: BoxDecoration(
                       color: isCompleted || isActive
                           ? OtrTheme.primaryBlue
-                          : Colors.white,
+                          : OtrTheme.surface,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: isCompleted || isActive
@@ -528,9 +532,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         const SizedBox(height: 24),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: OtrTheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade100),
+            border: Border.all(color: OtrTheme.dividerColor),
           ),
           child: CheckboxListTile(
             title: const Text(
@@ -664,9 +668,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
       width: 48,
       height: 56,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: OtrTheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade100, width: 2),
+        border: Border.all(color: OtrTheme.dividerColor, width: 2),
         boxShadow: OtrTheme.softShadow,
       ),
       child: TextField(

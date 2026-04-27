@@ -49,6 +49,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
+        
         body: Center(child: SpinKitDoubleBounce(color: OtrTheme.primaryBlue)),
       );
     }
@@ -74,7 +75,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
           TextButton.icon(
             onPressed: () => Navigator.pushNamed(context, '/bio'),
             icon: const Icon(Icons.edit_note_rounded, size: 18),
-            label: const Text('EDIT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+            label: const Text(
+              'EDIT',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+            ),
             style: TextButton.styleFrom(foregroundColor: OtrTheme.primaryBlue),
           ),
           const SizedBox(width: 8),
@@ -104,8 +108,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
                 _InfoRow('e-Mail', p['email'] ?? 'N/A'),
                 _InfoRow('Date of Birth', p['dateOfBirth'] ?? 'DD/MM/YYYY'),
                 _InfoRow('Gender', p['gender'] ?? 'N/A'),
-                _InfoRow('Religion', p['religion'] ?? 'N/A'),
-                _InfoRow('Community', p['community'] ?? 'N/A'),
                 _InfoRow('Nationality', p['nationality'] ?? 'N/A'),
                 _InfoRow('Aadhaar No.', p['aadhaarNumber'] ?? 'N/A'),
                 _InfoRow('Registration ID', p['registrationId'] ?? 'N/A'),
@@ -348,7 +350,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       ),
     );
   }
-
 }
 
 class _InfoRow {

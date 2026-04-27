@@ -50,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen>
         height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.white, Color(0xFFF1F5F9)],
+            colors: [OtrTheme.surface, OtrTheme.background],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -81,16 +81,8 @@ class _SplashScreenState extends State<SplashScreen>
                       tag: 'app_logo',
                       child: Container(
                         padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
+                        decoration: const BoxDecoration(
+                          color: Colors.transparent,
                         ),
                         child: SvgPicture.asset(
                           'assets/images/jadeE.svg',

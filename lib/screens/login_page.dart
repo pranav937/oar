@@ -109,10 +109,8 @@ class _LoginPageState extends State<LoginPage> {
                               tag: 'app_logo',
                               child: Container(
                                 padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(32),
-                                  boxShadow: OtrTheme.cardShadow,
+                                decoration: const BoxDecoration(
+                                  color: Colors.transparent,
                                 ),
                                 child: SvgPicture.asset(
                                   'assets/images/jadeE.svg',

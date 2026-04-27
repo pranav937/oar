@@ -65,8 +65,8 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: OtrTheme.surface,
+        surfaceTintColor: OtrTheme.surface,
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
         leading: IconButton(
@@ -172,7 +172,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       statusColor = OtrTheme.success;
     if (status == 'REJECTED' || status == 'FAILED')
       statusColor = OtrTheme.error;
-    if (status == 'PENDING_PAYMENT') statusColor = Colors.orange;
+    if (status == 'PENDING_PAYMENT') statusColor = OtrTheme.warning;
 
     String dateStr = 'N/A';
     try {
@@ -194,7 +194,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: OtrTheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: OtrTheme.cardShadow,
       ),
@@ -258,7 +258,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                   child: Divider(
                     height: 1,
                     thickness: 1,
-                    color: Color(0xFFF1F5F9),
+                    color: OtrTheme.dividerColor,
                   ),
                 ),
                 Row(
@@ -282,7 +282,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.orange.withValues(alpha: 0.2),
+                          color: OtrTheme.warning.withValues(alpha: 0.15),
                           blurRadius: 15,
                           offset: const Offset(0, 8),
                         ),

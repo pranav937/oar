@@ -35,7 +35,6 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _aadhaarController = TextEditingController();
   final TextEditingController _idProofNumberController =
       TextEditingController();
-  final TextEditingController _subCategoryController = TextEditingController();
   final TextEditingController _tenthBoardController = TextEditingController();
   final TextEditingController _tenthYearController = TextEditingController();
   final TextEditingController _twelfthBoardController = TextEditingController();
@@ -62,7 +61,6 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _govtDeptController = TextEditingController();
 
   String? _selectedGender;
-  String? _selectedCommunity;
   String? _selectedNationality;
   String? _selectedQualification;
   String? _selectedMaritalStatus;
@@ -124,7 +122,6 @@ class _BioPageState extends State<BioPage> {
           _emailController.text = data['email'] ?? '';
           _aadhaarController.text = data['aadhaarNumber'] ?? '';
           _idProofNumberController.text = data['idProofNumber'] ?? '';
-          _subCategoryController.text = data['subCategory'] ?? '';
           _tenthBoardController.text = data['tenthBoardName'] ?? '';
           _tenthYearController.text =
               data['tenthPassingYear']?.toString() ?? '';
@@ -133,7 +130,6 @@ class _BioPageState extends State<BioPage> {
               data['twelfthPassingYear']?.toString() ?? '';
 
           _selectedGender = data['gender'];
-          _selectedCommunity = data['category'];
           _selectedNationality = data['nationality'] ?? 'Indian';
           _selectedQualification = data['highestQualification'];
           _selectedMaritalStatus = data['maritalStatus'];
@@ -293,8 +289,6 @@ class _BioPageState extends State<BioPage> {
         'idProofType': _selectedIdProofType,
         'idProofNumber': _idProofNumberController.text,
         'aadhaarNumber': _aadhaarController.text,
-        'category': _selectedCommunity,
-        'subCategory': _subCategoryController.text,
         'isPhysicallyDisabled': _isPhysicallyDisabled,
         'nationality': _selectedNationality,
         'isSportsPerson': _isSportsPerson,
@@ -379,8 +373,41 @@ class _BioPageState extends State<BioPage> {
   }
 
   Future<void> _pickImage(bool isPhoto) async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Upload ${isPhoto ? 'Photo' : 'Signature'}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy),
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded, color: OtrTheme.primaryBlue),
+              title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_rounded, color: OtrTheme.primaryBlue),
+              title: const Text('Capture from Camera', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
     final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       imageQuality: 70,
     );
     if (image != null) {
@@ -732,31 +759,7 @@ class _BioPageState extends State<BioPage> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildFunctionalDropdown(
-                                    label: 'Category',
-                                    hint: 'Category',
-                                    icon: Icons.groups_rounded,
-                                    value: _selectedCommunity,
-                                    items: ['UR', 'SC', 'ST', 'OBC', 'EWS'],
-                                    onChanged: (val) => setState(
-                                      () => _selectedCommunity = val,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OtrTextField(
-                                    label: 'Sub Category',
-                                    hintText: 'Sub-category',
-                                    icon: Icons.category_rounded,
-                                    controller: _subCategoryController,
-                                  ),
-                                ),
-                              ],
-                            ),
+
                             const SizedBox(height: 24),
                             _buildSwitchTile(
                               'Physically Disabled',

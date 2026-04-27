@@ -80,8 +80,8 @@ class _DashboardPageState extends State<DashboardPage> {
           child: SvgPicture.asset('assets/images/jadeE.svg', height: 45),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: OtrTheme.surface,
+        surfaceTintColor: OtrTheme.surface,
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
         actions: [
@@ -184,7 +184,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: OtrTheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: OtrTheme.softShadow,
       ),
@@ -491,7 +491,7 @@ class _DashboardPageState extends State<DashboardPage> {
             title: 'Pending',
             subtitle: 'Action Required',
             count: pending.toString(),
-            color: Colors.orange,
+            color: OtrTheme.warning,
             icon: Icons.bolt_rounded,
           ),
         ),
@@ -520,7 +520,7 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: OtrTheme.surface,
         borderRadius: BorderRadius.circular(24),
         boxShadow: OtrTheme.cardShadow,
       ),
@@ -647,7 +647,7 @@ class _DashboardSection extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: OtrTheme.surface,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: OtrTheme.softShadow,
                   border: Border.all(
