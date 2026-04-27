@@ -15,6 +15,7 @@ class ApiConstants {
   static const String candidateVerifyOtp = "/api/ora/candidates/verify-otp";
   static const String candidateSendMobileOtp = "/api/ora/candidates/send-mobile-otp";
   static const String candidateVerifyMobileOtp = "/api/ora/candidates/verify-mobile-otp";
+  static const String candidateForgotPassword = "/api/ora/candidates/forgot-password";
 
   // ORA Applications
   static const String advertisementsActive = "/api/ramm/advertisements"; // Assuming active jobs come from here

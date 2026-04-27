@@ -208,6 +208,17 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> forgotPassword(String mobileNumber) async {
+    try {
+      final response = await post(ApiConstants.candidateForgotPassword, {
+        'mobileNumber': mobileNumber,
+      }, authenticated: false);
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // --- ORA Dashboard & Profile ---
 
   Future<Map<String, dynamic>> getDashboard() async {

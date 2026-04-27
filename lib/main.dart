@@ -14,6 +14,7 @@ import 'screens/recruitment_detail_page.dart';
 import 'screens/total_recruitment_page.dart';
 import 'screens/apply_now_page.dart';
 import 'screens/payment_page.dart';
+import 'screens/forgot_password_page.dart';
 
 void main() {
   runApp(const OtrModelApp());
@@ -111,6 +112,8 @@ class OtrModelApp extends StatelessWidget {
         '/total-recruitment': (context) => const TotalRecruitmentPage(),
         '/apply-now': (context) => const ApplyNowPage(),
         '/payment': (context) => const PaymentPage(),
+        '/forgot-password': (context) => const ForgotPasswordPage(),
+        '/otp-verification': (context) => const OtpVerificationPage(),
       },
     );
   }

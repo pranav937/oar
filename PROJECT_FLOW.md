@@ -1,7 +1,7 @@
 # JadeEd Smart Registration System (OTR Model)
 ## Project Documentation & User Flow
 
-### 1. Project Overview
+### 1. Project Overview}/api/ora/candidates/forgot-password 
 The **OTR Model** (One-Time Registration) is a premium recruitment and candidate management mobile application designed for the **JadeEd Smart Registration System**. It allows candidates to create a unified profile, upload documents, and apply for multiple recruitment positions seamlessly.
 
 ---

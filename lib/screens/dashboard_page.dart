@@ -231,7 +231,11 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 14, color: Colors.grey.shade400),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Colors.grey.shade400,
+              ),
               const SizedBox(width: 6),
               Text(
                 'Complete documents to reach 100%',
@@ -700,6 +704,3 @@ class _DashboardSection extends StatelessWidget {
     );
   }
 }
-
-
-

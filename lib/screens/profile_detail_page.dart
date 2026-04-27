@@ -111,20 +111,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
                 _InfoRow('Registration ID', p['registrationId'] ?? 'N/A'),
               ]),
               const SizedBox(height: 32),
-              _buildSectionHeader(
-                'Permanent Address',
-                Icons.location_on_rounded,
-              ),
-              _buildInfoTable([
-                _InfoRow('House No.', p['permanentHouseNo'] ?? 'N/A'),
-                _InfoRow('Street', p['permanentStreet'] ?? 'N/A'),
-                _InfoRow('Locality', p['permanentLocality'] ?? 'N/A'),
-                _InfoRow('District', p['permanentDistrict'] ?? 'N/A'),
-                _InfoRow('State / UT', p['permanentState'] ?? 'N/A'),
-                _InfoRow('Pincode', p['permanentPincode'] ?? 'N/A'),
-              ]),
-              const SizedBox(height: 40),
-              _buildNoteSection(),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
@@ -363,49 +349,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
     );
   }
 
-  Widget _buildNoteSection() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.blue.shade100, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                color: Colors.blue.shade700,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Important Note',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  color: Colors.blue.shade900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Ensure all your provided information matches your official documents.',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.black87,
-              fontWeight: FontWeight.bold,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _InfoRow {

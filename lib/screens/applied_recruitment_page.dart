@@ -62,10 +62,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       appBar: AppBar(
         title: const Text(
           'My Applications',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -82,24 +79,21 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
               child: SpinKitWave(color: OtrTheme.primaryBlue, size: 30),
             )
           : _error.isNotEmpty
-              ? _buildErrorPlaceholder()
-              : _applications.isEmpty
-                  ? _buildEmptyPlaceholder()
-                  : RefreshIndicator(
-                      onRefresh: _fetchApplications,
-                      color: OtrTheme.primaryBlue,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(20),
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: _applications.length,
-                        itemBuilder: (context, index) {
-                          return _buildRecruitmentCard(
-                            context,
-                            _applications[index],
-                          );
-                        },
-                      ),
-                    ),
+          ? _buildErrorPlaceholder()
+          : _applications.isEmpty
+          ? _buildEmptyPlaceholder()
+          : RefreshIndicator(
+              onRefresh: _fetchApplications,
+              color: OtrTheme.primaryBlue,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: _applications.length,
+                itemBuilder: (context, index) {
+                  return _buildRecruitmentCard(context, _applications[index]);
+                },
+              ),
+            ),
     );
   }
 
@@ -133,10 +127,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
           const SizedBox(height: 8),
           Text(
             "You haven't applied for any jobs yet.",
-            style: TextStyle(
-              color: Colors.grey.shade500,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
@@ -177,20 +168,28 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   Widget _buildRecruitmentCard(BuildContext context, dynamic app) {
     String status = app['status'] ?? 'SUBMITTED';
     Color statusColor = OtrTheme.primaryBlue;
-    if (status == 'APPROVED' || status == 'SUCCESS') statusColor = OtrTheme.success;
-    if (status == 'REJECTED' || status == 'FAILED') statusColor = OtrTheme.error;
+    if (status == 'APPROVED' || status == 'SUCCESS')
+      statusColor = OtrTheme.success;
+    if (status == 'REJECTED' || status == 'FAILED')
+      statusColor = OtrTheme.error;
     if (status == 'PENDING_PAYMENT') statusColor = Colors.orange;
 
     String dateStr = 'N/A';
     try {
       if (app['submittedAt'] != null) {
-        dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(app['submittedAt']));
+        dateStr = DateFormat(
+          'dd MMM yyyy',
+        ).format(DateTime.parse(app['submittedAt']));
       } else if (app['createdAt'] != null) {
-        dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(app['createdAt']));
+        dateStr = DateFormat(
+          'dd MMM yyyy',
+        ).format(DateTime.parse(app['createdAt']));
       }
     } catch (_) {}
 
-    String appNo = app['applicationNumber'] ?? (app['uuid'] ?? 'N/A').toString().substring(0, 8).toUpperCase();
+    String appNo =
+        app['applicationNumber'] ??
+        (app['uuid'] ?? 'N/A').toString().substring(0, 8).toUpperCase();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
@@ -214,7 +213,9 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            app['postName'] ?? app['postPreference1'] ?? 'Title N/A',
+                            app['postName'] ??
+                                app['postPreference1'] ??
+                                'Title N/A',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
@@ -225,10 +226,17 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                           const SizedBox(height: 6),
                           Row(
                             children: [
-                              const Icon(Icons.business_rounded, size: 12, color: OtrTheme.primaryBlue),
+                              const Icon(
+                                Icons.business_rounded,
+                                size: 12,
+                                color: OtrTheme.primaryBlue,
+                              ),
                               const SizedBox(width: 6),
                               Text(
-                                app['advertisementName'] != null && app['advertisementName'].toString().isNotEmpty
+                                app['advertisementName'] != null &&
+                                        app['advertisementName']
+                                            .toString()
+                                            .isNotEmpty
                                     ? app['advertisementName']
                                     : 'Department of Recruitment',
                                 style: TextStyle(
@@ -247,13 +255,25 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFF1F5F9),
+                  ),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildCompactInfo('SUBMITTED ON', dateStr, Icons.event_note_rounded),
-                    _buildCompactInfo('APPLICATION ID', appNo, Icons.fingerprint_rounded),
+                    _buildCompactInfo(
+                      'SUBMITTED ON',
+                      dateStr,
+                      Icons.event_note_rounded,
+                    ),
+                    _buildCompactInfo(
+                      'APPLICATION ID',
+                      appNo,
+                      Icons.fingerprint_rounded,
+                    ),
                   ],
                 ),
                 if (status == 'PENDING_PAYMENT') ...[
@@ -294,7 +314,10 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                           const SizedBox(width: 10),
                           Text(
                             'COMPLETE PAYMENT - ₹500',
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -304,7 +327,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
               ],
             ),
           ),
-          
+
           // Bottom action bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -326,7 +349,11 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                   ),
                 ),
                 const Spacer(),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: Colors.grey,
+                ),
               ],
             ),
           ),
@@ -386,4 +413,3 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
     );
   }
 }
-

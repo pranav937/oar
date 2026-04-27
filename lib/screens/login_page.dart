@@ -163,7 +163,10 @@ class _LoginPageState extends State<LoginPage> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {},
+                              onPressed: () => Navigator.pushNamed(
+                                context,
+                                '/forgot-password',
+                              ),
                               style: TextButton.styleFrom(
                                 foregroundColor: OtrTheme.primaryBlue,
                                 padding: EdgeInsets.zero,

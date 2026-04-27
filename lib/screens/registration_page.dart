@@ -23,8 +23,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
   bool _hasAcceptedDeclaration = false;
 
   // Controllers for OTP
-  final _emailOtpControllers = List.generate(6, (index) => TextEditingController());
-  final _mobileOtpControllers = List.generate(6, (index) => TextEditingController());
+  final _emailOtpControllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
+  final _mobileOtpControllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
 
   Future<void> _handleRegister() async {
     final email = _emailController.text;
@@ -32,54 +38,85 @@ class _RegistrationPageState extends State<RegistrationPage> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (email.isEmpty || mobile.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+    if (email.isEmpty ||
+        mobile.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
     // Email validation
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     if (!emailRegex.hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid email address')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid email address')));
       return;
     }
 
     // Mobile validation (10 digits)
     final mobileRegex = RegExp(r'^\d{10}$');
     if (!mobileRegex.hasMatch(mobile)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Mobile number must be exactly 10 digits')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Mobile number must be exactly 10 digits'),
+        ),
+      );
       return;
     }
 
     // Password complexity validation
     if (password.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must be at least 8 characters')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must be at least 8 characters')),
+      );
       return;
     }
     if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain an uppercase letter')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password must contain an uppercase letter'),
+        ),
+      );
       return;
     }
     if (!RegExp(r'[a-z]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain a lowercase letter')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password must contain a lowercase letter'),
+        ),
+      );
       return;
     }
     if (!RegExp(r'[0-9]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain a number')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password must contain a number')),
+      );
       return;
     }
     if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password must contain a special character')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password must contain a special character'),
+        ),
+      );
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
     if (!_hasAcceptedDeclaration) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please accept the declaration')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the declaration')),
+      );
       return;
     }
 
@@ -106,9 +143,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -119,25 +156,41 @@ class _RegistrationPageState extends State<RegistrationPage> {
     String mobileOtp = _mobileOtpControllers.map((c) => c.text).join();
 
     if (emailOtp.length < 6 || mobileOtp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter both code verification values')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter both code verification values'),
+        ),
+      );
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      final emailResult = await _apiService.verifyEmailOtp(_emailController.text, emailOtp);
-      final mobileResult = await _apiService.verifyMobileOtp(_mobileController.text, mobileOtp);
+      final emailResult = await _apiService.verifyEmailOtp(
+        _emailController.text,
+        emailOtp,
+      );
+      final mobileResult = await _apiService.verifyMobileOtp(
+        _mobileController.text,
+        mobileOtp,
+      );
 
       if (emailResult['success'] == true && mobileResult['success'] == true) {
         _finishRegistration(context);
       } else {
         String msg = "";
-        if (emailResult['success'] != true) msg += "Email OTP: ${emailResult['message']}. ";
-        if (mobileResult['success'] != true) msg += "Mobile OTP: ${mobileResult['message']}. ";
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+        if (emailResult['success'] != true)
+          msg += "Email OTP: ${emailResult['message']}. ";
+        if (mobileResult['success'] != true)
+          msg += "Mobile OTP: ${mobileResult['message']}. ";
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(msg)));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -149,16 +202,28 @@ class _RegistrationPageState extends State<RegistrationPage> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           title: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 48),
+                decoration: BoxDecoration(
+                  color: Colors.green.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.green,
+                  size: 48,
+                ),
               ),
               const SizedBox(height: 16),
-              const Text('Account Created!', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Account Created!',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
           content: const Text(
@@ -178,9 +243,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   backgroundColor: OtrTheme.primaryBlue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                child: const Text('Proceed to Login', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Proceed to Login',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -477,8 +547,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
             controlAffinity: ListTileControlAffinity.leading,
             activeColor: OtrTheme.primaryBlue,
             contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
         const SizedBox(height: 40),
@@ -616,12 +687,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
         ),
         onChanged: (value) {
           if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
-          if (value.isEmpty && index > 0) FocusScope.of(context).previousFocus();
+          if (value.isEmpty && index > 0)
+            FocusScope.of(context).previousFocus();
         },
       ),
     );
   }
 }
-
-
-
