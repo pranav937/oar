@@ -612,29 +612,21 @@ class _BioPageState extends State<BioPage> {
                           title: 'Personal Demographics',
                           icon: Icons.public_rounded,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _buildFunctionalDropdown(
-                                    label: 'Gender',
-                                    hint: 'Gender',
-                                    icon: Icons.transgender_rounded,
-                                    value: _selectedGender,
-                                    items: ['MALE', 'FEMALE', 'OTHER'],
-                                    onChanged: (val) =>
-                                        setState(() => _selectedGender = val),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _buildClickableField(
-                                    label: 'Date of Birth',
-                                    value: _getFormattedDate(),
-                                    icon: Icons.calendar_today_rounded,
-                                    onTap: () => _selectDate(context),
-                                  ),
-                                ),
-                              ],
+                            _buildFunctionalDropdown(
+                              label: 'Gender',
+                              hint: 'Gender',
+                              icon: Icons.transgender_rounded,
+                              value: _selectedGender,
+                              items: ['MALE', 'FEMALE', 'OTHER'],
+                              onChanged: (val) =>
+                                  setState(() => _selectedGender = val),
+                            ),
+                            const SizedBox(height: 20),
+                            _buildClickableField(
+                              label: 'Date of Birth',
+                              value: _getFormattedDate(),
+                              icon: Icons.calendar_today_rounded,
+                              onTap: () => _selectDate(context),
                             ),
                             const SizedBox(height: 20),
                             _buildFunctionalDropdown(
@@ -671,9 +663,8 @@ class _BioPageState extends State<BioPage> {
                               items: [
                                 '10th',
                                 '12th',
-                                'B.Tech',
-                                'B.Sc',
-                                'M.Tech',
+                                'Bachelor',
+                                'Master',
                                 'PhD',
                               ],
                               onChanged: (val) =>

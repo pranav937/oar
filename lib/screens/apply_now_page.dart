@@ -35,15 +35,22 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     'Category': false,
   };
 
-  List<String> _deploymentCenters = ['Ahmedabad', 'Surat', 'Rajkot']; // Fallback
-  List<Map<String, dynamic>> _centersData = []; // Store full objects to retrieve IDs
+  List<String> _deploymentCenters = [
+    'Ahmedabad',
+    'Surat',
+    'Rajkot',
+  ]; // Fallback
+  List<Map<String, dynamic>> _centersData =
+      []; // Store full objects to retrieve IDs
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_profileData == null && _isLoading) {
-      final advertisement = ModalRoute.of(context)!.settings.arguments as Advertisement;
-      _selectedPost = advertisement.postName; // Set selected post to advertisement postName
+      final advertisement =
+          ModalRoute.of(context)!.settings.arguments as Advertisement;
+      _selectedPost =
+          advertisement.postName; // Set selected post to advertisement postName
       _fetchData(advertisement.uuid);
     }
   }
@@ -52,24 +59,44 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     try {
       final profileResult = await _apiService.getProfile();
       final centresResult = await _apiService.getExamCentres();
-      
+
       if (mounted) {
         setState(() {
           if (profileResult['success'] == true) {
             _profileData = profileResult['data'];
           }
-          if (centresResult['success'] == true && centresResult['data'] != null) {
+          if (centresResult['success'] == true &&
+              centresResult['data'] != null) {
             final data = centresResult['data'];
             // Handle if data is a list directly or inside 'data' key
-            final centresList = data is List ? data : (data['examCenters'] ?? data['centers'] ?? data['deploymentCenters'] ?? []);
-            if (centresList != null && centresList is List && centresList.isNotEmpty) {
-              _centersData = centresList.whereType<Map<String, dynamic>>().toList();
-              
-              final parsed = centresList.map((x) {
-                if (x is Map) return x['name']?.toString() ?? x['centerName']?.toString() ?? x['city']?.toString() ?? x['district']?.toString() ?? 'Unknown';
-                return x.toString();
-              }).where((c) => c != 'Unknown' && c.trim().isNotEmpty).toSet().toList().cast<String>();
-              
+            final centresList = data is List
+                ? data
+                : (data['examCenters'] ??
+                      data['centers'] ??
+                      data['deploymentCenters'] ??
+                      []);
+            if (centresList != null &&
+                centresList is List &&
+                centresList.isNotEmpty) {
+              _centersData = centresList
+                  .whereType<Map<String, dynamic>>()
+                  .toList();
+
+              final parsed = centresList
+                  .map((x) {
+                    if (x is Map)
+                      return x['name']?.toString() ??
+                          x['centerName']?.toString() ??
+                          x['city']?.toString() ??
+                          x['district']?.toString() ??
+                          'Unknown';
+                    return x.toString();
+                  })
+                  .where((c) => c != 'Unknown' && c.trim().isNotEmpty)
+                  .toSet()
+                  .toList()
+                  .cast<String>();
+
               if (parsed.isNotEmpty) {
                 _deploymentCenters = parsed;
               }
@@ -505,7 +532,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     if (name == null) return null;
     try {
       final center = _centersData.firstWhere(
-        (c) => (c['name']?.toString() ?? c['centerName']?.toString() ?? c['city']?.toString() ?? c['district']?.toString()) == name,
+        (c) =>
+            (c['name']?.toString() ??
+                c['centerName']?.toString() ??
+                c['city']?.toString() ??
+                c['district']?.toString()) ==
+            name,
         orElse: () => <String, dynamic>{},
       );
       if (center.containsKey('id')) {
@@ -521,9 +553,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
       final appData = <String, dynamic>{
         "advertisementUuid": advUuid,
         "postPreference1": _selectedPost ?? 'Position',
-        if (_centerPriorities[0] != null) "examCentrePreference1": _getCenterId(_centerPriorities[0]),
-        if (_centerPriorities[1] != null) "examCentrePreference2": _getCenterId(_centerPriorities[1]),
-        if (_centerPriorities[2] != null) "examCentrePreference3": _getCenterId(_centerPriorities[2]),
+        if (_centerPriorities[0] != null)
+          "examCentrePreference1": _getCenterId(_centerPriorities[0]),
+        if (_centerPriorities[1] != null)
+          "examCentrePreference2": _getCenterId(_centerPriorities[1]),
+        if (_centerPriorities[2] != null)
+          "examCentrePreference3": _getCenterId(_centerPriorities[2]),
         if (_selectedMedium != null) "examMedium": _selectedMedium,
         "category": _profileData?['category'] ?? 'UR',
         "hasAcceptedTerms": true,
@@ -534,7 +569,10 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
 
       if (mounted) {
         if (result['success'] == true) {
-          CustomToast.showSuccess(context, 'Application synchronized successfully!');
+          CustomToast.showSuccess(
+            context,
+            'Application synchronized successfully!',
+          );
           // Navigate back to dashboard and clear form state
           Navigator.pushNamedAndRemoveUntil(
             context,
@@ -883,5 +921,3 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     );
   }
 }
-
-

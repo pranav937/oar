@@ -87,9 +87,10 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
+        toolbarHeight: 70,
         title: Hero(
           tag: 'app_logo',
-          child: SvgPicture.asset('assets/images/jadeE.svg', height: 45),
+          child: SvgPicture.asset('assets/images/jadeE.svg', height: 60),
         ),
         centerTitle: true,
         backgroundColor: OtrTheme.surface,
@@ -451,35 +452,23 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildSectionHeader(String title) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: OtrTheme.darkNavy,
-            letterSpacing: -0.5,
-          ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w900,
+          color: OtrTheme.darkNavy,
+          letterSpacing: -0.5,
         ),
-        TextButton(
-          onPressed: () {},
-          child: const Text(
-            'See Details',
-            style: TextStyle(
-              color: OtrTheme.primaryBlue,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   Widget _buildStatCards() {
-    final totalApplications = (_stats?.totalApplications != null && _stats!.totalApplications > 0)
+    final totalApplications =
+        (_stats?.totalApplications != null && _stats!.totalApplications > 0)
         ? _stats!.totalApplications
         : _totalFromApi;
 
@@ -541,56 +530,57 @@ class _StatCard extends StatelessWidget {
           boxShadow: OtrTheme.cardShadow,
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: color, size: 22),
                 ),
-                child: Icon(icon, color: color, size: 22),
+                Icon(
+                  Icons.trending_up_rounded,
+                  color: color.withValues(alpha: 0.3),
+                  size: 20,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Text(
+              count,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: OtrTheme.darkNavy,
+                height: 1,
               ),
-              Icon(
-                Icons.trending_up_rounded,
-                color: color.withValues(alpha: 0.3),
-                size: 20,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: OtrTheme.darkNavy,
               ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Text(
-            count,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: OtrTheme.darkNavy,
-              height: 1,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: OtrTheme.darkNavy,
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -658,7 +648,10 @@ class _DashboardSection extends StatelessWidget {
                   await Navigator.pushNamed(context, '/status');
                 } else if (t == 'Admit Card') {
                   if (context.mounted) {
-                    CustomToast.showSuccess(context, 'Admit Card module coming soon!');
+                    CustomToast.showSuccess(
+                      context,
+                      'Admit Card module coming soon!',
+                    );
                   }
                 }
                 onRefresh?.call();
