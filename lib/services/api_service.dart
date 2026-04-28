@@ -219,6 +219,40 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> resetPassword(String mobileNumber, String newPassword, String confirmPassword, String otp) async {
+    try {
+      final response = await post(ApiConstants.candidateResetPassword, {
+        'mobileNumber': mobileNumber,
+        'newPassword': newPassword,
+        'password': newPassword, // Retained just in case
+        'confirmPassword': confirmPassword,
+        'password_confirmation': confirmPassword,
+        'otp': otp,
+      }, authenticated: false);
+      
+      print('DEBUG RESET PASSWORD: ${response.statusCode} - ${response.body}');
+      final Map<String, dynamic> decoded = jsonDecode(response.body);
+      
+      String parseMessage(dynamic msg) {
+        if (msg is List) return msg.join(', ');
+        return msg?.toString() ?? 'Failed to reset password';
+      }
+      
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded, 'message': decoded['message'] != null ? parseMessage(decoded['message']) : 'Password reset successfully'};
+      } else {
+        return {
+          'success': false,
+          'message': parseMessage(decoded['message']),
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   // --- ORA Dashboard & Profile ---
 
   Future<Map<String, dynamic>> getDashboard() async {
@@ -408,16 +442,37 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> getExamCentres() async {
+    try {
+      final response = await get(ApiConstants.examCentres);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success') ? decoded : {'success': true, 'data': decoded};
+      } else {
+        return {'success': false, 'message': decoded['message'] ?? 'Failed to load exam centres'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   Future<Map<String, dynamic>> submitApplication(
     Map<String, dynamic> appData,
   ) async {
     try {
       final response = await post(ApiConstants.applicationSubmit, appData);
+      print('DEBUG SUBMIT APP: ${response.statusCode} - ${response.body}');
       final decoded = jsonDecode(response.body);
+      
+      String parseMsg(dynamic msg) {
+        if (msg is List) return msg.join(', ');
+        return msg?.toString() ?? 'Submission failed';
+      }
+      
       if (response.statusCode == 200 || response.statusCode == 201) {
         return decoded;
       } else {
-        return {'success': false, 'message': decoded['message'] ?? 'Submission failed'};
+        return {'success': false, 'message': parseMsg(decoded['message'])};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -427,11 +482,20 @@ class ApiService {
   Future<Map<String, dynamic>> getMyApplications({
     int page = 1,
     int pageSize = 10,
+    String? status,
   }) async {
     try {
+      final queryParams = {
+        'page': page.toString(),
+        'pageSize': pageSize.toString()
+      };
+      if (status != null && status != 'ALL') {
+        queryParams['status'] = status;
+      }
+      
       final response = await get(
         ApiConstants.myApplications,
-        queryParams: {'page': page.toString(), 'pageSize': pageSize.toString()},
+        queryParams: queryParams,
       );
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {

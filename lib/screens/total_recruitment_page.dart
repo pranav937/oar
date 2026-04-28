@@ -14,6 +14,9 @@ class TotalRecruitmentPage extends StatefulWidget {
 class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
   final ApiService _apiService = ApiService();
   List<Advertisement> _recruitments = [];
+  String _searchQuery = '';
+  String _selectedFilter = 'ALL';
+  final List<String> _filters = ['ALL', 'ACTIVE', 'CLOSED'];
   bool _isLoading = true;
   String _error = '';
 
@@ -48,6 +51,24 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredRecruitments = _recruitments.where((ad) {
+      final query = _searchQuery.toLowerCase();
+      final matchesSearch = ad.postName.toLowerCase().contains(query) ||
+             ad.organization.toLowerCase().contains(query);
+             
+      final status = ad.status.toUpperCase();
+      final isActive = status == 'OPEN' || status == 'PUBLISHED';
+      
+      bool matchesFilter = true;
+      if (_selectedFilter == 'ACTIVE') {
+        matchesFilter = isActive;
+      } else if (_selectedFilter == 'CLOSED') {
+        matchesFilter = !isActive;
+      }
+             
+      return matchesSearch && matchesFilter;
+    }).toList();
+
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
@@ -68,22 +89,25 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
       body: Column(
         children: [
           _buildSearchBar(),
+          _buildFilterBar(),
           Expanded(
             child: _isLoading
                 ? const Center(child: SpinKitPulse(color: OtrTheme.primaryBlue))
                 : _error.isNotEmpty
                 ? _buildErrorPlaceholder()
+                : filteredRecruitments.isEmpty
+                ? const Center(child: Text('No recruitments found matching your search.'))
                 : RefreshIndicator(
                     onRefresh: _fetchRecruitments,
                     color: OtrTheme.primaryBlue,
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       physics: const BouncingScrollPhysics(),
-                      itemCount: _recruitments.length,
+                      itemCount: filteredRecruitments.length,
                       itemBuilder: (context, index) {
                         return _buildRecruitmentCard(
                           context,
-                          _recruitments[index],
+                          filteredRecruitments[index],
                         );
                       },
                     ),
@@ -96,13 +120,18 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
 
   Widget _buildSearchBar() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: OtrTheme.softShadow,
       ),
       child: TextField(
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value;
+          });
+        },
         decoration: InputDecoration(
           hintText: 'Search by post or department...',
           hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -116,6 +145,56 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
       ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      margin: const EdgeInsets.only(bottom: 20),
+      child: Row(
+        children: _filters.map((filter) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                  right: filter == _filters.last ? 0 : 10),
+              child: _buildFilterChip(filter),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String filter) {
+    final isSelected = filter == _selectedFilter;
+    return ChoiceChip(
+      label: Container(
+        width: double.infinity,
+        alignment: Alignment.center,
+        child: Text(
+          filter,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : OtrTheme.darkNavy,
+            fontSize: 12,
+          ),
+        ),
+      ),
+      selected: isSelected,
+      selectedColor: OtrTheme.primaryBlue,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300,
+        ),
+      ),
+      onSelected: (selected) {
+        if (!isSelected) {
+          setState(() => _selectedFilter = filter);
+        }
+      },
     );
   }
 

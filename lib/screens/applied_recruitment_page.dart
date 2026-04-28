@@ -16,6 +16,8 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   List<dynamic> _applications = [];
   bool _isLoading = true;
   String _error = '';
+  String _selectedFilter = 'ALL';
+  final List<String> _filters = ['ALL', 'SUBMITTED', 'APPROVED', 'REJECTED'];
 
   @override
   void initState() {
@@ -29,18 +31,32 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       _error = '';
     });
     try {
-      final result = await _apiService.getMyApplications();
+      final result = await _apiService.getMyApplications(
+        pageSize: 20,
+        status: _selectedFilter,
+      );
       if (result['success'] == true) {
         setState(() {
           final data = result['data'];
+          List<dynamic> fetchedApps = [];
           if (data is Map && data.containsKey('applications')) {
-            _applications = data['applications'];
+            fetchedApps = data['applications'];
           } else if (data is List) {
-            _applications = data;
+            fetchedApps = data;
           } else if (data is Map && data.containsKey('items')) {
-            _applications = data['items'];
+            fetchedApps = data['items'];
+          }
+          
+          if (_selectedFilter == 'ALL') {
+            _applications = fetchedApps;
           } else {
-            _applications = [];
+            _applications = fetchedApps.where((app) {
+              final status = (app['status'] ?? '').toString().toUpperCase();
+              if (_selectedFilter == 'APPROVED') {
+                return status == 'APPROVED' || status == 'SUCCESS' || status == 'ACCEPTED';
+              }
+              return status == _selectedFilter;
+            }).toList();
           }
         });
       } else {
@@ -79,21 +95,88 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
               child: SpinKitWave(color: OtrTheme.primaryBlue, size: 30),
             )
           : _error.isNotEmpty
-          ? _buildErrorPlaceholder()
-          : _applications.isEmpty
-          ? _buildEmptyPlaceholder()
-          : RefreshIndicator(
-              onRefresh: _fetchApplications,
-              color: OtrTheme.primaryBlue,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(20),
-                physics: const AlwaysScrollableScrollPhysics(),
-                itemCount: _applications.length,
-                itemBuilder: (context, index) {
-                  return _buildRecruitmentCard(context, _applications[index]);
-                },
-              ),
+              ? _buildErrorPlaceholder()
+              : Column(
+                  children: [
+                _buildFilterBar(),
+                Expanded(
+                  child: _applications.isEmpty
+                      ? _buildEmptyPlaceholder()
+                      : RefreshIndicator(
+                          onRefresh: _fetchApplications,
+                          color: OtrTheme.primaryBlue,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(20),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: _applications.length,
+                            itemBuilder: (context, index) {
+                              return _buildRecruitmentCard(
+                                  context, _applications[index]);
+                            },
+                          ),
+                        ),
+                ),
+              ],
             ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildFilterChip('ALL')),
+              const SizedBox(width: 10),
+              Expanded(child: _buildFilterChip('SUBMITTED')),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _buildFilterChip('APPROVED')),
+              const SizedBox(width: 10),
+              Expanded(child: _buildFilterChip('REJECTED')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String filter) {
+    final isSelected = filter == _selectedFilter;
+    return ChoiceChip(
+      label: Container(
+        width: double.infinity,
+        alignment: Alignment.center,
+        child: Text(
+          filter == 'APPROVED' ? 'ACCEPTED' : filter,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : OtrTheme.darkNavy,
+            fontSize: 12,
+          ),
+        ),
+      ),
+      selected: isSelected,
+      selectedColor: OtrTheme.primaryBlue,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300,
+        ),
+      ),
+      onSelected: (selected) {
+        if (!isSelected) {
+          setState(() => _selectedFilter = filter);
+          _fetchApplications();
+        }
+      },
     );
   }
 

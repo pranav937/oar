@@ -16,12 +16,14 @@ class ApiConstants {
   static const String candidateSendMobileOtp = "/api/ora/candidates/send-mobile-otp";
   static const String candidateVerifyMobileOtp = "/api/ora/candidates/verify-mobile-otp";
   static const String candidateForgotPassword = "/api/ora/candidates/forgot-password";
+  static const String candidateResetPassword = "/api/ora/candidates/reset-password";
 
   // ORA Applications
   static const String advertisementsActive = "/api/ramm/advertisements"; // Assuming active jobs come from here
   static const String applicationForm = "/api/ora/applications/form";
   static const String applicationSubmit = "/api/ora/applications/submit";
   static const String myApplications = "/api/ora/applications";
+  static const String examCentres = "/api/ora/exam-centres";
 
   // ORA Payments
   static const String initiatePayment = "/api/ora/payments/initiate";

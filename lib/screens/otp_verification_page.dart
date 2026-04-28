@@ -187,7 +187,9 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
         ),
+        textAlignVertical: TextAlignVertical.center,
         onChanged: (v) {
           if (v.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
           if (v.isEmpty && index > 0) FocusScope.of(context).previousFocus();

@@ -34,19 +34,45 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     'Category': false,
   };
 
+  List<String> _deploymentCenters = ['Ahmedabad', 'Surat', 'Rajkot']; // Fallback
+  List<Map<String, dynamic>> _centersData = []; // Store full objects to retrieve IDs
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _fetchMockData();
+    if (_profileData == null && _isLoading) {
+      final advertisement = ModalRoute.of(context)!.settings.arguments as Advertisement;
+      _selectedPost = advertisement.postName; // Set selected post to advertisement postName
+      _fetchData(advertisement.uuid);
+    }
   }
 
-  Future<void> _fetchMockData() async {
+  Future<void> _fetchData(String advUuid) async {
     try {
-      final result = await _apiService.getProfile();
+      final profileResult = await _apiService.getProfile();
+      final centresResult = await _apiService.getExamCentres();
+      
       if (mounted) {
         setState(() {
-          if (result['success'] == true) {
-            _profileData = result['data'];
+          if (profileResult['success'] == true) {
+            _profileData = profileResult['data'];
+          }
+          if (centresResult['success'] == true && centresResult['data'] != null) {
+            final data = centresResult['data'];
+            // Handle if data is a list directly or inside 'data' key
+            final centresList = data is List ? data : (data['examCenters'] ?? data['centers'] ?? data['deploymentCenters'] ?? []);
+            if (centresList != null && centresList is List && centresList.isNotEmpty) {
+              _centersData = centresList.whereType<Map<String, dynamic>>().toList();
+              
+              final parsed = centresList.map((x) {
+                if (x is Map) return x['name']?.toString() ?? x['centerName']?.toString() ?? x['city']?.toString() ?? x['district']?.toString() ?? 'Unknown';
+                return x.toString();
+              }).where((c) => c != 'Unknown' && c.trim().isNotEmpty).toSet().toList().cast<String>();
+              
+              if (parsed.isNotEmpty) {
+                _deploymentCenters = parsed;
+              }
+            }
           }
           _isLoading = false;
         });
@@ -125,7 +151,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     physics: const NeverScrollableScrollPhysics(),
                     children: [
                       _buildEligibilityStep(advertisement),
-                      _buildConfigurationStep(),
+                      _buildConfigurationStep(advertisement),
                       _buildEvidenceStep(),
                       _buildSettlementStep(),
                       _buildSuccessStep(advertisement.uuid),
@@ -297,7 +323,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     );
   }
 
-  Widget _buildConfigurationStep() {
+  Widget _buildConfigurationStep(Advertisement adv) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -312,11 +338,31 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildDropdownField(
+          const Text(
             'PRIMARY POST SELECTION',
-            _selectedPost,
-            ['Junior Teacher', 'Support Staff', 'Principal'],
-            (v) => setState(() => _selectedPost = v),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Text(
+              adv.postName,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: OtrTheme.darkNavy,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           _buildDropdownField(
@@ -338,21 +384,21 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           _buildDropdownField(
             'PRIORITY 1',
             _centerPriorities[0],
-            ['Ahmedabad', 'Surat', 'Rajkot'],
+            _deploymentCenters,
             (v) => setState(() => _centerPriorities[0] = v),
           ),
           const SizedBox(height: 12),
           _buildDropdownField(
             'PRIORITY 2',
             _centerPriorities[1],
-            ['Ahmedabad', 'Surat', 'Rajkot'],
+            _deploymentCenters,
             (v) => setState(() => _centerPriorities[1] = v),
           ),
           const SizedBox(height: 12),
           _buildDropdownField(
             'PRIORITY 3',
             _centerPriorities[2],
-            ['Ahmedabad', 'Surat', 'Rajkot'],
+            _deploymentCenters,
             (v) => setState(() => _centerPriorities[2] = v),
           ),
         ],
@@ -454,16 +500,30 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     );
   }
 
+  int? _getCenterId(String? name) {
+    if (name == null) return null;
+    try {
+      final center = _centersData.firstWhere(
+        (c) => (c['name']?.toString() ?? c['centerName']?.toString() ?? c['city']?.toString() ?? c['district']?.toString()) == name,
+        orElse: () => <String, dynamic>{},
+      );
+      if (center.containsKey('id')) {
+        return int.tryParse(center['id'].toString());
+      }
+    } catch (_) {}
+    return null;
+  }
+
   Future<void> _handleFinalSubmit(String advUuid) async {
     setState(() => _isExiting = true);
     try {
-      final appData = {
+      final appData = <String, dynamic>{
         "advertisementUuid": advUuid,
         "postPreference1": _selectedPost ?? 'Position',
-        "examCentrePreference1": _centerPriorities[0] ?? 'Ahmedabad',
-        "examCentrePreference2": _centerPriorities[1],
-        "examCentrePreference3": _centerPriorities[2],
-        "examMedium": _selectedMedium,
+        if (_centerPriorities[0] != null) "examCentrePreference1": _getCenterId(_centerPriorities[0]),
+        if (_centerPriorities[1] != null) "examCentrePreference2": _getCenterId(_centerPriorities[1]),
+        if (_centerPriorities[2] != null) "examCentrePreference3": _getCenterId(_centerPriorities[2]),
+        if (_selectedMedium != null) "examMedium": _selectedMedium,
         "category": _profileData?['category'] ?? 'UR',
         "hasAcceptedTerms": true,
         "hasDeclarationSigned": true,
@@ -486,12 +546,20 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
             (route) => false,
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                result['message'] ?? 'Final synchronization failed',
+          // Show alert dialog so user cannot miss the exact error
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Validation Error'),
+              content: SingleChildScrollView(
+                child: Text(result['message'] ?? 'Unknown error occurred'),
               ),
-              backgroundColor: Colors.red,
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK'),
+                ),
+              ],
             ),
           );
         }

@@ -19,6 +19,7 @@ class _DashboardPageState extends State<DashboardPage> {
   DashboardStats? _stats;
   int _totalFromApi = 0;
   int _pendingFromApi = 0;
+  int _activeJobsCount = 0;
 
   @override
   void initState() {
@@ -33,6 +34,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
       // 2. Fetch Detailed Applications to refine counts
       final appsResult = await _apiService.getMyApplications(pageSize: 100);
+
+      // 3. Fetch Jobs for New Openings count
+      final jobsResult = await _apiService.getJobs();
 
       if (mounted) {
         setState(() {
@@ -60,6 +64,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       app['status'] == 'DRAFT',
                 )
                 .length;
+          }
+
+          if (jobsResult['success'] == true && jobsResult['data'] != null) {
+            final jobsData = jobsResult['data'];
+            if (jobsData is List) {
+              _activeJobsCount = jobsData.length;
+            }
           }
 
           _isLoading = false;
@@ -166,8 +177,8 @@ class _DashboardPageState extends State<DashboardPage> {
                           color: Colors.amber,
                         ),
                         _GridItemData(
-                          'Help & Support',
-                          Icons.support_agent_rounded,
+                          'Admit Card',
+                          Icons.badge_rounded,
                           color: Colors.pink,
                         ),
                       ],
@@ -467,32 +478,31 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildStatCards() {
-    final total = _totalFromApi > 0
-        ? _totalFromApi
-        : (_stats?.totalApplications ?? 0);
-    final pending = _pendingFromApi > 0
-        ? _pendingFromApi
-        : (_stats?.pendingApplications ?? 0);
+    final totalApplications = (_stats?.totalApplications != null && _stats!.totalApplications > 0)
+        ? _stats!.totalApplications
+        : _totalFromApi;
 
     return Row(
       children: [
         Expanded(
           child: _StatCard(
-            title: 'Applications',
-            subtitle: 'Total Submitted',
-            count: total.toString(),
+            title: 'New Openings',
+            subtitle: 'Active Jobs',
+            count: _activeJobsCount.toString(),
             color: OtrTheme.primaryBlue,
-            icon: Icons.assignment_rounded,
+            icon: Icons.business_center_rounded,
+            onTap: () => Navigator.pushNamed(context, '/total-recruitment'),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: _StatCard(
-            title: 'Pending',
-            subtitle: 'Action Required',
-            count: pending.toString(),
-            color: OtrTheme.warning,
-            icon: Icons.bolt_rounded,
+            title: 'My Applications',
+            subtitle: 'Total Applied',
+            count: totalApplications.toString(),
+            color: OtrTheme.success,
+            icon: Icons.assignment_turned_in_rounded,
+            onTap: () => Navigator.pushNamed(context, '/applied-recruitment'),
           ),
         ),
       ],
@@ -506,6 +516,7 @@ class _StatCard extends StatelessWidget {
   final String count;
   final Color color;
   final IconData icon;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.title,
@@ -513,18 +524,22 @@ class _StatCard extends StatelessWidget {
     required this.count,
     required this.color,
     required this.icon,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: OtrTheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: OtrTheme.cardShadow,
-      ),
-      child: Column(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: OtrTheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: OtrTheme.cardShadow,
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -574,7 +589,7 @@ class _StatCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 
@@ -640,6 +655,12 @@ class _DashboardSection extends StatelessWidget {
                   await Navigator.pushNamed(context, '/payment');
                 } else if (t == 'Account Status') {
                   await Navigator.pushNamed(context, '/status');
+                } else if (t == 'Admit Card') {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Admit Card module coming soon!')),
+                    );
+                  }
                 }
                 onRefresh?.call();
               },
