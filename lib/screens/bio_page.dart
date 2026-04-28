@@ -9,6 +9,7 @@ import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../utils/constants.dart';
+import '../utils/custom_toast.dart';
 
 class BioPage extends StatefulWidget {
   const BioPage({super.key});
@@ -213,11 +214,7 @@ class _BioPageState extends State<BioPage> {
         age--;
       }
       if (age < 18 || age > 65) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Candidate must be between 18 and 65 years old'),
-          ),
-        );
+        CustomToast.showSuccess(context, 'Candidate must be between 18 and 65 years old');
         return;
       }
     }
@@ -225,11 +222,7 @@ class _BioPageState extends State<BioPage> {
     // 2. Aadhaar Validation (12 digits)
     final aadhaar = _aadhaarController.text;
     if (aadhaar.isNotEmpty && !RegExp(r'^\d{12}$').hasMatch(aadhaar)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Invalid Aadhaar number (must be 12 digits)'),
-        ),
-      );
+      CustomToast.showError(context, 'Invalid Aadhaar number (must be 12 digits)');
       return;
     }
 
@@ -237,11 +230,7 @@ class _BioPageState extends State<BioPage> {
     if (_isPhysicallyDisabled) {
       final percent = int.tryParse(_disabilityPercentController.text);
       if (percent == null || percent < 0 || percent > 100) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Disability percentage must be between 0 and 100'),
-          ),
-        );
+        CustomToast.showSuccess(context, 'Disability percentage must be between 0 and 100');
         return;
       }
     }
@@ -252,24 +241,16 @@ class _BioPageState extends State<BioPage> {
     final twelfthYear = int.tryParse(_twelfthYearController.text);
 
     if (tenthYear != null && (tenthYear < 1980 || tenthYear > currentYear)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      CustomToast.showSuccess(context, 
             '10th passing year must be between 1980 and $currentYear',
-          ),
-        ),
-      );
+          );
       return;
     }
     if (twelfthYear != null &&
         (twelfthYear < 1980 || twelfthYear > currentYear)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      CustomToast.showSuccess(context, 
             '12th passing year must be between 1980 and $currentYear',
-          ),
-        ),
-      );
+          );
       return;
     }
 
@@ -347,9 +328,7 @@ class _BioPageState extends State<BioPage> {
       final result = await _apiService.updateProfile(profileData);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile updated successfully')),
-          );
+          CustomToast.showSuccess(context, 'Profile updated successfully');
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddressPage()),
@@ -357,9 +336,7 @@ class _BioPageState extends State<BioPage> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Update failed')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Update failed');
         }
       }
     } catch (e) {
@@ -462,21 +439,11 @@ class _BioPageState extends State<BioPage> {
               });
             }
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
+            CustomToast.showSuccess(context, 
                   '${isPhoto ? 'Photo' : 'Signature'} uploaded successfully',
-                ),
-                backgroundColor: Colors.green,
-              ),
-            );
+                );
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(result['message'] ?? 'Upload failed'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            CustomToast.showSuccess(context, result['message'] ?? 'Upload failed');
           }
         }
       } catch (e) {
@@ -1463,13 +1430,9 @@ class _BioPageState extends State<BioPage> {
                 _remoteSignatureUrl = null;
               }
             });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${isPhoto ? 'Photo' : 'Signature'} deleted successfully'), backgroundColor: Colors.green),
-            );
+            CustomToast.showSuccess(context, '${isPhoto ? 'Photo' : 'Signature'} deleted successfully');
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(result['message'] ?? 'Delete failed'), backgroundColor: Colors.red),
-            );
+            CustomToast.showSuccess(context, result['message'] ?? 'Delete failed');
           }
         }
       } catch (e) {

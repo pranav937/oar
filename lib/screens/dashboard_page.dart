@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../models/dashboard_model.dart';
+import '../utils/custom_toast.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -657,9 +658,7 @@ class _DashboardSection extends StatelessWidget {
                   await Navigator.pushNamed(context, '/status');
                 } else if (t == 'Admit Card') {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Admit Card module coming soon!')),
-                    );
+                    CustomToast.showSuccess(context, 'Admit Card module coming soon!');
                   }
                 }
                 onRefresh?.call();

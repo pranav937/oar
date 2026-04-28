@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/otr_theme.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../utils/custom_toast.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({super.key});
@@ -201,23 +202,15 @@ class _PaymentPageState extends State<PaymentPage> {
           if (mounted) _showSuccessDialog();
         } else {
           if (mounted)
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
+            CustomToast.showSuccess(context, 
                   verifyResult['message'] as String? ?? 'Verification failed',
-                ),
-              ),
-            );
+                );
         }
       } else {
         if (mounted)
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
+          CustomToast.showSuccess(context, 
                 initResult['message'] as String? ?? 'Failed to initiate',
-              ),
-            ),
-          );
+              );
       }
     } catch (e) {
       if (mounted)

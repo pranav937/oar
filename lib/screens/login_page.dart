@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
+import '../utils/custom_toast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,11 +20,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleLogin() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter both username and password'),
-        ),
-      );
+      CustomToast.showError(context, 'Please enter both username and password');
       return;
     }
 
@@ -40,9 +37,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Login failed')),
-          );
+          CustomToast.showError(context, result['message'] ?? 'Login failed');
         }
       }
     } catch (e) {

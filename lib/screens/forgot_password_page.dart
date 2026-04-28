@@ -3,6 +3,7 @@ import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../utils/custom_toast.dart';
 
 enum ForgotPasswordStep { mobile, otp, reset }
 
@@ -29,9 +30,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Future<void> _handleSendOtp() async {
     final mobile = _mobileController.text.trim();
     if (mobile.isEmpty || mobile.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid mobile number')),
-      );
+      CustomToast.showSuccess(context, 'Please enter a valid mobile number');
       return;
     }
 
@@ -40,25 +39,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       final result = await _apiService.forgotPassword(mobile);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'OTP sent successfully')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'OTP sent successfully');
           
           // Pre-fill OTP logic removed as per user request
           setState(() => _currentStep = ForgotPasswordStep.otp);
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Failed to send OTP')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Failed to send OTP');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        CustomToast.showError(context, 'An error occurred: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -68,9 +61,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Future<void> _handleVerifyOtp() async {
     final otp = _otpControllers.map((c) => c.text).join();
     if (otp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter 6 digit OTP')),
-      );
+      CustomToast.showSuccess(context, 'Please enter 6 digit OTP');
       return;
     }
 
@@ -79,23 +70,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       final result = await _apiService.verifyMobileOtp(_mobileController.text.trim(), otp);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('OTP Verified Successfully!')),
-          );
+          CustomToast.showSuccess(context, 'OTP Verified Successfully!');
           setState(() => _currentStep = ForgotPasswordStep.reset);
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Verification failed')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Verification failed');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        CustomToast.showError(context, 'An error occurred: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -107,16 +92,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final confirmPassword = _confirmPasswordController.text;
 
     if (password.isEmpty || password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
-      );
+      CustomToast.showSuccess(context, 'Password must be at least 6 characters');
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      CustomToast.showError(context, 'Passwords do not match');
       return;
     }
 
@@ -126,26 +107,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       final result = await _apiService.resetPassword(_mobileController.text.trim(), password, confirmPassword, otp);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Password reset successfully'), 
-              backgroundColor: Colors.green
-            ),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Password reset successfully');
           Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Failed to reset password')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Failed to reset password');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred: $e')),
-        );
+        CustomToast.showError(context, 'An error occurred: $e');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -94,6 +94,20 @@ class OtrModelApp extends StatelessWidget {
             vertical: 18,
           ),
         ),
+        snackBarTheme: SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 6,
+          backgroundColor: const Color(0xFF1E293B), // Dark slate
+          contentTextStyle: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+          actionTextColor: OtrTheme.primaryBlue,
+        ),
         useMaterial3: true,
       ),
       initialRoute: '/',

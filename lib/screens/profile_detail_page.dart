@@ -3,6 +3,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../theme/otr_theme.dart';
 import '../services/api_service.dart';
 import '../utils/constants.dart';
+import '../utils/custom_toast.dart';
 
 class ProfileDetailPage extends StatefulWidget {
   const ProfileDetailPage({super.key});
@@ -33,11 +34,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       } else {
         setState(() => _isLoading = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] ?? 'Failed to load profile'),
-            ),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Failed to load profile');
         }
       }
     } catch (e) {
@@ -116,12 +113,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile submitted for verification!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  CustomToast.showSuccess(context, 'Profile submitted for verification!');
                 },
                 child: const Text(
                   'Submit For Verification',

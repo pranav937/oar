@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../utils/constants.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/custom_toast.dart';
 
 class DocumentsPage extends StatefulWidget {
   const DocumentsPage({super.key});
@@ -155,31 +156,16 @@ class _DocumentsPageState extends State<DocumentsPage> {
           };
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Uploaded successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          CustomToast.showSuccess(context, 'Uploaded successfully!');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message'] as String? ?? 'Upload failed'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          CustomToast.showSuccess(context, result['message'] as String? ?? 'Upload failed');
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error uploading: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        CustomToast.showError(context, 'Error uploading: $e');
       }
     } finally {
       setState(() {
@@ -392,11 +378,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
     if (url == null || url.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Document URL not found. Please re-upload.'),
-          ),
-        );
+        CustomToast.showSuccess(context, 'Document URL not found. Please re-upload.');
       }
       return;
     }
@@ -425,11 +407,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Could not open browser. Try copying the link.'),
-              ),
-            );
+            CustomToast.showSuccess(context, 'Could not open browser. Try copying the link.');
           }
         }
       }
@@ -464,9 +442,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
             onPressed: () {
               setState(() => _uploadedDocs.remove(docTitle));
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Document removed!')),
-              );
+              CustomToast.showSuccess(context, 'Document removed!');
             },
             child: const Text(
               'DELETE',

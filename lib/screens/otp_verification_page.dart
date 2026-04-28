@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/otr_theme.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../utils/custom_toast.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   const OtpVerificationPage({super.key});
@@ -40,12 +41,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
       if (mounted) {
         if (result['success'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('OTP Verified Successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          CustomToast.showSuccess(context, 'OTP Verified Successfully!');
           if (type == 'forgot_password') {
             // Navigate to login or reset password page
             Navigator.pushNamedAndRemoveUntil(
@@ -57,9 +53,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             Navigator.pushReplacementNamed(context, '/dashboard');
           }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Verification failed')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Verification failed');
         }
       }
     } catch (e) {

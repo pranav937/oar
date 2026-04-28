@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
+import '../utils/custom_toast.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -60,49 +61,29 @@ class _RegistrationPageState extends State<RegistrationPage> {
     // Mobile validation (10 digits)
     final mobileRegex = RegExp(r'^\d{10}$');
     if (!mobileRegex.hasMatch(mobile)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Mobile number must be exactly 10 digits'),
-        ),
-      );
+      CustomToast.showSuccess(context, 'Mobile number must be exactly 10 digits');
       return;
     }
 
     // Password complexity validation
     if (password.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 8 characters')),
-      );
+      CustomToast.showSuccess(context, 'Password must be at least 8 characters');
       return;
     }
     if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must contain an uppercase letter'),
-        ),
-      );
+      CustomToast.showSuccess(context, 'Password must contain an uppercase letter');
       return;
     }
     if (!RegExp(r'[a-z]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must contain a lowercase letter'),
-        ),
-      );
+      CustomToast.showSuccess(context, 'Password must contain a lowercase letter');
       return;
     }
     if (!RegExp(r'[0-9]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must contain a number')),
-      );
+      CustomToast.showSuccess(context, 'Password must contain a number');
       return;
     }
     if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must contain a special character'),
-        ),
-      );
+      CustomToast.showSuccess(context, 'Password must contain a special character');
       return;
     }
 
@@ -114,9 +95,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
 
     if (!_hasAcceptedDeclaration) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please accept the declaration')),
-      );
+      CustomToast.showSuccess(context, 'Please accept the declaration');
       return;
     }
 
@@ -138,9 +117,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         // Move to OTP step
         setState(() => _currentStep = 1);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Registration failed')),
-        );
+        CustomToast.showSuccess(context, result['message'] ?? 'Registration failed');
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -156,11 +133,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     String mobileOtp = _mobileOtpControllers.map((c) => c.text).join();
 
     if (emailOtp.length < 6 || mobileOtp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter both code verification values'),
-        ),
-      );
+      CustomToast.showSuccess(context, 'Please enter both code verification values');
       return;
     }
 

@@ -3,6 +3,7 @@ import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../utils/custom_toast.dart';
 
 class AddressPage extends StatefulWidget {
   const AddressPage({super.key});
@@ -94,16 +95,12 @@ class _AddressPageState extends State<AddressPage> {
       final result = await _apiService.updateProfile(profileData);
       if (result['success'] == true) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Address updated successfully')),
-          );
+          CustomToast.showSuccess(context, 'Address updated successfully');
           Navigator.pushNamed(context, '/documents');
         }
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Update failed')),
-          );
+          CustomToast.showSuccess(context, result['message'] ?? 'Update failed');
         }
       }
     } catch (e) {

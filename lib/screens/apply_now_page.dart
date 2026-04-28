@@ -4,6 +4,7 @@ import '../models/advertisement_model.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import '../utils/custom_toast.dart';
 
 class ApplyNowPage extends StatefulWidget {
   const ApplyNowPage({super.key});
@@ -533,12 +534,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
 
       if (mounted) {
         if (result['success'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Application synchronized successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          CustomToast.showSuccess(context, 'Application synchronized successfully!');
           // Navigate back to dashboard and clear form state
           Navigator.pushNamedAndRemoveUntil(
             context,
@@ -566,9 +562,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        CustomToast.showError(context, 'Error: $e');
       }
     } finally {
       if (mounted) setState(() => _isExiting = false);
