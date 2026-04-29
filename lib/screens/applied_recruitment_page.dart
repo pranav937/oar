@@ -46,14 +46,24 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
           } else if (data is Map && data.containsKey('items')) {
             fetchedApps = data['items'];
           }
-          
+
           if (_selectedFilter == 'ALL') {
             _applications = fetchedApps;
           } else {
             _applications = fetchedApps.where((app) {
               final status = (app['status'] ?? '').toString().toUpperCase();
               if (_selectedFilter == 'APPROVED') {
-                return status == 'APPROVED' || status == 'SUCCESS' || status == 'ACCEPTED';
+                return status == 'APPROVED' ||
+                    status == 'SUCCESS' ||
+                    status == 'ACCEPTED';
+              }
+              if (_selectedFilter == 'SUBMITTED') {
+                // Payment-completed applications are logically "submitted"
+                return status == 'SUBMITTED' ||
+                    status == 'PAYMENT_COMPLETED' ||
+                    status == 'PAID' ||
+                    status == 'PAYMENT_VERIFIED' ||
+                    status == 'PAYMENT_SUCCESS';
               }
               return status == _selectedFilter;
             }).toList();
@@ -95,9 +105,9 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
               child: SpinKitWave(color: OtrTheme.primaryBlue, size: 30),
             )
           : _error.isNotEmpty
-              ? _buildErrorPlaceholder()
-              : Column(
-                  children: [
+          ? _buildErrorPlaceholder()
+          : Column(
+              children: [
                 _buildFilterBar(),
                 Expanded(
                   child: _applications.isEmpty
@@ -111,7 +121,9 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                             itemCount: _applications.length,
                             itemBuilder: (context, index) {
                               return _buildRecruitmentCard(
-                                  context, _applications[index]);
+                                context,
+                                _applications[index],
+                              );
                             },
                           ),
                         ),
@@ -249,9 +261,19 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   }
 
   Widget _buildRecruitmentCard(BuildContext context, dynamic app) {
-    String status = app['status'] ?? 'SUBMITTED';
+    String rawStatus = (app['status'] ?? 'SUBMITTED').toString().toUpperCase();
+
+    // Normalize payment-completed states to SUBMITTED for display
+    String status = rawStatus;
+    if (rawStatus == 'PAYMENT_COMPLETED' ||
+        rawStatus == 'PAID' ||
+        rawStatus == 'PAYMENT_VERIFIED' ||
+        rawStatus == 'PAYMENT_SUCCESS') {
+      status = 'SUBMITTED';
+    }
+
     Color statusColor = OtrTheme.primaryBlue;
-    if (status == 'APPROVED' || status == 'SUCCESS')
+    if (status == 'APPROVED' || status == 'SUCCESS' || status == 'ACCEPTED')
       statusColor = OtrTheme.success;
     if (status == 'REJECTED' || status == 'FAILED')
       statusColor = OtrTheme.error;
@@ -359,7 +381,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                     ),
                   ],
                 ),
-                if (status == 'PENDING_PAYMENT') ...[
+                if (rawStatus == 'PENDING_PAYMENT') ...[
                   const SizedBox(height: 24),
                   Container(
                     decoration: BoxDecoration(
@@ -403,6 +425,33 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                ] else if (status == 'APPROVED' || status == 'ACCEPTED') ...[
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/admit-card',
+                        arguments: app['uuid'],
+                      );
+                    },
+                    icon: const Icon(Icons.assignment_ind_rounded, size: 18),
+                    label: const Text(
+                      'VIEW ADMIT CARD',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: OtrTheme.primaryBlue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                   ),
@@ -478,6 +527,27 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   }
 
   Widget _buildStatusBadge(String status, Color color) {
+    // Display-friendly label
+    String label;
+    switch (status) {
+      case 'SUBMITTED':
+        label = '✓ SUBMITTED';
+        break;
+      case 'APPROVED':
+      case 'SUCCESS':
+      case 'ACCEPTED':
+        label = '✓ APPROVED';
+        break;
+      case 'REJECTED':
+      case 'FAILED':
+        label = '✗ REJECTED';
+        break;
+      case 'PENDING_PAYMENT':
+        label = '⚠ PENDING PAYMENT';
+        break;
+      default:
+        label = status.replaceAll('_', ' ');
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -485,7 +555,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        status.replaceAll('_', ' ').toUpperCase(),
+        label,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w900,

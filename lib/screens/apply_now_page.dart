@@ -35,6 +35,10 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     'Category': false,
   };
 
+  // Step 4 Data
+  bool _declarationAccepted = false;
+  String _paymentMode = 'UPI';
+
   List<String> _deploymentCenters = [
     'Ahmedabad',
     'Surat',
@@ -110,7 +114,130 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     }
   }
 
-  void _nextStep() {
+  Future<void> _nextStep(Advertisement adv) async {
+    // Step-wise validation
+    if (_currentStep == 1) {
+      // Configuration Step
+      if (_selectedMedium == null || _centerPriorities[0] == null) {
+        if (mounted)
+          CustomToast.showError(
+            context,
+            'Please select Exam Medium and Center Preference 1',
+          );
+        return;
+      }
+    }
+
+    if (_currentStep == 3) {
+      // Settlement Step
+      if (!_declarationAccepted) {
+        if (mounted)
+          CustomToast.showError(
+            context,
+            'Please accept the declaration to proceed',
+          );
+        return;
+      }
+
+      // Ensure post name is sent correctly
+      final String postName = adv.postName;
+
+      final feeDetails = _calculateFeeDetails(adv);
+      final netPayable = feeDetails['net']!;
+
+      setState(() => _isLoading = true);
+      final appData = <String, dynamic>{
+        "advertisementUuid": adv.uuid,
+        "postPreference1": postName, // Always use the advertisement's post name
+        if (_centerPriorities[0] != null)
+          "examCentrePreference1": _getCenterId(_centerPriorities[0]),
+        if (_centerPriorities[1] != null)
+          "examCentrePreference2": _getCenterId(_centerPriorities[1]),
+        if (_centerPriorities[2] != null)
+          "examCentrePreference3": _getCenterId(_centerPriorities[2]),
+        if (_selectedMedium != null) "examMedium": _selectedMedium,
+        "category": _profileData?['category'] ?? 'UR',
+        "hasAcceptedTerms": true,
+        "hasDeclarationSigned": true,
+      };
+
+      final result = await _apiService.submitApplication(appData);
+      setState(() => _isLoading = false);
+
+      if (result['success'] == true) {
+        String generatedAppUuid =
+            result['data']?['applicationUuid'] ??
+            result['data']?['uuid'] ??
+            'APP-${DateTime.now().millisecondsSinceEpoch}';
+
+        double feeToPay =
+            (result['data']?['feeAmount']?.toDouble()) ?? netPayable;
+
+        if (feeToPay > 0) {
+          if (mounted)
+            CustomToast.showSuccess(context, 'Initiating Secure Payment...');
+
+          final initResult = await _apiService.initiatePayment(
+            generatedAppUuid,
+            feeToPay,
+            _paymentMode,
+          );
+
+          if (initResult['success'] == true) {
+            final transactionId = initResult['data']?['transactionId'];
+
+            // 1. Simulate the payment (Dev environment)
+            final simulateResult = await _apiService.simulatePayment(
+              transactionId,
+            );
+
+            if (simulateResult['success'] == true) {
+              // 2. Verify the payment
+              final verifyResult = await _apiService.verifyPayment(
+                transactionId,
+                'GWAY-${transactionId}',
+                feeToPay,
+                'SUCCESS',
+              );
+
+              if (verifyResult['success'] == true) {
+                if (mounted)
+                  CustomToast.showSuccess(
+                    context,
+                    'Payment Verified Successfully!',
+                  );
+              } else {
+                if (mounted)
+                  CustomToast.showError(
+                    context,
+                    verifyResult['message'] ?? 'Payment Verification Failed',
+                  );
+                return;
+              }
+            } else {
+              if (mounted)
+                CustomToast.showError(context, 'Payment Simulation Failed');
+              return;
+            }
+          } else {
+            if (mounted)
+              CustomToast.showError(
+                context,
+                initResult['message'] ?? 'Payment Initiation Failed',
+              );
+            return;
+          }
+        }
+      } else {
+        if (mounted)
+          CustomToast.showError(
+            context,
+            result['message'] ?? 'Failed to submit application',
+          );
+        return;
+      }
+    }
+
     if (_currentStep < 4) {
       setState(() => _currentStep++);
       _pageController.animateToPage(
@@ -181,12 +308,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                       _buildEligibilityStep(advertisement),
                       _buildConfigurationStep(advertisement),
                       _buildEvidenceStep(),
-                      _buildSettlementStep(),
+                      _buildSettlementStep(advertisement),
                       _buildSuccessStep(advertisement.uuid),
                     ],
                   ),
                 ),
-                if (_currentStep < 4) _buildBottomNavbar(),
+                if (_currentStep < 4) _buildBottomNavbar(advertisement),
               ],
             ),
     );
@@ -254,13 +381,17 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     // Calculate Age
     String ageStr = 'N/A';
     if (p['dateOfBirth'] != null) {
-      final dob = DateTime.parse(p['dateOfBirth']);
-      final now = DateTime.now();
-      int age = now.year - dob.year;
-      if (now.month < dob.month ||
-          (now.month == dob.month && now.day < dob.day))
-        age--;
-      ageStr = '$age Years';
+      try {
+        final dob = DateTime.parse(p['dateOfBirth'].toString());
+        final now = DateTime.now();
+        int age = now.year - dob.year;
+        if (now.month < dob.month ||
+            (now.month == dob.month && now.day < dob.day))
+          age--;
+        ageStr = '$age Years';
+      } catch (e) {
+        ageStr = 'N/A';
+      }
     }
 
     return SingleChildScrollView(
@@ -467,61 +598,421 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     );
   }
 
-  Widget _buildSettlementStep() {
+  Map<String, double> _calculateFeeDetails(Advertisement adv) {
+    double originalFee = 0.0;
+    double netPayable = 0.0;
+
+    final category = _profileData?['category'] ?? 'UR';
+
+    // Find the fee matching the candidate's category
+    ApplicationFee? matchingFee;
+    try {
+      matchingFee = adv.fees.firstWhere((fee) => fee.category == category);
+    } catch (_) {
+      // Fallback to UR if specific category fee not defined
+      try {
+        matchingFee = adv.fees.firstWhere(
+          (fee) => fee.category == 'UR' || fee.category == 'General',
+        );
+      } catch (_) {}
+    }
+
+    if (matchingFee != null) {
+      originalFee = matchingFee.amount.toDouble();
+      if (matchingFee.isExempted) {
+        netPayable = 0.0;
+      } else {
+        netPayable = originalFee;
+      }
+    } else {
+      originalFee = 500.0; // Global fallback if fees list is empty
+      netPayable = 500.0;
+    }
+
+    // Additional profile-based exemptions
+    final isPhysicallyDisabled = _profileData?['isPhysicallyDisabled'] == true;
+    final isExSoldier = _profileData?['isExSoldier'] == true;
+    final isWidow = _profileData?['isWidow'] == true;
+    final gender = _profileData?['gender'];
+
+    if (isPhysicallyDisabled || isExSoldier || isWidow || gender == 'FEMALE') {
+      netPayable = 0.0;
+    }
+
+    return {
+      'original': originalFee,
+      'subsidy': originalFee - netPayable,
+      'net': netPayable,
+    };
+  }
+
+  Widget _buildSettlementStep(Advertisement adv) {
+    final feeDetails = _calculateFeeDetails(adv);
+    final netPayable = feeDetails['net']!;
+    final isExempted = netPayable == 0;
+    final category = _profileData?['category'] ?? 'UR';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Application Settlement Fee Card (Premium React style)
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
+              color: const Color(0xFF0F172A), // slate-900
+              borderRadius: BorderRadius.circular(40), // rounded-[3rem]
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 20,
+                  color: const Color(
+                    0xFF4F46E5,
+                  ).withOpacity(0.15), // indigo-600/15
+                  blurRadius: 100,
+                  offset: const Offset(30, -30),
                 ),
               ],
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.account_balance_wallet_rounded,
-                  color: OtrTheme.primaryBlue,
-                  size: 48,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'APPLICATION SETTLEMENT FEE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white60,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isExempted ? '₹ 0' : '₹ ${netPayable.toInt()}',
+                            style: const TextStyle(
+                              fontSize: 42,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              letterSpacing: -2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            child: Text(
+                              '$category Category ${isExempted ? "• Exempted" : ""}'
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 1,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline_rounded,
+                              color: isExempted
+                                  ? const Color(0xFF34D399)
+                                  : const Color(0xFFFBBF24),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isExempted
+                                  ? 'Exemption Applied'
+                                  : 'Ready for Payment',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: isExempted
+                                    ? const Color(0xFF34D399)
+                                    : const Color(0xFFFBBF24),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: 140,
+                          child: Text(
+                            isExempted
+                                ? 'No transaction required for this category.'
+                                : 'Non-refundable transaction securely processed via gateway.',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.white.withOpacity(0.5),
+                              fontStyle: FontStyle.italic,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'APPLICATION SETTLEMENT',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Review and pay the application fee',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Divider(),
-                ),
-                _buildPaymentRow('Original Fee', '₹1000'),
-                _buildPaymentRow('OTR Subsidy', '-₹500'),
-                _buildPaymentRow('Processing Fee', '₹0'),
-                const Divider(),
-                const SizedBox(height: 12),
-                _buildPaymentRow('NET PAYABLE', '₹500', isTotal: true),
               ],
             ),
           ),
-          const SizedBox(height: 32),
-          const Text(
-            'SECURE TRANSACTION PROTOCOL',
-            style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey,
-              fontWeight: FontWeight.w800,
+
+          if (!isExempted) ...[
+            const SizedBox(height: 32),
+            const Text(
+              'SELECT PAYMENT METHOD',
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                letterSpacing: 3,
+              ),
             ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                // UPI Option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _paymentMode = 'UPI'),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _paymentMode == 'UPI' ? OtrTheme.primaryBlue : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _paymentMode == 'UPI' ? OtrTheme.primaryBlue : Colors.grey.shade200,
+                          width: 2,
+                        ),
+                        boxShadow: _paymentMode == 'UPI'
+                            ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+                            : [],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.qr_code_scanner_rounded, color: _paymentMode == 'UPI' ? Colors.white : Colors.grey.shade600, size: 28),
+                          const SizedBox(height: 12),
+                          Text('UPI', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _paymentMode == 'UPI' ? Colors.white : Colors.black87)),
+                          const SizedBox(height: 4),
+                          Text('Instant & Secure', textAlign: TextAlign.center, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: _paymentMode == 'UPI' ? Colors.white70 : Colors.grey.shade500)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // CARD Option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _paymentMode = 'CARD'),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _paymentMode == 'CARD' ? OtrTheme.primaryBlue : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _paymentMode == 'CARD' ? OtrTheme.primaryBlue : Colors.grey.shade200,
+                          width: 2,
+                        ),
+                        boxShadow: _paymentMode == 'CARD'
+                            ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+                            : [],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.credit_card_rounded, color: _paymentMode == 'CARD' ? Colors.white : Colors.grey.shade600, size: 28),
+                          const SizedBox(height: 12),
+                          Text('CARD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _paymentMode == 'CARD' ? Colors.white : Colors.black87)),
+                          const SizedBox(height: 4),
+                          Text('Credit / Debit', textAlign: TextAlign.center, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: _paymentMode == 'CARD' ? Colors.white70 : Colors.grey.shade500)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // NETBANK Option
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _paymentMode = 'NET_BANKING'),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: _paymentMode == 'NET_BANKING' ? OtrTheme.primaryBlue : Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _paymentMode == 'NET_BANKING' ? OtrTheme.primaryBlue : Colors.grey.shade200,
+                          width: 2,
+                        ),
+                        boxShadow: _paymentMode == 'NET_BANKING'
+                            ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+                            : [],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.account_balance_rounded, color: _paymentMode == 'NET_BANKING' ? Colors.white : Colors.grey.shade600, size: 28),
+                          const SizedBox(height: 12),
+                          Text('NETBANK', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _paymentMode == 'NET_BANKING' ? Colors.white : Colors.black87)),
+                          const SizedBox(height: 4),
+                          Text('All Major Banks', textAlign: TextAlign.center, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: _paymentMode == 'NET_BANKING' ? Colors.white70 : Colors.grey.shade500)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          const SizedBox(height: 32),
+
+          // Personnel Declaration
+          Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC), // slate-50
+              borderRadius: BorderRadius.circular(32), // rounded-[2.5rem]
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'PERSONNEL DECLARATION',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    letterSpacing: 3,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => setState(
+                    () => _declarationAccepted = !_declarationAccepted,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        margin: const EdgeInsets.only(top: 2),
+                        decoration: BoxDecoration(
+                          color: _declarationAccepted
+                              ? OtrTheme.primaryBlue
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _declarationAccepted
+                                ? OtrTheme.primaryBlue
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                        ),
+                        child: _declarationAccepted
+                            ? const Icon(
+                                Icons.check,
+                                size: 14,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Text(
+                          'I affirm that all information provided is accurate. Discrepancies identified during secondary verification will be subject to statutory legal action and immediate termination of candidature.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black,
+                            height: 1.6,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // Payment Methods & Submission
+          Column(
+            children: [
+              ElevatedButton(
+                onPressed: (_isLoading || !_declarationAccepted)
+                    ? null
+                    : () => _nextStep(adv),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4F46E5), // indigo-600
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 22),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(32),
+                  ),
+                  elevation: 20,
+                  shadowColor: const Color(0xFF4F46E5).withOpacity(0.3),
+                  minimumSize: const Size(double.infinity, 0),
+                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            isExempted
+                                ? 'FINALIZE FREE SUBMISSION'
+                                : 'AUTHORIZE ₹ ${netPayable.toInt()} TRANSACTION',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Icon(Icons.chevron_right_rounded, size: 20),
+                        ],
+                      ),
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
         ],
       ),
@@ -547,65 +1038,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     return null;
   }
 
-  Future<void> _handleFinalSubmit(String advUuid) async {
-    setState(() => _isExiting = true);
-    try {
-      final appData = <String, dynamic>{
-        "advertisementUuid": advUuid,
-        "postPreference1": _selectedPost ?? 'Position',
-        if (_centerPriorities[0] != null)
-          "examCentrePreference1": _getCenterId(_centerPriorities[0]),
-        if (_centerPriorities[1] != null)
-          "examCentrePreference2": _getCenterId(_centerPriorities[1]),
-        if (_centerPriorities[2] != null)
-          "examCentrePreference3": _getCenterId(_centerPriorities[2]),
-        if (_selectedMedium != null) "examMedium": _selectedMedium,
-        "category": _profileData?['category'] ?? 'UR',
-        "hasAcceptedTerms": true,
-        "hasDeclarationSigned": true,
-      };
-
-      final result = await _apiService.submitApplication(appData);
-
-      if (mounted) {
-        if (result['success'] == true) {
-          CustomToast.showSuccess(
-            context,
-            'Application synchronized successfully!',
-          );
-          // Navigate back to dashboard and clear form state
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/dashboard',
-            (route) => false,
-          );
-        } else {
-          // Show alert dialog so user cannot miss the exact error
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Validation Error'),
-              content: SingleChildScrollView(
-                child: Text(result['message'] ?? 'Unknown error occurred'),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        CustomToast.showError(context, 'Error: $e');
-      }
-    } finally {
-      if (mounted) setState(() => _isExiting = false);
-    }
-  }
+  // Removed _handleFinalSubmit as it is now handled in _nextStep
 
   Widget _buildSuccessStep(String advUuid) {
     return Padding(
@@ -662,13 +1095,15 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: _isExiting ? null : () => _handleFinalSubmit(advUuid),
+            onPressed: () => Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/dashboard',
+              (route) => false,
+            ),
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(64),
             ),
-            child: _isExiting
-                ? const SpinKitThreeBounce(color: Colors.white, size: 24)
-                : const Text('RETURN TO COMMAND CENTRE'),
+            child: const Text('RETURN TO COMMAND CENTRE'),
           ),
           const SizedBox(height: 16),
           TextButton(
@@ -685,7 +1120,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
 
   // --- Helper Widgets ---
 
-  Widget _buildBottomNavbar() {
+  Widget _buildBottomNavbar(Advertisement adv) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
@@ -711,7 +1146,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           Expanded(
             flex: 2,
             child: ElevatedButton(
-              onPressed: _nextStep,
+              onPressed: () => _nextStep(adv),
               child: Text(
                 _currentStep == 3 ? 'PAY & CONTINUE' : 'CONTINUE APPLICATION',
               ),
@@ -917,6 +1352,75 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodOption(
+    String mode,
+    IconData icon,
+    String subtitle,
+  ) {
+    // Map 'NETBANK' to 'NET_BANKING' for server compatibility
+    final String modeId = mode == 'NETBANK' ? 'NET_BANKING' : mode;
+    bool isSelected = _paymentMode == modeId;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _paymentMode = modeId;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? OtrTheme.primaryBlue : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade200,
+              width: 2,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: OtrTheme.primaryBlue.withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+                size: 28,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                mode,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? Colors.white : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? Colors.white70 : Colors.grey.shade500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -29,4 +29,5 @@ class ApiConstants {
   static const String initiatePayment = "/api/ora/payments/initiate";
   static const String verifyPayment = "/api/ora/payments/verify-callback";
   static const String paymentHistory = "/api/ora/payments/history";
+  static const String admitCardFetch = "/api/ora/admit-cards";
 }

@@ -219,7 +219,12 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> resetPassword(String mobileNumber, String newPassword, String confirmPassword, String otp) async {
+  Future<Map<String, dynamic>> resetPassword(
+    String mobileNumber,
+    String newPassword,
+    String confirmPassword,
+    String otp,
+  ) async {
     try {
       final response = await post(ApiConstants.candidateResetPassword, {
         'mobileNumber': mobileNumber,
@@ -229,24 +234,27 @@ class ApiService {
         'password_confirmation': confirmPassword,
         'otp': otp,
       }, authenticated: false);
-      
+
       print('DEBUG RESET PASSWORD: ${response.statusCode} - ${response.body}');
       final Map<String, dynamic> decoded = jsonDecode(response.body);
-      
+
       String parseMessage(dynamic msg) {
         if (msg is List) return msg.join(', ');
         return msg?.toString() ?? 'Failed to reset password';
       }
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return decoded.containsKey('success')
             ? decoded
-            : {'success': true, 'data': decoded, 'message': decoded['message'] != null ? parseMessage(decoded['message']) : 'Password reset successfully'};
+            : {
+                'success': true,
+                'data': decoded,
+                'message': decoded['message'] != null
+                    ? parseMessage(decoded['message'])
+                    : 'Password reset successfully',
+              };
       } else {
-        return {
-          'success': false,
-          'message': parseMessage(decoded['message']),
-        };
+        return {'success': false, 'message': parseMessage(decoded['message'])};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -435,7 +443,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return decoded;
       } else {
-        return {'success': false, 'message': decoded['message'] ?? 'Failed to load form'};
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to load form',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -447,9 +458,14 @@ class ApiService {
       final response = await get(ApiConstants.examCentres);
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {
-        return decoded.containsKey('success') ? decoded : {'success': true, 'data': decoded};
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
       } else {
-        return {'success': false, 'message': decoded['message'] ?? 'Failed to load exam centres'};
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to load exam centres',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -460,19 +476,50 @@ class ApiService {
     Map<String, dynamic> appData,
   ) async {
     try {
+      print('DEBUG SUBMIT APPDATA: $appData');
       final response = await post(ApiConstants.applicationSubmit, appData);
       print('DEBUG SUBMIT APP: ${response.statusCode} - ${response.body}');
       final decoded = jsonDecode(response.body);
-      
-      String parseMsg(dynamic msg) {
+
+      String parseMsg(dynamic body) {
+        // 1. Try to get specific errors array first
+        if (body['errors'] != null) {
+          if (body['errors'] is List) {
+            return body['errors']
+                .map((e) {
+                  if (e is Map) {
+                    return "${e['field'] ?? ''}: ${e['message'] ?? e.toString()}";
+                  }
+                  return e.toString();
+                })
+                .join('\n');
+          }
+          if (body['errors'] is Map) {
+            return body['errors'].entries
+                .map((e) {
+                  final val = e.value;
+                  return "${e.key}: ${val is List ? val.join(', ') : val}";
+                })
+                .join('\n');
+          }
+          return body['errors'].toString();
+        }
+
+        // 2. Try 'error' field
+        if (body['error'] != null) return body['error'].toString();
+
+        // 3. Try main 'message'
+        var msg = body['message'];
         if (msg is List) return msg.join(', ');
-        return msg?.toString() ?? 'Submission failed';
+        if (msg != null && msg.toString().isNotEmpty) return msg.toString();
+
+        return 'Submission failed (Error ${response.statusCode})';
       }
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return decoded;
       } else {
-        return {'success': false, 'message': parseMsg(decoded['message'])};
+        return {'success': false, 'message': parseMsg(decoded)};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -487,12 +534,12 @@ class ApiService {
     try {
       final queryParams = {
         'page': page.toString(),
-        'pageSize': pageSize.toString()
+        'pageSize': pageSize.toString(),
       };
       if (status != null && status != 'ALL') {
         queryParams['status'] = status;
       }
-      
+
       final response = await get(
         ApiConstants.myApplications,
         queryParams: queryParams,
@@ -501,7 +548,10 @@ class ApiService {
       if (response.statusCode == 200) {
         return decoded;
       } else {
-        return {'success': false, 'message': decoded['message'] ?? 'Failed to load applications'};
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to load applications',
+        };
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
@@ -511,23 +561,121 @@ class ApiService {
   // --- ORA Payments ---
 
   Future<Map<String, dynamic>> initiatePayment(
-    String appUuid,
+    String applicationUuid,
     double amount,
+    String paymentMode,
   ) async {
-    final response = await post(ApiConstants.initiatePayment, {
-      'applicationUuid': appUuid,
-      'amount': amount,
-      'paymentMode': 'ONLINE',
-    });
-    return jsonDecode(response.body);
+    try {
+      final body = {
+        'applicationUuid': applicationUuid,
+        'amount': amount.toInt(),
+        'paymentMode': paymentMode,
+      };
+      final response = await post('/api/ora/payments/initiate', body);
+      final decoded = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return decoded;
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Payment initiation failed',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> verifyPayment(
-    String paymentUuid,
     String transactionId,
+    String gatewayTransactionId,
+    double amount,
+    String status,
   ) async {
-    // Stub for offline mode
-    return {'success': true, 'message': 'Payment verified (Offline)'};
+    try {
+      final body = {
+        'transactionId': transactionId,
+        'gatewayTransactionId': gatewayTransactionId,
+        'status': status,
+        'amount': amount.toInt(),
+        'responseCode': 'OK',
+      };
+      final response = await post('/api/ora/payments/verify-callback', body);
+      final decoded = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return decoded;
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Payment verification failed',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getAppliedRecruitments({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final response = await get(
+        ApiConstants.myApplications,
+        queryParams: {'page': page.toString(), 'pageSize': pageSize.toString()},
+      );
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded;
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch applications',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getPaymentHistory({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final response = await get(
+        '/api/ora/payments/history',
+        queryParams: {
+          'page': page.toString(),
+          'pageSize': pageSize.toString(),
+        },
+      );
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded;
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch payment history',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Simulator helper (Optional but helpful for ORA flow)
+  Future<Map<String, dynamic>> simulatePayment(String transactionId) async {
+    try {
+      final response = await post('/api/ora/payments/$transactionId/simulate', {
+        'status': 'SUCCESS',
+      });
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'message': 'Simulation error: $e'};
+    }
   }
 
   Future<Map<String, dynamic>> uploadDocument(File file, String type) async {
@@ -564,5 +712,35 @@ class ApiService {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
+  }
+
+  // Fetch Notifications
+  Future<Map<String, dynamic>> getNotifications() async {
+    try {
+      final response = await get('/api/notifications/me?page=1&pageSize=20');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      }
+      return {'success': false, 'message': 'Failed to load notifications'};
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
+    }
+  }
+
+  Future<Map<String, dynamic>> getAdmitCard(String applicationUuid) async {
+    try {
+      final response = await get('${ApiConstants.admitCardFetch}/$applicationUuid');
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded;
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch admit card'
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
   }
 }

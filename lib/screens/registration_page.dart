@@ -61,21 +61,33 @@ class _RegistrationPageState extends State<RegistrationPage> {
     // Mobile validation (10 digits)
     final mobileRegex = RegExp(r'^\d{10}$');
     if (!mobileRegex.hasMatch(mobile)) {
-      CustomToast.showSuccess(context, 'Mobile number must be exactly 10 digits');
+      CustomToast.showSuccess(
+        context,
+        'Mobile number must be exactly 10 digits',
+      );
       return;
     }
 
     // Password complexity validation
     if (password.length < 8) {
-      CustomToast.showSuccess(context, 'Password must be at least 8 characters');
+      CustomToast.showSuccess(
+        context,
+        'Password must be at least 8 characters',
+      );
       return;
     }
     if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      CustomToast.showSuccess(context, 'Password must contain an uppercase letter');
+      CustomToast.showSuccess(
+        context,
+        'Password must contain an uppercase letter',
+      );
       return;
     }
     if (!RegExp(r'[a-z]').hasMatch(password)) {
-      CustomToast.showSuccess(context, 'Password must contain a lowercase letter');
+      CustomToast.showSuccess(
+        context,
+        'Password must contain a lowercase letter',
+      );
       return;
     }
     if (!RegExp(r'[0-9]').hasMatch(password)) {
@@ -83,7 +95,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
       return;
     }
     if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-      CustomToast.showSuccess(context, 'Password must contain a special character');
+      CustomToast.showSuccess(
+        context,
+        'Password must contain a special character',
+      );
       return;
     }
 
@@ -117,7 +132,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
         // Move to OTP step
         setState(() => _currentStep = 1);
       } else {
-        CustomToast.showSuccess(context, result['message'] ?? 'Registration failed');
+        CustomToast.showSuccess(
+          context,
+          result['message'] ?? 'Registration failed',
+        );
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -133,7 +151,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
     String mobileOtp = _mobileOtpControllers.map((c) => c.text).join();
 
     if (emailOtp.length < 6 || mobileOtp.length < 6) {
-      CustomToast.showSuccess(context, 'Please enter both code verification values');
+      CustomToast.showSuccess(
+        context,
+        'Please enter both code verification values',
+      );
       return;
     }
 
@@ -202,11 +223,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           content: Text(
             'Your registration is complete. Welcome to OTR Model! Please log in to your new account.',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.5,
-              color: Colors.black87,
-            ),
+            style: TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
           ),
           actions: [
             SizedBox(

@@ -82,6 +82,226 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.7,
+        decoration: const BoxDecoration(
+          color: OtrTheme.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              height: 4,
+              width: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.notifications_active_rounded,
+                    color: OtrTheme.primaryBlue,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Notifications',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: OtrTheme.darkNavy,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: FutureBuilder<Map<String, dynamic>>(
+                future: _apiService.getNotifications(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: SpinKitFadingCube(
+                        color: OtrTheme.primaryBlue,
+                        size: 40,
+                      ),
+                    );
+                  }
+
+                  if (!snapshot.hasData ||
+                      snapshot.data!['success'] != true ||
+                      snapshot.data!['data'] == null) {
+                    return const Center(
+                      child: Text('Failed to load notifications'),
+                    );
+                  }
+
+                  final dataObj = snapshot.data!['data'];
+                  final List notifications = dataObj['notifications'] ?? [];
+                  if (notifications.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No new notifications',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    itemCount: notifications.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 24),
+                    itemBuilder: (context, index) {
+                      final notif = notifications[index];
+                      // The real API does not seem to have a 'read' boolean. We'll default to true or check status.
+                      final isRead = true;
+
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isRead
+                              ? Colors.transparent
+                              : OtrTheme.primaryBlue.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: isRead
+                              ? Border.all(color: Colors.grey.shade200)
+                              : Border.all(
+                                  color: OtrTheme.primaryBlue.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: isRead
+                                    ? Colors.grey.shade100
+                                    : OtrTheme.primaryBlue.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isRead
+                                    ? Icons.notifications_none_rounded
+                                    : Icons.notifications_active_rounded,
+                                color: isRead
+                                    ? Colors.grey
+                                    : OtrTheme.primaryBlue,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    notif['title'] ?? 'Notification',
+                                    style: TextStyle(
+                                      fontWeight: isRead
+                                          ? FontWeight.w700
+                                          : FontWeight.w900,
+                                      fontSize: 15,
+                                      color: OtrTheme.darkNavy,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    notif['body'] ??
+                                        '', // Changed from message to body
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 13,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Builder(
+                                    builder: (context) {
+                                      String dateText = 'Just now';
+                                      if (notif['createdAt'] != null) {
+                                        try {
+                                          final dt = DateTime.parse(
+                                            notif['createdAt'],
+                                          );
+                                          dateText =
+                                              '${dt.day}/${dt.month}/${dt.year}';
+                                        } catch (_) {
+                                          try {
+                                            dateText = notif['createdAt']
+                                                .toString()
+                                                .split('T')
+                                                .first;
+                                          } catch (_) {
+                                            dateText = 'Invalid date';
+                                          }
+                                        }
+                                      }
+                                      return Text(
+                                        dateText,
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (!isRead)
+                              Container(
+                                width: 8,
+                                height: 8,
+                                margin: const EdgeInsets.only(top: 6),
+                                decoration: const BoxDecoration(
+                                  color: OtrTheme.primaryBlue,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,6 +318,10 @@ class _DashboardPageState extends State<DashboardPage> {
         foregroundColor: OtrTheme.darkNavy,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_none_rounded, size: 26),
+            onPressed: () => _showNotifications(context),
+          ),
           IconButton(
             icon: const Icon(Icons.power_settings_new_rounded, size: 26),
             onPressed: () async {
@@ -648,9 +872,10 @@ class _DashboardSection extends StatelessWidget {
                   await Navigator.pushNamed(context, '/status');
                 } else if (t == 'Admit Card') {
                   if (context.mounted) {
-                    CustomToast.showSuccess(
+                    await Navigator.pushNamed(
                       context,
-                      'Admit Card module coming soon!',
+                      '/admit-card',
+                      arguments: 'mock-uuid-1234',
                     );
                   }
                 }
