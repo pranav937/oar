@@ -263,9 +263,16 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   Widget _buildRecruitmentCard(BuildContext context, dynamic app) {
     String rawStatus = (app['status'] ?? 'SUBMITTED').toString().toUpperCase();
 
+    bool isAdmitCardIssued = false;
+    if (app['statusTimeline'] != null && app['statusTimeline'] is Map) {
+      isAdmitCardIssued = app['statusTimeline']['admitCardIssued'] == true;
+    }
+
     // Normalize payment-completed states to SUBMITTED for display
     String status = rawStatus;
-    if (rawStatus == 'PAYMENT_COMPLETED' ||
+    if (isAdmitCardIssued) {
+      status = 'ADMIT_CARD_ISSUED';
+    } else if (rawStatus == 'PAYMENT_COMPLETED' ||
         rawStatus == 'PAID' ||
         rawStatus == 'PAYMENT_VERIFIED' ||
         rawStatus == 'PAYMENT_SUCCESS') {
@@ -273,7 +280,10 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
     }
 
     Color statusColor = OtrTheme.primaryBlue;
-    if (status == 'APPROVED' || status == 'SUCCESS' || status == 'ACCEPTED')
+    if (status == 'APPROVED' ||
+        status == 'SUCCESS' ||
+        status == 'ACCEPTED' ||
+        status == 'ADMIT_CARD_ISSUED')
       statusColor = OtrTheme.success;
     if (status == 'REJECTED' || status == 'FAILED')
       statusColor = OtrTheme.error;
@@ -428,14 +438,15 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                       ),
                     ),
                   ),
-                ] else if (status == 'APPROVED' || status == 'ACCEPTED') ...[
+                ] else if (isAdmitCardIssued) ...[
                   const SizedBox(height: 24),
+
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pushNamed(
                         context,
                         '/admit-card',
-                        arguments: app['uuid'],
+                        arguments: app['applicationUuid'] ?? app['uuid'],
                       );
                     },
                     icon: const Icon(Icons.assignment_ind_rounded, size: 18),
@@ -537,6 +548,9 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       case 'SUCCESS':
       case 'ACCEPTED':
         label = '✓ APPROVED';
+        break;
+      case 'ADMIT_CARD_ISSUED':
+        label = '✓ ADMIT CARD ISSUED';
         break;
       case 'REJECTED':
       case 'FAILED':

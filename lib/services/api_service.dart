@@ -647,10 +647,7 @@ class ApiService {
     try {
       final response = await get(
         '/api/ora/payments/history',
-        queryParams: {
-          'page': page.toString(),
-          'pageSize': pageSize.toString(),
-        },
+        queryParams: {'page': page.toString(), 'pageSize': pageSize.toString()},
       );
       final decoded = jsonDecode(response.body);
       if (response.statusCode == 200) {
@@ -729,14 +726,29 @@ class ApiService {
 
   Future<Map<String, dynamic>> getAdmitCard(String applicationUuid) async {
     try {
-      final response = await get('${ApiConstants.admitCardFetch}/$applicationUuid');
+      final response = await get(
+        '${ApiConstants.admitCardFetch}/$applicationUuid',
+      );
+
+      // Check if the response is HTML (starts with <!DOCTYPE or <html)
+      final body = response.body.trim();
+      if (body.startsWith('<!DOCTYPE') || body.startsWith('<html')) {
+        return {
+          'success': false,
+          'message':
+              'Server error: Invalid response format (HTML instead of JSON). Status: ${response.statusCode}',
+        };
+      }
+
       final decoded = jsonDecode(response.body);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return decoded;
       } else {
         return {
           'success': false,
-          'message': decoded['message'] ?? 'Failed to fetch admit card'
+          'message':
+              decoded['message'] ??
+              'Failed to fetch admit card (Status: ${response.statusCode})',
         };
       }
     } catch (e) {

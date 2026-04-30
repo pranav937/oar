@@ -872,11 +872,7 @@ class _DashboardSection extends StatelessWidget {
                   await Navigator.pushNamed(context, '/status');
                 } else if (t == 'Admit Card') {
                   if (context.mounted) {
-                    await Navigator.pushNamed(
-                      context,
-                      '/admit-card',
-                      arguments: 'mock-uuid-1234',
-                    );
+                    await Navigator.pushNamed(context, '/admit-card');
                   }
                 }
                 onRefresh?.call();
