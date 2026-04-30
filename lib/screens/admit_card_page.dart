@@ -1,7 +1,11 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
+import '../utils/admit_card_generator.dart';
 import '../theme/otr_theme.dart';
 import 'admit_card_detail_page.dart';
 
@@ -241,20 +245,60 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => CustomToast.showSuccess(
-                        context,
-                        'Downloading PDF...',
-                      ),
+                      onPressed: () async {
+                        try {
+                          final String id = (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
+                          final String appNo = (app['applicationNumber'] ?? 'ADMIT_CARD').toString().replaceAll('/', '_');
+                          
+                          if (id.isEmpty) {
+                            CustomToast.showError(context, 'Invalid application ID');
+                            return;
+                          }
+                          
+                          final urlString = _apiService.getAdmitCardDownloadUrl(id);
+                          CustomToast.showSuccess(context, 'Fetching latest exam details...');
+
+                          // 1. Fetch full admit card data for proper formatting
+                          final detailResult = await _apiService.getAdmitCard(id);
+                          
+                          if (detailResult['success'] != true) {
+                            throw detailResult['message'] ?? 'Could not fetch exam details.';
+                          }
+
+                          CustomToast.showSuccess(context, 'Generating PDF...');
+                          final fullData = detailResult['data'] ?? {};
+
+                          // 2. Generate PDF locally
+                          final bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
+
+                          if (bytes.isEmpty) {
+                            throw 'Failed to generate PDF document.';
+                          }
+
+                          // 3. Save file
+                          await FilePicker.saveFile(
+                            dialogTitle: 'Save Admit Card',
+                            fileName: 'AdmitCard_$appNo.pdf',
+                            type: FileType.custom,
+                            allowedExtensions: ['pdf'],
+                            bytes: bytes,
+                          );
+
+                          CustomToast.showSuccess(context, 'Admit Card saved to device!');
+                        } catch (e) {
+                          CustomToast.showError(context, 'Failed: $e');
+                        }
+                      },
                       icon: const Icon(Icons.download_rounded, size: 16),
                       label: const Text('DOWNLOAD PDF'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: OtrTheme.darkNavy,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 0,
                       ),
                     ),
                   ),

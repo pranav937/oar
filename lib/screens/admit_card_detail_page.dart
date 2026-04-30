@@ -1,8 +1,12 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
+import '../utils/admit_card_generator.dart';
 import '../theme/otr_theme.dart';
 
 class AdmitCardDetailPage extends StatefulWidget {
@@ -412,10 +416,53 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
 
           const SizedBox(height: 30),
           ElevatedButton.icon(
-            onPressed: () => CustomToast.showSuccess(
-              context,
-              'Downloading high-resolution PDF...',
-            ),
+            onPressed: () async {
+              try {
+                if (_admitCardData == null) {
+                  CustomToast.showError(context, 'Admit card data not loaded');
+                  return;
+                }
+
+                final app = widget.application;
+                final String id = (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
+                final String appNo = (app['applicationNumber'] ?? 'ADMIT_CARD').toString().replaceAll('/', '_');
+                
+                if (id.isEmpty) {
+                  CustomToast.showError(context, 'Invalid application ID');
+                  return;
+                }
+
+                // Check if the API provided a specific PDF/Download URL
+                final String? customUrl = _admitCardData!['pdfUrl']?.toString() ?? 
+                                        _admitCardData!['downloadUrl']?.toString();
+
+                final urlString = _apiService.getAdmitCardDownloadUrl(id, customUrl: customUrl);
+                
+                CustomToast.showSuccess(context, 'Generating official PDF document...');
+                
+                // 1. Generate PDF locally with proper formatting
+                final bytes = await AdmitCardGenerator.generateAdmitCard(_admitCardData!);
+                
+                if (bytes.isEmpty) {
+                  throw 'Failed to generate PDF document.';
+                }
+
+                // 2. Save the file using FilePicker
+                String? outputFile = await FilePicker.saveFile(
+                  dialogTitle: 'Save Admit Card',
+                  fileName: 'AdmitCard_$appNo.pdf',
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                  bytes: bytes,
+                );
+
+                if (outputFile != null) {
+                  CustomToast.showSuccess(context, 'Admit Card saved to device!');
+                }
+              } catch (e) {
+                CustomToast.showError(context, 'Generation failed: $e');
+              }
+            },
             icon: const Icon(Icons.download_rounded),
             label: const Text(
               'DOWNLOAD OFFICIAL ADMIT CARD',

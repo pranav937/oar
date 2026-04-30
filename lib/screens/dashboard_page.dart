@@ -349,8 +349,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProfileCard(),
-                    const SizedBox(height: 24),
-                    _buildProfileCompletion(),
                     const SizedBox(height: 32),
                     _buildSectionHeader('Recruitment Stats'),
                     const SizedBox(height: 16),
@@ -417,77 +415,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildProfileCompletion() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: OtrTheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: OtrTheme.softShadow,
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Profile Completion',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: OtrTheme.darkNavy,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: OtrTheme.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text(
-                  '85%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                    color: OtrTheme.success,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: 0.85,
-              minHeight: 8,
-              backgroundColor: Colors.grey.shade100,
-              valueColor: const AlwaysStoppedAnimation<Color>(OtrTheme.success),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline_rounded,
-                size: 14,
-                color: Colors.grey.shade400,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Complete documents to reach 100%',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildProfileCard() {
     final name = _stats?.fullName ?? 'Candidate';

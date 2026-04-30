@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/constants.dart';
@@ -753,6 +754,63 @@ class ApiService {
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  String getAdmitCardDownloadUrl(String applicationUuid, {String? customUrl}) {
+    if (customUrl != null && customUrl.isNotEmpty) {
+      if (customUrl.startsWith('http')) return customUrl;
+      return '${ApiConstants.baseUrl}${customUrl.startsWith('/') ? '' : '/'}$customUrl';
+    }
+    // Re-enabling /download suffix to be used with the new POST download logic
+    return '${ApiConstants.baseUrl}${ApiConstants.admitCardFetch}/$applicationUuid/download';
+  }
+
+  Future<List<int>?> downloadAdmitCardBytes(String url) async {
+    try {
+      final token = await _getToken();
+      // Using POST as identified in the Postman collection for the /download endpoint
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Accept': 'application/pdf',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({}),
+      ).timeout(const Duration(seconds: 45));
+
+      if (response.statusCode == 200) {
+        final bytes = response.bodyBytes;
+        // Check if the file starts with the PDF magic number '%PDF-'
+        if (bytes.length > 4 && 
+            bytes[0] == 0x25 && bytes[1] == 0x50 && 
+            bytes[2] == 0x44 && bytes[3] == 0x46) {
+          return bytes;
+        }
+        
+        debugPrint("Download failed: Response is not a valid PDF. Status: ${response.statusCode}");
+        return null;
+      }
+      
+      // Fallback to GET if POST fails (for non-standard endpoints)
+      final getResponse = await http.get(
+        Uri.parse(url),
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Accept': 'application/pdf',
+        },
+      ).timeout(const Duration(seconds: 30));
+
+      if (getResponse.statusCode == 200) {
+        final bytes = getResponse.bodyBytes;
+        if (bytes.length > 4 && bytes[0] == 0x25) return bytes;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint("PDF Download Exception: $e");
+      return null;
     }
   }
 }
