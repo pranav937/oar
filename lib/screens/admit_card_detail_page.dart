@@ -5,6 +5,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
 import '../utils/admit_card_generator.dart';
@@ -501,14 +503,46 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
               child: ElevatedButton.icon(
                 onPressed: () async {
                   try {
-                    final Uri url = Uri.parse(data['viewUrl'].toString());
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    } else {
-                      throw 'Could not launch $url';
+                    final app = widget.application;
+                    final String id = (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
+                    
+                    if (id.isEmpty) {
+                      CustomToast.showError(context, 'Invalid application ID');
+                      return;
                     }
+
+                    final urlString = _apiService.getAdmitCardDownloadUrl(id);
+                    CustomToast.showSuccess(context, 'Loading Hall Ticket...');
+
+                    // 1. Try downloading from server first
+                    List<int>? bytes = await _apiService.downloadAdmitCardBytes(urlString);
+
+                    // 2. Fallback to local generation if needed
+                    if (bytes == null || bytes.isEmpty) {
+                      debugPrint('Server download failed, falling back to local generation');
+                      if (_admitCardData != null) {
+                        CustomToast.showSuccess(context, 'Generating view locally...');
+                        bytes = await AdmitCardGenerator.generateAdmitCard(_admitCardData!);
+                      } else {
+                        throw 'No data available to generate view.';
+                      }
+                    }
+
+                    if (bytes == null || bytes.isEmpty) {
+                      throw 'Failed to download or generate PDF.';
+                    }
+
+                    // 3. Show native print/view dialog
+                    await Printing.layoutPdf(
+                      onLayout: (PdfPageFormat format) async => Uint8List.fromList(bytes!),
+                      name: 'AdmitCard_${app['applicationNumber'] ?? 'HallTicket'}',
+                    );
+
                   } catch (e) {
-                    CustomToast.showError(context, 'Error opening print view: $e');
+                    CustomToast.showError(
+                      context,
+                      'Error opening print view: $e',
+                    );
                   }
                 },
                 icon: const Icon(Icons.print_rounded),
@@ -559,23 +593,27 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                     _admitCardData!['pdfUrl']?.toString() ??
                     _admitCardData!['downloadUrl']?.toString();
 
-                final urlString = _apiService.getAdmitCardDownloadUrl(
-                  id,
-                  customUrl: customUrl,
-                );
+                final urlString = _apiService.getAdmitCardDownloadUrl(id);
+                CustomToast.showSuccess(context, 'Downloading Admit Card...');
 
-                CustomToast.showSuccess(
-                  context,
-                  'Generating official PDF document...',
-                );
+                // 1. Try downloading from server first
+                List<int>? bytes = await _apiService.downloadAdmitCardBytes(urlString);
 
-                // 1. Generate PDF locally with proper formatting
-                final bytes = await AdmitCardGenerator.generateAdmitCard(
-                  _admitCardData!,
-                );
+                // 2. If server download fails, fallback to local generation
+                if (bytes == null || bytes.isEmpty) {
+                  debugPrint('Server download failed or returned empty, falling back to local generation');
+                  CustomToast.showSuccess(context, 'Fetching data for local generation...');
+                  
+                  final detailResult = await _apiService.getAdmitCard(id);
+                  if (detailResult['success'] == true) {
+                    CustomToast.showSuccess(context, 'Generating PDF locally...');
+                    final fullData = detailResult['data'] ?? {};
+                    bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
+                  }
+                }
 
-                if (bytes.isEmpty) {
-                  throw 'Failed to generate PDF document.';
+                if (bytes == null || bytes.isEmpty) {
+                  throw 'Failed to get PDF document from server or local generator.';
                 }
 
                 // 2. Save the file using FilePicker
@@ -584,7 +622,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   fileName: 'AdmitCard_$appNo.pdf',
                   type: FileType.custom,
                   allowedExtensions: ['pdf'],
-                  bytes: bytes,
+                  bytes: Uint8List.fromList(bytes),
                 );
 
                 if (outputFile != null) {

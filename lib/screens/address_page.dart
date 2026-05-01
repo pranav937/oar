@@ -20,16 +20,12 @@ class _AddressPageState extends State<AddressPage> {
   bool _isSaving = false;
 
   final TextEditingController _pFlatController = TextEditingController();
-  final TextEditingController _pStreetController = TextEditingController();
-  final TextEditingController _pLandmarkController = TextEditingController();
   final TextEditingController _pTalukaController = TextEditingController();
   final TextEditingController _pDistrictController = TextEditingController();
   final TextEditingController _pStateController = TextEditingController();
   final TextEditingController _pPincodeController = TextEditingController();
 
   final TextEditingController _cFlatController = TextEditingController();
-  final TextEditingController _cStreetController = TextEditingController();
-  final TextEditingController _cLandmarkController = TextEditingController();
   final TextEditingController _cTalukaController = TextEditingController();
   final TextEditingController _cDistrictController = TextEditingController();
   final TextEditingController _cStateController = TextEditingController();
@@ -104,10 +100,11 @@ class _AddressPageState extends State<AddressPage> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -118,6 +115,10 @@ class _AddressPageState extends State<AddressPage> {
       _isSameAsPermanent = value ?? false;
       if (_isSameAsPermanent) {
         _cFlatController.text = _pFlatController.text;
+        _cTalukaController.text = _pTalukaController.text;
+        _cDistrictController.text = _pDistrictController.text;
+        _cStateController.text = _pStateController.text;
+        _cPincodeController.text = _pPincodeController.text;
       }
     });
   }
@@ -229,7 +230,7 @@ class _AddressPageState extends State<AddressPage> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: _isSameAsPermanent
-                                  ? OtrTheme.primaryBlue.withOpacity(0.3)
+                                  ? OtrTheme.primaryBlue.withAlpha(76)
                                   : Colors.transparent,
                             ),
                           ),
@@ -266,6 +267,51 @@ class _AddressPageState extends State<AddressPage> {
                                 icon: Icons.map_rounded,
                                 controller: _cFlatController,
                                 maxLines: 2,
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'Taluka/City',
+                                      hintText: 'Taluka',
+                                      icon: Icons.location_on_rounded,
+                                      controller: _cTalukaController,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'District',
+                                      hintText: 'District',
+                                      icon: Icons.location_city_rounded,
+                                      controller: _cDistrictController,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'State',
+                                      hintText: 'State',
+                                      icon: Icons.flag_rounded,
+                                      controller: _cStateController,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: OtrTextField(
+                                      label: 'Pincode',
+                                      hintText: '6 digits',
+                                      icon: Icons.pin_drop_rounded,
+                                      controller: _cPincodeController,
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -304,12 +350,12 @@ class _AddressPageState extends State<AddressPage> {
           decoration: BoxDecoration(
             color: isActive
                 ? OtrTheme.primaryBlue
-                : Colors.grey.withOpacity(0.2),
+                : Colors.grey.withAlpha(51),
             shape: BoxShape.circle,
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: OtrTheme.primaryBlue.withOpacity(0.3),
+                      color: OtrTheme.primaryBlue.withAlpha(76),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -347,7 +393,7 @@ class _AddressPageState extends State<AddressPage> {
       child: Container(
         height: 2,
         margin: const EdgeInsets.only(bottom: 14, left: 4, right: 4),
-        color: isDone ? OtrTheme.primaryBlue : Colors.grey.withOpacity(0.2),
+        color: isDone ? OtrTheme.primaryBlue : Colors.grey.withAlpha(51),
       ),
     );
   }
@@ -387,7 +433,7 @@ class _AddressPageState extends State<AddressPage> {
         padding: const EdgeInsets.symmetric(vertical: 18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 8,
-        shadowColor: OtrTheme.primaryBlue.withOpacity(0.4),
+        shadowColor: OtrTheme.primaryBlue.withAlpha(102),
       ),
       child: _isSaving
           ? const SizedBox(
@@ -431,15 +477,15 @@ class _AddressPageState extends State<AddressPage> {
         boxShadow: [
           BoxShadow(
             color: isExpanded
-                ? OtrTheme.primaryBlue.withOpacity(0.08)
-                : Colors.black.withOpacity(0.03),
+                ? OtrTheme.primaryBlue.withAlpha(20)
+                : Colors.black.withAlpha(8),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
           color: isExpanded
-              ? OtrTheme.primaryBlue.withOpacity(0.3)
+              ? OtrTheme.primaryBlue.withAlpha(76)
               : Colors.transparent,
           width: 1.5,
         ),

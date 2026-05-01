@@ -2409,6 +2409,44 @@
           "response": []
         },
         {
+          "name": "Delete Document by Type",
+          "request": {
+            "description": "Delete all documents of a specific type (e.g. AADHAR, DEGREE, CASTE).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{candidate_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/candidates/documents?documentType=AADHAR",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "candidates",
+                "documents"
+              ],
+              "query": [
+                {
+                  "key": "documentType",
+                  "value": "AADHAR",
+                  "description": "Type of document to delete (AADHAR, PAN, DEGREE, etc.)"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Get Candidate Documents",
           "request": {
             "auth": {
@@ -3014,7 +3052,84 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "View Admit Card HTML",
+          "request": {
+            "description": "Candidate: Direct HTML view of their own hall ticket.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{candidate_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admit-cards/:applicationUuid/view",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admit-cards",
+                ":applicationUuid",
+                "view"
+              ],
+              "variable": [
+                {
+                  "key": "applicationUuid",
+                  "value": "{{application_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Admit Card PDF",
+          "request": {
+            "description": "Candidate: Download admit card as PDF.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{candidate_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admit-cards/:applicationUuid/download-pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admit-cards",
+                ":applicationUuid",
+                "download-pdf"
+              ],
+              "variable": [
+                {
+                  "key": "applicationUuid",
+                  "value": "{{application_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
         }
+
       ]
     },
     {
@@ -3466,6 +3581,228 @@
                 {
                   "key": "applicationUuid",
                   "value": "{{application_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin: View Admit Card HTML",
+          "request": {
+            "description": "Admin: Direct HTML view of a candidate's hall ticket.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admin/admit-cards/:applicationUuid/view",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admin",
+                "admit-cards",
+                ":applicationUuid",
+                "view"
+              ],
+              "variable": [
+                {
+                  "key": "applicationUuid",
+                  "value": "{{application_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Admin: Download Admit Card PDF",
+          "request": {
+            "description": "Admin: Download admit card as PDF.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admin/admit-cards/:applicationUuid/download-pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admin",
+                "admit-cards",
+                ":applicationUuid",
+                "download-pdf"
+              ],
+              "variable": [
+                {
+                  "key": "applicationUuid",
+                  "value": "{{application_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+
+        {
+          "name": "Public: Get Admit Card (QR View)",
+          "request": {
+            "description": "Public endpoint to fetch admit card details by UUID. Used by mobile devices after scanning the QR code.",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admit-cards/public/:admitCardUuid",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admit-cards",
+                "public",
+                ":admitCardUuid"
+              ],
+              "variable": [
+                {
+                  "key": "admitCardUuid",
+                  "value": "{{admit_card_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Public: View Admit Card HTML",
+          "request": {
+            "description": "Public: Direct HTML view of the hall ticket. This is what the QR code scanners will hit to show the candidate details.",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admit-cards/public/:admitCardUuid/view",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admit-cards",
+                "public",
+                ":admitCardUuid",
+                "view"
+              ],
+              "variable": [
+                {
+                  "key": "admitCardUuid",
+                  "value": "{{admit_card_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Public: Download Admit Card PDF",
+          "request": {
+            "description": "Public: Download PDF via QR code scan.",
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admit-cards/public/:admitCardUuid/download-pdf",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admit-cards",
+                "public",
+                ":admitCardUuid",
+                "download-pdf"
+              ],
+              "variable": [
+                {
+                  "key": "admitCardUuid",
+                  "value": "{{admit_card_uuid}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+
+        {
+          "name": "Admin: Get All Applications",
+          "request": {
+            "description": "Admin: Get all applications with comprehensive filters for status, advertisement, and search terms.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ora/admin/applications?page=1&pageSize=10&status=&advertisementUuid=&search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ora",
+                "admin",
+                "applications"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status: SUBMITTED, SCRUTINY, ACCEPTED, REJECTED, etc."
+                },
+                {
+                  "key": "advertisementUuid",
+                  "value": "",
+                  "description": "Filter by advertisement UUID"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "Search by application number, candidate name, or email"
                 }
               ]
             }
@@ -4345,6 +4682,11 @@
     },
     {
       "key": "transaction_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admit_card_uuid",
       "value": "",
       "type": "string"
     }

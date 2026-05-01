@@ -804,28 +804,22 @@ class ApiService {
     }
   }
 
-  String getAdmitCardDownloadUrl(String applicationUuid, {String? customUrl}) {
-    if (customUrl != null && customUrl.isNotEmpty) {
-      if (customUrl.startsWith('http')) return customUrl;
-      return '${ApiConstants.baseUrl}${customUrl.startsWith('/') ? '' : '/'}$customUrl';
-    }
-    // Re-enabling /download suffix to be used with the new POST download logic
-    return '${ApiConstants.baseUrl}${ApiConstants.admitCardFetch}/$applicationUuid/download';
+  String getAdmitCardDownloadUrl(String applicationUuid) {
+    // Use /download-pdf suffix as per user requirement
+    return '${ApiConstants.baseUrl}${ApiConstants.admitCardFetch}/$applicationUuid/download-pdf';
   }
 
   Future<List<int>?> downloadAdmitCardBytes(String url) async {
     try {
       final token = await _getToken();
-      // Using POST as identified in the Postman collection for the /download endpoint
+      // Using GET as specified by the user's API requirement
       final response = await http
-          .post(
+          .get(
             Uri.parse(url),
             headers: {
               if (token != null) 'Authorization': 'Bearer $token',
               'Accept': 'application/pdf',
-              'Content-Type': 'application/json',
             },
-            body: jsonEncode({}),
           )
           .timeout(const Duration(seconds: 45));
 

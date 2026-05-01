@@ -264,35 +264,27 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                             return;
                           }
 
-                          final urlString = _apiService.getAdmitCardDownloadUrl(
-                            id,
-                          );
-                          CustomToast.showSuccess(
-                            context,
-                            'Fetching latest exam details...',
-                          );
+                          final urlString = _apiService.getAdmitCardDownloadUrl(id);
+                          CustomToast.showSuccess(context, 'Downloading Admit Card...');
 
-                          // 1. Fetch full admit card data for proper formatting
-                          final detailResult = await _apiService.getAdmitCard(
-                            id,
-                          );
+                          // 1. Try downloading from server first
+                          List<int>? bytes = await _apiService.downloadAdmitCardBytes(urlString);
 
-                          if (detailResult['success'] != true) {
-                            throw detailResult['message'] ??
-                                'Could not fetch exam details.';
+                          // 2. If server download fails, fallback to local generation
+                          if (bytes == null || bytes.isEmpty) {
+                            debugPrint('Server download failed or returned empty, falling back to local generation');
+                            CustomToast.showSuccess(context, 'Fetching data for local generation...');
+                            
+                            final detailResult = await _apiService.getAdmitCard(id);
+                            if (detailResult['success'] == true) {
+                              CustomToast.showSuccess(context, 'Generating PDF locally...');
+                              final fullData = detailResult['data'] ?? {};
+                              bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
+                            }
                           }
 
-                          CustomToast.showSuccess(context, 'Generating PDF...');
-                          final fullData = detailResult['data'] ?? {};
-
-                          // 2. Generate PDF locally
-                          final bytes =
-                              await AdmitCardGenerator.generateAdmitCard(
-                                fullData,
-                              );
-
-                          if (bytes.isEmpty) {
-                            throw 'Failed to generate PDF document.';
+                          if (bytes == null || bytes.isEmpty) {
+                            throw 'Failed to get PDF document from server or local generator.';
                           }
 
                           // 3. Save file
@@ -301,7 +293,7 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                             fileName: 'AdmitCard_$appNo.pdf',
                             type: FileType.custom,
                             allowedExtensions: ['pdf'],
-                            bytes: bytes,
+                            bytes: Uint8List.fromList(bytes!),
                           );
 
                           CustomToast.showSuccess(

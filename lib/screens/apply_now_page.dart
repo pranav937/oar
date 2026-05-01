@@ -801,25 +801,63 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     onTap: () => setState(() => _paymentMode = 'UPI'),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: _paymentMode == 'UPI' ? OtrTheme.primaryBlue : Colors.white,
+                        color: _paymentMode == 'UPI'
+                            ? OtrTheme.primaryBlue
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: _paymentMode == 'UPI' ? OtrTheme.primaryBlue : Colors.grey.shade200,
+                          color: _paymentMode == 'UPI'
+                              ? OtrTheme.primaryBlue
+                              : Colors.grey.shade200,
                           width: 2,
                         ),
                         boxShadow: _paymentMode == 'UPI'
-                            ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+                            ? [
+                                BoxShadow(
+                                  color: OtrTheme.primaryBlue.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ]
                             : [],
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.qr_code_scanner_rounded, color: _paymentMode == 'UPI' ? Colors.white : Colors.grey.shade600, size: 28),
+                          Icon(
+                            Icons.qr_code_scanner_rounded,
+                            color: _paymentMode == 'UPI'
+                                ? Colors.white
+                                : Colors.grey.shade600,
+                            size: 28,
+                          ),
                           const SizedBox(height: 12),
-                          Text('UPI', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _paymentMode == 'UPI' ? Colors.white : Colors.black87)),
+                          Text(
+                            'UPI',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _paymentMode == 'UPI'
+                                  ? Colors.white
+                                  : Colors.black87,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text('Instant & Secure', textAlign: TextAlign.center, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: _paymentMode == 'UPI' ? Colors.white70 : Colors.grey.shade500)),
+                          Text(
+                            'Instant & Secure',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                              color: _paymentMode == 'UPI'
+                                  ? Colors.white70
+                                  : Colors.grey.shade500,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -832,25 +870,63 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     onTap: () => setState(() => _paymentMode = 'CARD'),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: _paymentMode == 'CARD' ? OtrTheme.primaryBlue : Colors.white,
+                        color: _paymentMode == 'CARD'
+                            ? OtrTheme.primaryBlue
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: _paymentMode == 'CARD' ? OtrTheme.primaryBlue : Colors.grey.shade200,
+                          color: _paymentMode == 'CARD'
+                              ? OtrTheme.primaryBlue
+                              : Colors.grey.shade200,
                           width: 2,
                         ),
                         boxShadow: _paymentMode == 'CARD'
-                            ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+                            ? [
+                                BoxShadow(
+                                  color: OtrTheme.primaryBlue.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ]
                             : [],
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.credit_card_rounded, color: _paymentMode == 'CARD' ? Colors.white : Colors.grey.shade600, size: 28),
+                          Icon(
+                            Icons.credit_card_rounded,
+                            color: _paymentMode == 'CARD'
+                                ? Colors.white
+                                : Colors.grey.shade600,
+                            size: 28,
+                          ),
                           const SizedBox(height: 12),
-                          Text('CARD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _paymentMode == 'CARD' ? Colors.white : Colors.black87)),
+                          Text(
+                            'CARD',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _paymentMode == 'CARD'
+                                  ? Colors.white
+                                  : Colors.black87,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text('Credit / Debit', textAlign: TextAlign.center, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: _paymentMode == 'CARD' ? Colors.white70 : Colors.grey.shade500)),
+                          Text(
+                            'Credit / Debit',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                              color: _paymentMode == 'CARD'
+                                  ? Colors.white70
+                                  : Colors.grey.shade500,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -863,25 +939,63 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     onTap: () => setState(() => _paymentMode = 'NET_BANKING'),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 20,
+                        horizontal: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: _paymentMode == 'NET_BANKING' ? OtrTheme.primaryBlue : Colors.white,
+                        color: _paymentMode == 'NET_BANKING'
+                            ? OtrTheme.primaryBlue
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(
-                          color: _paymentMode == 'NET_BANKING' ? OtrTheme.primaryBlue : Colors.grey.shade200,
+                          color: _paymentMode == 'NET_BANKING'
+                              ? OtrTheme.primaryBlue
+                              : Colors.grey.shade200,
                           width: 2,
                         ),
                         boxShadow: _paymentMode == 'NET_BANKING'
-                            ? [BoxShadow(color: OtrTheme.primaryBlue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))]
+                            ? [
+                                BoxShadow(
+                                  color: OtrTheme.primaryBlue.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ]
                             : [],
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.account_balance_rounded, color: _paymentMode == 'NET_BANKING' ? Colors.white : Colors.grey.shade600, size: 28),
+                          Icon(
+                            Icons.account_balance_rounded,
+                            color: _paymentMode == 'NET_BANKING'
+                                ? Colors.white
+                                : Colors.grey.shade600,
+                            size: 28,
+                          ),
                           const SizedBox(height: 12),
-                          Text('NETBANK', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: _paymentMode == 'NET_BANKING' ? Colors.white : Colors.black87)),
+                          Text(
+                            'NETBANK',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _paymentMode == 'NET_BANKING'
+                                  ? Colors.white
+                                  : Colors.black87,
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Text('All Major Banks', textAlign: TextAlign.center, style: TextStyle(fontSize: 8, fontWeight: FontWeight.w500, color: _paymentMode == 'NET_BANKING' ? Colors.white70 : Colors.grey.shade500)),
+                          Text(
+                            'All Major Banks',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w500,
+                              color: _paymentMode == 'NET_BANKING'
+                                  ? Colors.white70
+                                  : Colors.grey.shade500,
+                            ),
+                          ),
                         ],
                       ),
                     ),
