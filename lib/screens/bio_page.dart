@@ -188,14 +188,28 @@ class _BioPageState extends State<BioPage> {
 
           // Handle remote images
           if (data['photoUrl'] != null) {
-            _remotePhotoUrl = data['photoUrl'].startsWith('http')
-                ? data['photoUrl']
-                : '${ApiConstants.baseUrl}${data['photoUrl']}';
+            String url = data['photoUrl'];
+            if (url.startsWith('http')) {
+              _remotePhotoUrl = url;
+            } else {
+              final String base = ApiConstants.baseUrl.endsWith('/')
+                  ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                  : ApiConstants.baseUrl;
+              final String path = url.startsWith('/') ? url : '/$url';
+              _remotePhotoUrl = '$base$path';
+            }
           }
           if (data['signatureUrl'] != null) {
-            _remoteSignatureUrl = data['signatureUrl'].startsWith('http')
-                ? data['signatureUrl']
-                : '${ApiConstants.baseUrl}${data['signatureUrl']}';
+            String url = data['signatureUrl'];
+            if (url.startsWith('http')) {
+              _remoteSignatureUrl = url;
+            } else {
+              final String base = ApiConstants.baseUrl.endsWith('/')
+                  ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                  : ApiConstants.baseUrl;
+              final String path = url.startsWith('/') ? url : '/$url';
+              _remoteSignatureUrl = '$base$path';
+            }
           }
 
           _isLoading = false;
@@ -449,29 +463,31 @@ class _BioPageState extends State<BioPage> {
 
         if (mounted) {
           if (result['success'] == true) {
-            // Update the remote URL if the server returned it
-            if (result['data'] != null && result['data']['photoUrl'] != null) {
+            if (result['data'] != null) {
               setState(() {
-                final url = result['data']['photoUrl'];
-                if (isPhoto) {
-                  _remotePhotoUrl = url.startsWith('http')
-                      ? url
-                      : '${ApiConstants.baseUrl}$url';
-                } else if (result['data']['signatureUrl'] != null) {
-                  final sigUrl = result['data']['signatureUrl'];
-                  _remoteSignatureUrl = sigUrl.startsWith('http')
-                      ? sigUrl
-                      : '${ApiConstants.baseUrl}$sigUrl';
+                if (isPhoto && result['data']['photoUrl'] != null) {
+                  String url = result['data']['photoUrl'];
+                  if (url.startsWith('http')) {
+                    _remotePhotoUrl = url;
+                  } else {
+                    final String base = ApiConstants.baseUrl.endsWith('/')
+                        ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                        : ApiConstants.baseUrl;
+                    final String path = url.startsWith('/') ? url : '/$url';
+                    _remotePhotoUrl = '$base$path';
+                  }
+                } else if (!isPhoto && result['data']['signatureUrl'] != null) {
+                  String url = result['data']['signatureUrl'];
+                  if (url.startsWith('http')) {
+                    _remoteSignatureUrl = url;
+                  } else {
+                    final String base = ApiConstants.baseUrl.endsWith('/')
+                        ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                        : ApiConstants.baseUrl;
+                    final String path = url.startsWith('/') ? url : '/$url';
+                    _remoteSignatureUrl = '$base$path';
+                  }
                 }
-              });
-            } else if (!isPhoto &&
-                result['data'] != null &&
-                result['data']['signatureUrl'] != null) {
-              setState(() {
-                final sigUrl = result['data']['signatureUrl'];
-                _remoteSignatureUrl = sigUrl.startsWith('http')
-                    ? sigUrl
-                    : '${ApiConstants.baseUrl}$sigUrl';
               });
             }
 
@@ -555,31 +571,21 @@ class _BioPageState extends State<BioPage> {
                     title: 'Basic Information',
                     icon: Icons.person_pin_rounded,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: _buildFunctionalDropdown(
-                              label: 'Title',
-                              hint: 'Mr.',
-                              icon: Icons.title_rounded,
-                              value: _selectedTitle,
-                              items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
-                              onChanged: (val) =>
-                                  setState(() => _selectedTitle = val),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: OtrTextField(
-                              label: 'Surname',
-                              hintText: 'Surname',
-                              icon: Icons.person_outline_rounded,
-                              controller: _surnameController,
-                            ),
-                          ),
-                        ],
+                      _buildFunctionalDropdown(
+                        label: 'Title',
+                        hint: 'Mr.',
+                        icon: Icons.title_rounded,
+                        value: _selectedTitle,
+                        items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
+                        onChanged: (val) =>
+                            setState(() => _selectedTitle = val),
+                      ),
+                      const SizedBox(height: 20),
+                      OtrTextField(
+                        label: 'Surname',
+                        hintText: 'Surname',
+                        icon: Icons.person_outline_rounded,
+                        controller: _surnameController,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -1253,29 +1259,42 @@ class _BioPageState extends State<BioPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: OtrTheme.darkNavy,
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: OtrTheme.darkNavy,
+              letterSpacing: -0.2,
+            ),
           ),
         ),
         const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade100, width: 1.5),
             boxShadow: OtrTheme.softShadow,
           ),
           child: DropdownButtonFormField<String>(
             value: items.contains(value) ? value : null,
+            isExpanded: true,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.grey,
+              size: 20,
+            ),
             decoration: InputDecoration(
-              prefixIcon: Icon(icon, color: OtrTheme.primaryBlue, size: 22),
+              prefixIcon: Container(
+                padding: const EdgeInsets.all(12),
+                child: Icon(icon, color: OtrTheme.primaryBlue, size: 22),
+              ),
               contentPadding: const EdgeInsets.symmetric(
-                vertical: 18,
-                horizontal: 16,
+                vertical: 16,
+                horizontal: 4,
               ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
@@ -1286,7 +1305,7 @@ class _BioPageState extends State<BioPage> {
               style: TextStyle(
                 color: Colors.grey.shade400,
                 fontSize: 14,
-                fontWeight: FontWeight.normal,
+                fontWeight: FontWeight.w500,
               ),
             ),
             style: const TextStyle(
@@ -1295,14 +1314,18 @@ class _BioPageState extends State<BioPage> {
               fontWeight: FontWeight.w600,
             ),
             items: items
-                .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                .map((e) => DropdownMenuItem(
+                      value: e,
+                      child: Text(
+                        e,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ))
                 .toList(),
             onChanged: onChanged,
-            iconSize: 24,
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.grey,
-            ),
           ),
         ),
       ],

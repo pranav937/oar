@@ -8,6 +8,7 @@ import '../utils/constants.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/custom_toast.dart';
+import '../models/document_type.dart';
 
 class DocumentsPage extends StatefulWidget {
   const DocumentsPage({super.key});
@@ -25,7 +26,21 @@ class _DocumentsPageState extends State<DocumentsPage> {
   bool _isUploading = false;
   String? _uploadingFor;
 
-  final Map<String, String> _documentMap = {'Aadhaar Card': 'AADHAAR'};
+  final Map<String, String> _documentMap = {
+    'Aadhaar Card': DocumentType.AADHAR.name,
+    'Driving License': DocumentType.DRIVING.name,
+    'PAN Card': DocumentType.PAN.name,
+    'Voter ID / Election Card': DocumentType.ELECTION.name,
+    '10th Marksheet/Certificate': DocumentType.TENTH.name,
+    '12th Marksheet/Certificate': DocumentType.TWELTH.name,
+    'Graduation Degree': DocumentType.GRADUATE.name,
+    'Post Graduation Degree': DocumentType.POSTGRADUATE.name,
+    'PWD Certificate': DocumentType.PWD.name,
+    'Caste Certificate': DocumentType.CASTE.name,
+    'Widow Certificate': DocumentType.WIDOW.name,
+    'Sports Certificate': DocumentType.SPORT.name,
+    'Ex-Servicemen Certificate': DocumentType.EXSERVICE.name,
+  };
 
   @override
   void initState() {
@@ -42,15 +57,18 @@ class _DocumentsPageState extends State<DocumentsPage> {
           for (var doc in docs) {
             final String? type = doc['documentType'];
             final String? name = doc['documentName'];
-            final String? url = doc['url'];
+            final String? url = doc['url'] ?? doc['fileUrl'];
 
-            // Reverse mapping from Type (AADHAAR) back to Title (Aadhaar Card)
+            // Reverse mapping from Type back to Title (handle variations like AADHAR/AADHAAR)
             String? title;
-            _documentMap.forEach((key, value) { 
-              if (value == type) title = key;
+            _documentMap.forEach((key, value) {
+              if (value.toUpperCase() == type?.toUpperCase() ||
+                  (value == 'AADHAR' && type?.toUpperCase() == 'AADHAAR')) {
+                title = key;
+              }
             });
 
-            if (title != null) {
+            if (title != null && url != null) {
               _uploadedDocs[title!] = {'name': name, 'url': url};
             }
           }
@@ -160,7 +178,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] as String? ?? 'Upload failed');
+          CustomToast.showSuccess(
+            context,
+            result['message'] as String? ?? 'Upload failed',
+          );
         }
       }
     } catch (e) {
@@ -378,12 +399,11 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
     if (url == null || url.isEmpty) {
       if (mounted) {
-        CustomToast.showSuccess(context, 'Document URL not found. Please re-upload.');
+        CustomToast.showError(context, 'Document URL not found.');
       }
       return;
     }
 
-    // Safely join Base URL and relative path
     String fullUrl = url;
     if (!url.startsWith('http')) {
       final String base = ApiConstants.baseUrl.endsWith('/')
@@ -393,29 +413,79 @@ class _DocumentsPageState extends State<DocumentsPage> {
       fullUrl = '$base$path';
     }
 
-    final Uri uri = Uri.parse(fullUrl);
-    try {
-      // Trying direct launch first (more reliable on newer Android versions)
-      bool launched = await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
+    // Check if it's an image or PDF
+    final lowerUrl = fullUrl.toLowerCase();
+    final isImage = lowerUrl.endsWith('.jpg') ||
+        lowerUrl.endsWith('.jpeg') ||
+        lowerUrl.endsWith('.png') ||
+        lowerUrl.endsWith('.webp');
 
-      if (!launched) {
-        // Fallback check
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } else {
-          if (mounted) {
-            CustomToast.showSuccess(context, 'Could not open browser. Try copying the link.');
+    if (isImage) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(10),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              InteractiveViewer(
+                panEnabled: true,
+                minScale: 0.5,
+                maxScale: 4,
+                child: Image.network(
+                  fullUrl,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.all(20),
+                    child: const Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline, color: Colors.red, size: 48),
+                        SizedBox(height: 16),
+                        Text('Could not load image'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // For PDFs or other files, use external browser
+      final Uri uri = Uri.parse(fullUrl);
+      try {
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!launched) {
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            if (mounted) {
+              CustomToast.showError(context, 'Could not open document.');
+            }
           }
         }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Browser Error: $e')));
+      } catch (e) {
+        if (mounted) {
+          CustomToast.showError(context, 'Browser Error: $e');
+        }
       }
     }
   }
@@ -439,10 +509,41 @@ class _DocumentsPageState extends State<DocumentsPage> {
             child: const Text('CANCEL'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() => _uploadedDocs.remove(docTitle));
-              Navigator.pop(context);
-              CustomToast.showSuccess(context, 'Document removed!');
+            onPressed: () async {
+              Navigator.pop(context); // Close dialog
+              final String? docType = _documentMap[docTitle];
+              if (docType == null) return;
+
+              setState(() {
+                _isUploading = true;
+                _uploadingFor = docTitle;
+              });
+
+              try {
+                final result = await _apiService.deleteDocument(docType);
+                if (result['success'] == true) {
+                  setState(() => _uploadedDocs.remove(docTitle));
+                  if (mounted) {
+                    CustomToast.showSuccess(context, 'Document removed!');
+                  }
+                } else {
+                  if (mounted) {
+                    CustomToast.showError(
+                      context,
+                      result['message'] ?? 'Failed to delete',
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  CustomToast.showError(context, 'Error deleting: $e');
+                }
+              } finally {
+                setState(() {
+                  _isUploading = false;
+                  _uploadingFor = null;
+                });
+              }
             },
             child: const Text(
               'DELETE',

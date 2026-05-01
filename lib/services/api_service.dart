@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -236,7 +236,9 @@ class ApiService {
         'otp': otp,
       }, authenticated: false);
 
-      debugPrint('DEBUG RESET PASSWORD: ${response.statusCode} - ${response.body}');
+      debugPrint(
+        'DEBUG RESET PASSWORD: ${response.statusCode} - ${response.body}',
+      );
       final Map<String, dynamic> decoded = jsonDecode(response.body);
 
       String parseMessage(dynamic msg) {
@@ -707,6 +709,49 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> deleteDocument(String type) async {
+    try {
+      final response = await delete(
+        '${ApiConstants.candidateUploadDocs}?documentType=$type',
+      );
+
+      // Handle empty body
+      if (response.body.isEmpty) {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          return {'success': true, 'message': 'Deleted successfully'};
+        }
+        return {
+          'success': false,
+          'message': 'Server error: ${response.statusCode}',
+        };
+      }
+
+      // Safe JSON decode
+      Map<String, dynamic> decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (e) {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          return {'success': true, 'message': 'Deleted successfully'};
+        }
+        return {'success': false, 'message': 'Invalid server response'};
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to delete document',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
@@ -772,43 +817,51 @@ class ApiService {
     try {
       final token = await _getToken();
       // Using POST as identified in the Postman collection for the /download endpoint
-      final response = await http.post(
-        Uri.parse(url),
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-          'Accept': 'application/pdf',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({}),
-      ).timeout(const Duration(seconds: 45));
+      final response = await http
+          .post(
+            Uri.parse(url),
+            headers: {
+              if (token != null) 'Authorization': 'Bearer $token',
+              'Accept': 'application/pdf',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({}),
+          )
+          .timeout(const Duration(seconds: 45));
 
       if (response.statusCode == 200) {
         final bytes = response.bodyBytes;
         // Check if the file starts with the PDF magic number '%PDF-'
-        if (bytes.length > 4 && 
-            bytes[0] == 0x25 && bytes[1] == 0x50 && 
-            bytes[2] == 0x44 && bytes[3] == 0x46) {
+        if (bytes.length > 4 &&
+            bytes[0] == 0x25 &&
+            bytes[1] == 0x50 &&
+            bytes[2] == 0x44 &&
+            bytes[3] == 0x46) {
           return bytes;
         }
-        
-        debugPrint("Download failed: Response is not a valid PDF. Status: ${response.statusCode}");
+
+        debugPrint(
+          "Download failed: Response is not a valid PDF. Status: ${response.statusCode}",
+        );
         return null;
       }
-      
+
       // Fallback to GET if POST fails (for non-standard endpoints)
-      final getResponse = await http.get(
-        Uri.parse(url),
-        headers: {
-          if (token != null) 'Authorization': 'Bearer $token',
-          'Accept': 'application/pdf',
-        },
-      ).timeout(const Duration(seconds: 30));
+      final getResponse = await http
+          .get(
+            Uri.parse(url),
+            headers: {
+              if (token != null) 'Authorization': 'Bearer $token',
+              'Accept': 'application/pdf',
+            },
+          )
+          .timeout(const Duration(seconds: 30));
 
       if (getResponse.statusCode == 200) {
         final bytes = getResponse.bodyBytes;
         if (bytes.length > 4 && bytes[0] == 0x25) return bytes;
       }
-      
+
       return null;
     } catch (e) {
       debugPrint("PDF Download Exception: $e");

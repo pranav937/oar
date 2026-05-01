@@ -347,17 +347,21 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                                 color: OtrTheme.primaryBlue,
                               ),
                               const SizedBox(width: 6),
-                              Text(
-                                app['advertisementName'] != null &&
-                                        app['advertisementName']
-                                            .toString()
-                                            .isNotEmpty
-                                    ? app['advertisementName']
-                                    : 'Department of Recruitment',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade500,
-                                  fontWeight: FontWeight.w600,
+                              Flexible(
+                                child: Text(
+                                  app['advertisementName'] != null &&
+                                          app['advertisementName']
+                                              .toString()
+                                              .isNotEmpty
+                                      ? app['advertisementName']
+                                      : 'Department of Recruitment',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade500,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -379,15 +383,20 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildCompactInfo(
-                      'SUBMITTED ON',
-                      dateStr,
-                      Icons.event_note_rounded,
+                    Expanded(
+                      child: _buildCompactInfo(
+                        'SUBMITTED ON',
+                        dateStr,
+                        Icons.event_note_rounded,
+                      ),
                     ),
-                    _buildCompactInfo(
-                      'APPLICATION ID',
-                      appNo,
-                      Icons.fingerprint_rounded,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildCompactInfo(
+                        'APPLICATION ID',
+                        appNo,
+                        Icons.fingerprint_rounded,
+                      ),
                     ),
                   ],
                 ),

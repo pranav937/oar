@@ -710,6 +710,8 @@ class _StatCard extends StatelessWidget {
                 color: OtrTheme.darkNavy,
                 height: 1,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Text(
@@ -719,6 +721,8 @@ class _StatCard extends StatelessWidget {
                 fontWeight: FontWeight.w800,
                 color: OtrTheme.darkNavy,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             Text(
               subtitle,
@@ -727,6 +731,8 @@ class _StatCard extends StatelessWidget {
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
