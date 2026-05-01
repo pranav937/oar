@@ -504,8 +504,13 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                 onPressed: () async {
                   try {
                     final app = widget.application;
-                    final String id = (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
-                    
+                    final String id =
+                        (app['applicationUuid'] ??
+                                app['uuid'] ??
+                                app['id'] ??
+                                '')
+                            .toString();
+
                     if (id.isEmpty) {
                       CustomToast.showError(context, 'Invalid application ID');
                       return;
@@ -515,14 +520,23 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                     CustomToast.showSuccess(context, 'Loading Hall Ticket...');
 
                     // 1. Try downloading from server first
-                    List<int>? bytes = await _apiService.downloadAdmitCardBytes(urlString);
+                    List<int>? bytes = await _apiService.downloadAdmitCardBytes(
+                      urlString,
+                    );
 
                     // 2. Fallback to local generation if needed
                     if (bytes == null || bytes.isEmpty) {
-                      debugPrint('Server download failed, falling back to local generation');
+                      debugPrint(
+                        'Server download failed, falling back to local generation',
+                      );
                       if (_admitCardData != null) {
-                        CustomToast.showSuccess(context, 'Generating view locally...');
-                        bytes = await AdmitCardGenerator.generateAdmitCard(_admitCardData!);
+                        CustomToast.showSuccess(
+                          context,
+                          'Generating view locally...',
+                        );
+                        bytes = await AdmitCardGenerator.generateAdmitCard(
+                          _admitCardData!,
+                        );
                       } else {
                         throw 'No data available to generate view.';
                       }
@@ -534,10 +548,11 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
 
                     // 3. Show native print/view dialog
                     await Printing.layoutPdf(
-                      onLayout: (PdfPageFormat format) async => Uint8List.fromList(bytes!),
-                      name: 'AdmitCard_${app['applicationNumber'] ?? 'HallTicket'}',
+                      onLayout: (PdfPageFormat format) async =>
+                          Uint8List.fromList(bytes!),
+                      name:
+                          'AdmitCard_${app['applicationNumber'] ?? 'HallTicket'}',
                     );
-
                   } catch (e) {
                     CustomToast.showError(
                       context,
@@ -597,18 +612,30 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                 CustomToast.showSuccess(context, 'Downloading Admit Card...');
 
                 // 1. Try downloading from server first
-                List<int>? bytes = await _apiService.downloadAdmitCardBytes(urlString);
+                List<int>? bytes = await _apiService.downloadAdmitCardBytes(
+                  urlString,
+                );
 
                 // 2. If server download fails, fallback to local generation
                 if (bytes == null || bytes.isEmpty) {
-                  debugPrint('Server download failed or returned empty, falling back to local generation');
-                  CustomToast.showSuccess(context, 'Fetching data for local generation...');
-                  
+                  debugPrint(
+                    'Server download failed or returned empty, falling back to local generation',
+                  );
+                  CustomToast.showSuccess(
+                    context,
+                    'Fetching data for local generation...',
+                  );
+
                   final detailResult = await _apiService.getAdmitCard(id);
                   if (detailResult['success'] == true) {
-                    CustomToast.showSuccess(context, 'Generating PDF locally...');
+                    CustomToast.showSuccess(
+                      context,
+                      'Generating PDF locally...',
+                    );
                     final fullData = detailResult['data'] ?? {};
-                    bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
+                    bytes = await AdmitCardGenerator.generateAdmitCard(
+                      fullData,
+                    );
                   }
                 }
 
