@@ -62,8 +62,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
             // Reverse mapping from Type back to Title (handle variations like AADHAR/AADHAAR)
             String? title;
             _documentMap.forEach((key, value) {
-              if (value.toUpperCase() == type?.toUpperCase() ||
-                  (value == 'AADHAR' && type?.toUpperCase() == 'AADHAAR')) {
+              if (value.toUpperCase() == type?.toUpperCase()) {
                 title = key;
               }
             });
@@ -415,7 +414,8 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
     // Check if it's an image or PDF
     final lowerUrl = fullUrl.toLowerCase();
-    final isImage = lowerUrl.endsWith('.jpg') ||
+    final isImage =
+        lowerUrl.endsWith('.jpg') ||
         lowerUrl.endsWith('.jpeg') ||
         lowerUrl.endsWith('.png') ||
         lowerUrl.endsWith('.webp');
