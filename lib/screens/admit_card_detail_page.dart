@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -104,6 +105,8 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
       }
     } catch (_) {}
 
+    final qrBytes = _getQrBytes(data['qrCodeImage']);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -140,9 +143,84 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   ],
                 ),
               ),
+              if (data['hallTicketNumber'] != null)
+                Text(
+                  data['hallTicketNumber'].toString(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: OtrTheme.darkNavy,
+                    fontSize: 12,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: 20),
+
+          // QR Code Card (New Section)
+          if (qrBytes != null)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 20),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'OFFICIAL QR VERIFICATION',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.grey,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade100),
+                    ),
+                    child: Image.memory(
+                      qrBytes,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    data['hallTicketNumber']?.toString() ?? '',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: OtrTheme.darkNavy,
+                      fontSize: 14,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'SCAN TO VALIDATE AUTHENTICITY',
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           Container(
             width: double.infinity,
@@ -415,6 +493,46 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
           ),
 
           const SizedBox(height: 30),
+
+          // Print Button (New Requirement)
+          if (data['viewUrl'] != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    final Uri url = Uri.parse(data['viewUrl'].toString());
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    } else {
+                      throw 'Could not launch $url';
+                    }
+                  } catch (e) {
+                    CustomToast.showError(context, 'Error opening print view: $e');
+                  }
+                },
+                icon: const Icon(Icons.print_rounded),
+                label: const Text(
+                  'PRINT HALL TICKET',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    letterSpacing: 1,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: OtrTheme.darkNavy,
+                  minimumSize: const Size.fromHeight(60),
+                  side: const BorderSide(color: OtrTheme.darkNavy, width: 2),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+
           ElevatedButton.icon(
             onPressed: () async {
               try {
@@ -424,25 +542,38 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                 }
 
                 final app = widget.application;
-                final String id = (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
-                final String appNo = (app['applicationNumber'] ?? 'ADMIT_CARD').toString().replaceAll('/', '_');
-                
+                final String id =
+                    (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '')
+                        .toString();
+                final String appNo = (app['applicationNumber'] ?? 'ADMIT_CARD')
+                    .toString()
+                    .replaceAll('/', '_');
+
                 if (id.isEmpty) {
                   CustomToast.showError(context, 'Invalid application ID');
                   return;
                 }
 
                 // Check if the API provided a specific PDF/Download URL
-                final String? customUrl = _admitCardData!['pdfUrl']?.toString() ?? 
-                                        _admitCardData!['downloadUrl']?.toString();
+                final String? customUrl =
+                    _admitCardData!['pdfUrl']?.toString() ??
+                    _admitCardData!['downloadUrl']?.toString();
 
-                final urlString = _apiService.getAdmitCardDownloadUrl(id, customUrl: customUrl);
-                
-                CustomToast.showSuccess(context, 'Generating official PDF document...');
-                
+                final urlString = _apiService.getAdmitCardDownloadUrl(
+                  id,
+                  customUrl: customUrl,
+                );
+
+                CustomToast.showSuccess(
+                  context,
+                  'Generating official PDF document...',
+                );
+
                 // 1. Generate PDF locally with proper formatting
-                final bytes = await AdmitCardGenerator.generateAdmitCard(_admitCardData!);
-                
+                final bytes = await AdmitCardGenerator.generateAdmitCard(
+                  _admitCardData!,
+                );
+
                 if (bytes.isEmpty) {
                   throw 'Failed to generate PDF document.';
                 }
@@ -457,7 +588,10 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                 );
 
                 if (outputFile != null) {
-                  CustomToast.showSuccess(context, 'Admit Card saved to device!');
+                  CustomToast.showSuccess(
+                    context,
+                    'Admit Card saved to device!',
+                  );
                 }
               } catch (e) {
                 CustomToast.showError(context, 'Generation failed: $e');
@@ -465,7 +599,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
             },
             icon: const Icon(Icons.download_rounded),
             label: const Text(
-              'DOWNLOAD OFFICIAL ADMIT CARD',
+              'DOWNLOAD PDF',
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 13,
@@ -486,6 +620,21 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
         ],
       ),
     );
+  }
+
+  Uint8List? _getQrBytes(String? dataUri) {
+    if (dataUri == null) return null;
+    try {
+      if (dataUri.startsWith('data:image')) {
+        final base64String = dataUri.split(',').last;
+        return base64Decode(base64String);
+      }
+      // If it's pure base64
+      return base64Decode(dataUri);
+    } catch (e) {
+      debugPrint('Error decoding QR code: $e');
+      return null;
+    }
   }
 
   Widget _detailItem(String label, String value, {bool isBold = false}) {

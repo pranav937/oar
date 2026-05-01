@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -12,7 +12,7 @@ class AdmitCardGenerator {
   static String _resolveUrl(String? url) {
     if (url == null || url.isEmpty) return '';
     if (url.startsWith('http')) return url;
-    
+
     final String base = ApiConstants.baseUrl.endsWith('/')
         ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
         : ApiConstants.baseUrl;
@@ -30,13 +30,17 @@ class AdmitCardGenerator {
     pw.ImageProvider? photoProvider;
     pw.ImageProvider? signatureProvider;
 
-    final String photoUrl = _resolveUrl(data['photoUrl']?.toString() ?? 
-                            data['candidate']?['photoUrl']?.toString() ??
-                            data['personalDetails']?['photoUrl']?.toString());
-    
-    final String signatureUrl = _resolveUrl(data['signatureUrl']?.toString() ?? 
-                               data['candidate']?['signatureUrl']?.toString() ??
-                               data['personalDetails']?['signatureUrl']?.toString());
+    final String photoUrl = _resolveUrl(
+      data['photoUrl']?.toString() ??
+          data['candidate']?['photoUrl']?.toString() ??
+          data['personalDetails']?['photoUrl']?.toString(),
+    );
+
+    final String signatureUrl = _resolveUrl(
+      data['signatureUrl']?.toString() ??
+          data['candidate']?['signatureUrl']?.toString() ??
+          data['personalDetails']?['signatureUrl']?.toString(),
+    );
 
     try {
       if (photoUrl.isNotEmpty) {
@@ -52,7 +56,7 @@ class AdmitCardGenerator {
         }
       }
     } catch (e) {
-      print('Error fetching images for PDF: $e');
+      debugPrint('Error fetching images for PDF: $e');
     }
 
     pdf.addPage(
@@ -87,7 +91,10 @@ class AdmitCardGenerator {
                   // Document Title
                   pw.Center(
                     child: pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const pw.EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
                       decoration: pw.BoxDecoration(
                         color: PdfColors.blue900,
                         borderRadius: pw.BorderRadius.circular(4),
@@ -114,23 +121,58 @@ class AdmitCardGenerator {
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            _buildInfoField('FULL NAME', data['candidateName']?.toString().toUpperCase() ?? 'N/A', font),
+                            _buildInfoField(
+                              'FULL NAME',
+                              data['candidateName']?.toString().toUpperCase() ??
+                                  'N/A',
+                              font,
+                            ),
                             pw.SizedBox(height: 12),
                             pw.Row(
                               children: [
-                                pw.Expanded(child: _buildInfoField('APPLICATION NO', data['applicationNumber']?.toString() ?? 'N/A', font)),
-                                pw.Expanded(child: _buildInfoField('ROLL NUMBER', data['rollNumber']?.toString() ?? 'PENDING', font)),
+                                pw.Expanded(
+                                  child: _buildInfoField(
+                                    'APPLICATION NO',
+                                    data['applicationNumber']?.toString() ??
+                                        'N/A',
+                                    font,
+                                  ),
+                                ),
+                                pw.Expanded(
+                                  child: _buildInfoField(
+                                    'ROLL NUMBER',
+                                    data['rollNumber']?.toString() ?? 'PENDING',
+                                    font,
+                                  ),
+                                ),
                               ],
                             ),
                             pw.SizedBox(height: 12),
                             pw.Row(
                               children: [
-                                pw.Expanded(child: _buildInfoField('CATEGORY', data['category']?.toString() ?? 'UR', font)),
-                                pw.Expanded(child: _buildInfoField('GENDER', data['gender']?.toString() ?? 'N/A', font)),
+                                pw.Expanded(
+                                  child: _buildInfoField(
+                                    'CATEGORY',
+                                    data['category']?.toString() ?? 'UR',
+                                    font,
+                                  ),
+                                ),
+                                pw.Expanded(
+                                  child: _buildInfoField(
+                                    'GENDER',
+                                    data['gender']?.toString() ?? 'N/A',
+                                    font,
+                                  ),
+                                ),
                               ],
                             ),
                             pw.SizedBox(height: 12),
-                            _buildInfoField('DATE OF BIRTH', data['dateOfBirth']?.toString().split('T')[0] ?? 'N/A', font),
+                            _buildInfoField(
+                              'DATE OF BIRTH',
+                              data['dateOfBirth']?.toString().split('T')[0] ??
+                                  'N/A',
+                              font,
+                            ),
                           ],
                         ),
                       ),
@@ -143,11 +185,17 @@ class AdmitCardGenerator {
                             decoration: pw.BoxDecoration(
                               border: pw.Border.all(color: PdfColors.grey400),
                             ),
-                            child: photoProvider != null 
-                              ? pw.Image(photoProvider, fit: pw.BoxFit.cover)
-                              : pw.Center(
-                                  child: pw.Text('PHOTO', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey400)),
-                                ),
+                            child: photoProvider != null
+                                ? pw.Image(photoProvider, fit: pw.BoxFit.cover)
+                                : pw.Center(
+                                    child: pw.Text(
+                                      'PHOTO',
+                                      style: pw.TextStyle(
+                                        fontSize: 8,
+                                        color: PdfColors.grey400,
+                                      ),
+                                    ),
+                                  ),
                           ),
                           pw.SizedBox(height: 5),
                           pw.Container(
@@ -157,10 +205,19 @@ class AdmitCardGenerator {
                               border: pw.Border.all(color: PdfColors.grey400),
                             ),
                             child: signatureProvider != null
-                              ? pw.Image(signatureProvider, fit: pw.BoxFit.contain)
-                              : pw.Center(
-                                  child: pw.Text('SIGNATURE', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey400)),
-                                ),
+                                ? pw.Image(
+                                    signatureProvider,
+                                    fit: pw.BoxFit.contain,
+                                  )
+                                : pw.Center(
+                                    child: pw.Text(
+                                      'SIGNATURE',
+                                      style: pw.TextStyle(
+                                        fontSize: 8,
+                                        color: PdfColors.grey400,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ],
                       ),
@@ -172,7 +229,12 @@ class AdmitCardGenerator {
                   pw.SizedBox(height: 10),
 
                   // Post Info
-                  _buildInfoField('POST APPLIED FOR', data['postName']?.toString().toUpperCase() ?? 'N/A', font, isFullWidth: true),
+                  _buildInfoField(
+                    'POST APPLIED FOR',
+                    data['postName']?.toString().toUpperCase() ?? 'N/A',
+                    font,
+                    isFullWidth: true,
+                  ),
 
                   pw.SizedBox(height: 20),
 
@@ -189,34 +251,82 @@ class AdmitCardGenerator {
                       children: [
                         pw.Text(
                           'EXAMINATION LOGISTICS',
-                          style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.blue900),
+                          style: pw.TextStyle(
+                            font: font,
+                            fontSize: 10,
+                            color: PdfColors.blue900,
+                          ),
                         ),
                         pw.SizedBox(height: 12),
                         pw.Row(
                           children: [
-                            pw.Expanded(child: _buildInfoField('EXAM DATE', data['examDate']?.toString() ?? 'N/A', font)),
-                            pw.Expanded(child: _buildInfoField('REPORTING TIME', data['reportingTime']?.toString() ?? 'N/A', font)),
+                            pw.Expanded(
+                              child: _buildInfoField(
+                                'EXAM DATE',
+                                data['examDate']?.toString() ?? 'N/A',
+                                font,
+                              ),
+                            ),
+                            pw.Expanded(
+                              child: _buildInfoField(
+                                'REPORTING TIME',
+                                data['reportingTime']?.toString() ?? 'N/A',
+                                font,
+                              ),
+                            ),
                           ],
                         ),
                         pw.SizedBox(height: 12),
                         pw.Row(
                           children: [
-                            pw.Expanded(child: _buildInfoField('GATE CLOSING', data['gateClosingTime']?.toString() ?? 'N/A', font)),
-                            pw.Expanded(child: _buildInfoField('SHIFT / SESSION', data['examShift']?.toString() ?? 'N/A', font)),
+                            pw.Expanded(
+                              child: _buildInfoField(
+                                'GATE CLOSING',
+                                data['gateClosingTime']?.toString() ?? 'N/A',
+                                font,
+                              ),
+                            ),
+                            pw.Expanded(
+                              child: _buildInfoField(
+                                'SHIFT / SESSION',
+                                data['examShift']?.toString() ?? 'N/A',
+                                font,
+                              ),
+                            ),
                           ],
                         ),
                         pw.SizedBox(height: 12),
-                        _buildInfoField('EXAMINATION VENUE', data['examVenueName']?.toString() ?? 'N/A', font, isFullWidth: true),
+                        _buildInfoField(
+                          'EXAMINATION VENUE',
+                          data['examVenueName']?.toString() ?? 'N/A',
+                          font,
+                          isFullWidth: true,
+                        ),
                         pw.SizedBox(height: 4),
                         pw.Text(
                           data['examVenueAddress']?.toString() ?? '',
-                          style: pw.TextStyle(fontSize: 9, color: PdfColors.grey800),
+                          style: pw.TextStyle(
+                            fontSize: 9,
+                            color: PdfColors.grey800,
+                          ),
                         ),
                         pw.SizedBox(height: 12),
                         pw.Row(
                           children: [
-                            pw.Expanded(child: _buildInfoField('CENTRE CODE', data['examCentreCode']?.toString() ?? 'N/A', font)),
-                            pw.Expanded(child: _buildInfoField('SEAT NUMBER', data['seatNumber']?.toString() ?? 'N/A', font)),
+                            pw.Expanded(
+                              child: _buildInfoField(
+                                'CENTRE CODE',
+                                data['examCentreCode']?.toString() ?? 'N/A',
+                                font,
+                              ),
+                            ),
+                            pw.Expanded(
+                              child: _buildInfoField(
+                                'SEAT NUMBER',
+                                data['seatNumber']?.toString() ?? 'N/A',
+                                font,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -228,13 +338,25 @@ class AdmitCardGenerator {
                   // Important Instructions
                   pw.Text(
                     'IMPORTANT INSTRUCTIONS FOR CANDIDATES',
-                    style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.blue900),
+                    style: pw.TextStyle(
+                      font: font,
+                      fontSize: 10,
+                      color: PdfColors.blue900,
+                    ),
                   ),
                   pw.SizedBox(height: 8),
-                  _instructionItem('1. Candidates must bring this Admit Card along with an original Photo ID proof.'),
-                  _instructionItem('2. Please reach the examination center at least 60 minutes before the reporting time.'),
-                  _instructionItem('3. Electronic gadgets, mobile phones, and calculators are strictly prohibited.'),
-                  _instructionItem('4. The candidate signature must match the one uploaded during registration.'),
+                  _instructionItem(
+                    '1. Candidates must bring this Admit Card along with an original Photo ID proof.',
+                  ),
+                  _instructionItem(
+                    '2. Please reach the examination center at least 60 minutes before the reporting time.',
+                  ),
+                  _instructionItem(
+                    '3. Electronic gadgets, mobile phones, and calculators are strictly prohibited.',
+                  ),
+                  _instructionItem(
+                    '4. The candidate signature must match the one uploaded during registration.',
+                  ),
 
                   pw.Spacer(),
 
@@ -248,11 +370,18 @@ class AdmitCardGenerator {
                         children: [
                           pw.Text(
                             'Date of Issue: ${DateFormat('dd-MMM-yyyy').format(DateTime.now())}',
-                            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey700),
+                            style: const pw.TextStyle(
+                              fontSize: 8,
+                              color: PdfColors.grey700,
+                            ),
                           ),
                           pw.Text(
                             'System Generated Document - No Signature Required',
-                            style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic, color: PdfColors.grey700),
+                            style: pw.TextStyle(
+                              fontSize: 8,
+                              fontStyle: pw.FontStyle.italic,
+                              color: PdfColors.grey700,
+                            ),
                           ),
                         ],
                       ),
@@ -260,7 +389,12 @@ class AdmitCardGenerator {
                         width: 50,
                         height: 50,
                         color: PdfColors.grey200,
-                        child: pw.Center(child: pw.Text('QR', style: const pw.TextStyle(fontSize: 8))),
+                        child: pw.Center(
+                          child: pw.Text(
+                            'QR',
+                            style: const pw.TextStyle(fontSize: 8),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -275,7 +409,12 @@ class AdmitCardGenerator {
     return pdf.save();
   }
 
-  static pw.Widget _buildInfoField(String label, String value, pw.Font font, {bool isFullWidth = false}) {
+  static pw.Widget _buildInfoField(
+    String label,
+    String value,
+    pw.Font font, {
+    bool isFullWidth = false,
+  }) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [

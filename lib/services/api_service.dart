@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -137,7 +137,7 @@ class ApiService {
         authenticated: false,
       );
 
-      print(
+      debugPrint(
         "DEBUG: Registration Response (${response.statusCode}): ${response.body}",
       );
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -236,7 +236,7 @@ class ApiService {
         'otp': otp,
       }, authenticated: false);
 
-      print('DEBUG RESET PASSWORD: ${response.statusCode} - ${response.body}');
+      debugPrint('DEBUG RESET PASSWORD: ${response.statusCode} - ${response.body}');
       final Map<String, dynamic> decoded = jsonDecode(response.body);
 
       String parseMessage(dynamic msg) {
@@ -477,9 +477,9 @@ class ApiService {
     Map<String, dynamic> appData,
   ) async {
     try {
-      print('DEBUG SUBMIT APPDATA: $appData');
+      debugPrint('DEBUG SUBMIT APPDATA: $appData');
       final response = await post(ApiConstants.applicationSubmit, appData);
-      print('DEBUG SUBMIT APP: ${response.statusCode} - ${response.body}');
+      debugPrint('DEBUG SUBMIT APP: ${response.statusCode} - ${response.body}');
       final decoded = jsonDecode(response.body);
 
       String parseMsg(dynamic body) {
@@ -719,8 +719,10 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
       }
+      debugPrint('Error loading notifications');
       return {'success': false, 'message': 'Failed to load notifications'};
     } catch (e) {
+      debugPrint('Error loading notifications: $e');
       return {'success': false, 'message': e.toString()};
     }
   }

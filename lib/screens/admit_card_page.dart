@@ -35,7 +35,7 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
         page: 1,
         pageSize: 20,
       );
-      
+
       if (response['success'] == true) {
         final data = response['data'];
         List<dynamic> fetchedApps = [];
@@ -51,17 +51,18 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
           // Filtering based on the provided JSON structure
           _applications = fetchedApps.where((app) {
             final status = (app['status'] ?? '').toString().toUpperCase();
-            
+
             // Check nested statusTimeline for admitCardIssued
             bool isIssuedByTimeline = false;
             if (app['statusTimeline'] != null && app['statusTimeline'] is Map) {
-              isIssuedByTimeline = app['statusTimeline']['admitCardIssued'] == true;
+              isIssuedByTimeline =
+                  app['statusTimeline']['admitCardIssued'] == true;
             }
 
             // Also check for ADMIT_CARD_ISSUED status directly
             return status == 'ADMIT_CARD_ISSUED' || isIssuedByTimeline;
           }).toList();
-          
+
           _isLoading = false;
         });
       } else {
@@ -93,10 +94,7 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
       appBar: AppBar(
         title: const Text(
           'Admit Cards',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0.5,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.5),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -247,29 +245,51 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         try {
-                          final String id = (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
-                          final String appNo = (app['applicationNumber'] ?? 'ADMIT_CARD').toString().replaceAll('/', '_');
-                          
+                          final String id =
+                              (app['applicationUuid'] ??
+                                      app['uuid'] ??
+                                      app['id'] ??
+                                      '')
+                                  .toString();
+                          final String appNo =
+                              (app['applicationNumber'] ?? 'ADMIT_CARD')
+                                  .toString()
+                                  .replaceAll('/', '_');
+
                           if (id.isEmpty) {
-                            CustomToast.showError(context, 'Invalid application ID');
+                            CustomToast.showError(
+                              context,
+                              'Invalid application ID',
+                            );
                             return;
                           }
-                          
-                          final urlString = _apiService.getAdmitCardDownloadUrl(id);
-                          CustomToast.showSuccess(context, 'Fetching latest exam details...');
+
+                          final urlString = _apiService.getAdmitCardDownloadUrl(
+                            id,
+                          );
+                          CustomToast.showSuccess(
+                            context,
+                            'Fetching latest exam details...',
+                          );
 
                           // 1. Fetch full admit card data for proper formatting
-                          final detailResult = await _apiService.getAdmitCard(id);
-                          
+                          final detailResult = await _apiService.getAdmitCard(
+                            id,
+                          );
+
                           if (detailResult['success'] != true) {
-                            throw detailResult['message'] ?? 'Could not fetch exam details.';
+                            throw detailResult['message'] ??
+                                'Could not fetch exam details.';
                           }
 
                           CustomToast.showSuccess(context, 'Generating PDF...');
                           final fullData = detailResult['data'] ?? {};
 
                           // 2. Generate PDF locally
-                          final bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
+                          final bytes =
+                              await AdmitCardGenerator.generateAdmitCard(
+                                fullData,
+                              );
 
                           if (bytes.isEmpty) {
                             throw 'Failed to generate PDF document.';
@@ -284,7 +304,10 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                             bytes: bytes,
                           );
 
-                          CustomToast.showSuccess(context, 'Admit Card saved to device!');
+                          CustomToast.showSuccess(
+                            context,
+                            'Admit Card saved to device!',
+                          );
                         } catch (e) {
                           CustomToast.showError(context, 'Failed: $e');
                         }
