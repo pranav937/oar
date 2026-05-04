@@ -178,7 +178,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     itemBuilder: (context, index) {
                       final notif = notifications[index];
                       // The real API does not seem to have a 'read' boolean. We'll default to true or check status.
-                      final isRead = true;
+                      final isRead = (notif['isRead'] ?? true) == true;
 
                       return Container(
                         padding: const EdgeInsets.all(16),
@@ -414,7 +414,6 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
     );
   }
-
 
   Widget _buildProfileCard() {
     final name = _stats?.fullName ?? 'Candidate';

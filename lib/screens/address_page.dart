@@ -15,7 +15,8 @@ class AddressPage extends StatefulWidget {
 class _AddressPageState extends State<AddressPage> {
   final ApiService _apiService = ApiService();
   int _expandedIndex = 0;
-  bool _isSameAsPermanent = false;
+  bool _isPermanentSameAsCurrent = false;
+  bool _isCorrespondenceSameAsCurrent = false;
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -31,10 +32,62 @@ class _AddressPageState extends State<AddressPage> {
   final TextEditingController _cStateController = TextEditingController();
   final TextEditingController _cPincodeController = TextEditingController();
 
+  final TextEditingController _currFlatController = TextEditingController();
+  final TextEditingController _currTalukaController = TextEditingController();
+  final TextEditingController _currDistrictController = TextEditingController();
+  final TextEditingController _currStateController = TextEditingController();
+  final TextEditingController _currPincodeController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _fetchAddress();
+
+    // Add listeners for real-time sync
+    _currFlatController.addListener(_syncAddresses);
+    _currTalukaController.addListener(_syncAddresses);
+    _currDistrictController.addListener(_syncAddresses);
+    _currStateController.addListener(_syncAddresses);
+    _currPincodeController.addListener(_syncAddresses);
+  }
+
+  @override
+  void dispose() {
+    _currFlatController.dispose();
+    _currTalukaController.dispose();
+    _currDistrictController.dispose();
+    _currStateController.dispose();
+    _currPincodeController.dispose();
+
+    _pFlatController.dispose();
+    _pTalukaController.dispose();
+    _pDistrictController.dispose();
+    _pStateController.dispose();
+    _pPincodeController.dispose();
+
+    _cFlatController.dispose();
+    _cTalukaController.dispose();
+    _cDistrictController.dispose();
+    _cStateController.dispose();
+    _cPincodeController.dispose();
+    super.dispose();
+  }
+
+  void _syncAddresses() {
+    if (_isPermanentSameAsCurrent) {
+      _pFlatController.text = _currFlatController.text;
+      _pTalukaController.text = _currTalukaController.text;
+      _pDistrictController.text = _currDistrictController.text;
+      _pStateController.text = _currStateController.text;
+      _pPincodeController.text = _currPincodeController.text;
+    }
+    if (_isCorrespondenceSameAsCurrent) {
+      _cFlatController.text = _currFlatController.text;
+      _cTalukaController.text = _currTalukaController.text;
+      _cDistrictController.text = _currDistrictController.text;
+      _cStateController.text = _currStateController.text;
+      _cPincodeController.text = _currPincodeController.text;
+    }
   }
 
   Future<void> _fetchAddress() async {
@@ -51,16 +104,26 @@ class _AddressPageState extends State<AddressPage> {
           _pPincodeController.text = data['pinCode'] ?? '';
 
           // Correspondence Address
-          _cFlatController.text =
-              data['correspondenceAddress'] ?? data['presentAddress'] ?? '';
+          _cFlatController.text = data['correspondenceAddress'] ?? '';
           _cStateController.text = data['state'] ?? '';
           _cDistrictController.text = data['district'] ?? '';
           _cTalukaController.text = data['taluka'] ?? '';
           _cPincodeController.text = data['pinCode'] ?? '';
 
-          if (_pFlatController.text.isNotEmpty &&
-              _pFlatController.text == _cFlatController.text) {
-            _isSameAsPermanent = true;
+          // Current/Present Address
+          _currFlatController.text = data['presentAddress'] ?? '';
+          _currTalukaController.text = data['taluka'] ?? '';
+          _currDistrictController.text = data['district'] ?? '';
+          _currStateController.text = data['state'] ?? '';
+          _currPincodeController.text = data['pinCode'] ?? '';
+
+          if (_currFlatController.text.isNotEmpty) {
+            if (_currFlatController.text == _pFlatController.text) {
+              _isPermanentSameAsCurrent = true;
+            }
+            if (_currFlatController.text == _cFlatController.text) {
+              _isCorrespondenceSameAsCurrent = true;
+            }
           }
 
           _isLoading = false;
@@ -76,16 +139,12 @@ class _AddressPageState extends State<AddressPage> {
     try {
       final profileData = {
         'permanentAddress': _pFlatController.text,
-        'correspondenceAddress': _isSameAsPermanent
-            ? _pFlatController.text
-            : _cFlatController.text,
-        'presentAddress': _isSameAsPermanent
-            ? _pFlatController.text
-            : _cFlatController.text,
-        'state': _pStateController.text,
-        'district': _pDistrictController.text,
-        'taluka': _pTalukaController.text,
-        'pinCode': _pPincodeController.text,
+        'correspondenceAddress': _cFlatController.text,
+        'presentAddress': _currFlatController.text,
+        'state': _currStateController.text, // Using current as primary
+        'district': _currDistrictController.text,
+        'taluka': _currTalukaController.text,
+        'pinCode': _currPincodeController.text,
       };
 
       final result = await _apiService.updateProfile(profileData);
@@ -110,15 +169,28 @@ class _AddressPageState extends State<AddressPage> {
     }
   }
 
-  void _handleCheckbox(bool? value) {
+  void _handlePermanentSync(bool? value) {
     setState(() {
-      _isSameAsPermanent = value ?? false;
-      if (_isSameAsPermanent) {
-        _cFlatController.text = _pFlatController.text;
-        _cTalukaController.text = _pTalukaController.text;
-        _cDistrictController.text = _pDistrictController.text;
-        _cStateController.text = _pStateController.text;
-        _cPincodeController.text = _pPincodeController.text;
+      _isPermanentSameAsCurrent = value ?? false;
+      if (_isPermanentSameAsCurrent) {
+        _pFlatController.text = _currFlatController.text;
+        _pTalukaController.text = _currTalukaController.text;
+        _pDistrictController.text = _currDistrictController.text;
+        _pStateController.text = _currStateController.text;
+        _pPincodeController.text = _currPincodeController.text;
+      }
+    });
+  }
+
+  void _handleCorrespondenceSync(bool? value) {
+    setState(() {
+      _isCorrespondenceSameAsCurrent = value ?? false;
+      if (_isCorrespondenceSameAsCurrent) {
+        _cFlatController.text = _currFlatController.text;
+        _cTalukaController.text = _currTalukaController.text;
+        _cDistrictController.text = _currDistrictController.text;
+        _cStateController.text = _currStateController.text;
+        _cPincodeController.text = _currPincodeController.text;
       }
     });
   }
@@ -162,162 +234,248 @@ class _AddressPageState extends State<AddressPage> {
                   const SizedBox(height: 24),
                   _buildCollapsibleSection(
                     index: 0,
-                    title: 'Permanent Address',
-                    icon: Icons.home_work_rounded,
+                    title: 'Current Address',
+                    icon: Icons.location_history_rounded,
                     children: [
-                            OtrTextField(
-                              label: 'Full Address',
-                              hintText: 'Enter permanent address',
-                              icon: Icons.map_rounded,
-                              controller: _pFlatController,
-                              maxLines: 2,
+                      OtrTextField(
+                        label: 'Full Address',
+                        hintText: 'Enter current address',
+                        icon: Icons.map_rounded,
+                        controller: _currFlatController,
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OtrTextField(
+                              label: 'Taluka/City',
+                              hintText: 'Taluka',
+                              icon: Icons.location_on_rounded,
+                              controller: _currTalukaController,
                             ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OtrTextField(
-                                    label: 'Taluka/City',
-                                    hintText: 'Taluka',
-                                    icon: Icons.location_on_rounded,
-                                    controller: _pTalukaController,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OtrTextField(
-                                    label: 'District',
-                                    hintText: 'District',
-                                    icon: Icons.location_city_rounded,
-                                    controller: _pDistrictController,
-                                  ),
-                                ),
-                              ],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OtrTextField(
+                              label: 'District',
+                              hintText: 'District',
+                              icon: Icons.location_city_rounded,
+                              controller: _currDistrictController,
                             ),
-                            const SizedBox(height: 20),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OtrTextField(
-                                    label: 'State',
-                                    hintText: 'State',
-                                    icon: Icons.flag_rounded,
-                                    controller: _pStateController,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OtrTextField(
-                                    label: 'Pincode',
-                                    hintText: '6 digits',
-                                    icon: Icons.pin_drop_rounded,
-                                    controller: _pPincodeController,
-                                    keyboardType: TextInputType.number,
-                                  ),
-                                ),
-                              ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OtrTextField(
+                              label: 'State',
+                              hintText: 'State',
+                              icon: Icons.flag_rounded,
+                              controller: _currStateController,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OtrTextField(
+                              label: 'Pincode',
+                              hintText: '6 digits',
+                              icon: Icons.pin_drop_rounded,
+                              controller: _currPincodeController,
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _isPermanentSameAsCurrent
+                            ? OtrTheme.primaryBlue.withAlpha(76)
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: CheckboxListTile(
+                      value: _isPermanentSameAsCurrent,
+                      onChanged: _handlePermanentSync,
+                      title: const Text(
+                        'Permanent Address Same as Current',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: OtrTheme.darkNavy,
+                        ),
+                      ),
+                      activeColor: OtrTheme.primaryBlue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (!_isPermanentSameAsCurrent)
+                    _buildCollapsibleSection(
+                      index: 1,
+                      title: 'Permanent Address',
+                      icon: Icons.home_work_rounded,
+                      children: [
+                        OtrTextField(
+                          label: 'Full Address',
+                          hintText: 'Enter permanent address',
+                          icon: Icons.map_rounded,
+                          controller: _pFlatController,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'Taluka/City',
+                                hintText: 'Taluka',
+                                icon: Icons.location_on_rounded,
+                                controller: _pTalukaController,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'District',
+                                hintText: 'District',
+                                icon: Icons.location_city_rounded,
+                                controller: _pDistrictController,
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: _isSameAsPermanent
-                                  ? OtrTheme.primaryBlue.withAlpha(76)
-                                  : Colors.transparent,
-                            ),
-                          ),
-                          child: CheckboxListTile(
-                            value: _isSameAsPermanent,
-                            onChanged: _handleCheckbox,
-                            title: const Text(
-                              'Same as Permanent Address',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: OtrTheme.darkNavy,
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'State',
+                                hintText: 'State',
+                                icon: Icons.flag_rounded,
+                                controller: _pStateController,
                               ),
                             ),
-                            activeColor: OtrTheme.primaryBlue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'Pincode',
+                                hintText: '6 digits',
+                                icon: Icons.pin_drop_rounded,
+                                controller: _pPincodeController,
+                                keyboardType: TextInputType.number,
+                              ),
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                            ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        if (!_isSameAsPermanent)
-                          _buildCollapsibleSection(
-                            index: 1,
-                            title: 'Correspondence Address',
-                            icon: Icons.mail_rounded,
-                            children: [
-                              OtrTextField(
-                                label: 'Full Address',
-                                hintText: 'Enter correspondence address',
-                                icon: Icons.map_rounded,
-                                controller: _cFlatController,
-                                maxLines: 2,
+                      ],
+                    ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _isCorrespondenceSameAsCurrent
+                            ? OtrTheme.primaryBlue.withAlpha(76)
+                            : Colors.transparent,
+                      ),
+                    ),
+                    child: CheckboxListTile(
+                      value: _isCorrespondenceSameAsCurrent,
+                      onChanged: _handleCorrespondenceSync,
+                      title: const Text(
+                        'Correspondence Address Same as Current',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: OtrTheme.darkNavy,
+                        ),
+                      ),
+                      activeColor: OtrTheme.primaryBlue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (!_isCorrespondenceSameAsCurrent)
+                    _buildCollapsibleSection(
+                      index: 2,
+                      title: 'Correspondence Address',
+                      icon: Icons.mail_rounded,
+                      children: [
+                        OtrTextField(
+                          label: 'Full Address',
+                          hintText: 'Enter correspondence address',
+                          icon: Icons.map_rounded,
+                          controller: _cFlatController,
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'Taluka/City',
+                                hintText: 'Taluka',
+                                icon: Icons.location_on_rounded,
+                                controller: _cTalukaController,
                               ),
-                              const SizedBox(height: 20),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OtrTextField(
-                                      label: 'Taluka/City',
-                                      hintText: 'Taluka',
-                                      icon: Icons.location_on_rounded,
-                                      controller: _cTalukaController,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: OtrTextField(
-                                      label: 'District',
-                                      hintText: 'District',
-                                      icon: Icons.location_city_rounded,
-                                      controller: _cDistrictController,
-                                    ),
-                                  ),
-                                ],
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'District',
+                                hintText: 'District',
+                                icon: Icons.location_city_rounded,
+                                controller: _cDistrictController,
                               ),
-                              const SizedBox(height: 20),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OtrTextField(
-                                      label: 'State',
-                                      hintText: 'State',
-                                      icon: Icons.flag_rounded,
-                                      controller: _cStateController,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: OtrTextField(
-                                      label: 'Pincode',
-                                      hintText: '6 digits',
-                                      icon: Icons.pin_drop_rounded,
-                                      controller: _cPincodeController,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ),
-                                ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'State',
+                                hintText: 'State',
+                                icon: Icons.flag_rounded,
+                                controller: _cStateController,
                               ),
-                            ],
-                          ),
-                        const SizedBox(height: 48),
-                        _buildSaveButton(),
-                        const SizedBox(height: 60),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: OtrTextField(
+                                label: 'Pincode',
+                                hintText: '6 digits',
+                                icon: Icons.pin_drop_rounded,
+                                controller: _cPincodeController,
+                                keyboardType: TextInputType.number,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 48),
+                  _buildSaveButton(),
+                  const SizedBox(height: 60),
                       ],
                     ),
                   ),

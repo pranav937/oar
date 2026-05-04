@@ -35,6 +35,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
         pageSize: 20,
         status: _selectedFilter,
       );
+      if (!mounted) return;
       if (result['success'] == true) {
         setState(() {
           final data = result['data'];
@@ -283,11 +284,15 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
     if (status == 'APPROVED' ||
         status == 'SUCCESS' ||
         status == 'ACCEPTED' ||
-        status == 'ADMIT_CARD_ISSUED')
+        status == 'ADMIT_CARD_ISSUED') {
       statusColor = OtrTheme.success;
-    if (status == 'REJECTED' || status == 'FAILED')
+    }
+    if (status == 'REJECTED' || status == 'FAILED') {
       statusColor = OtrTheme.error;
-    if (status == 'PENDING_PAYMENT') statusColor = OtrTheme.warning;
+    }
+    if (status == 'PENDING_PAYMENT') {
+      statusColor = OtrTheme.warning;
+    }
 
     String dateStr = 'N/A';
     try {

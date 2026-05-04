@@ -259,14 +259,14 @@ class _DocumentsPageState extends State<DocumentsPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
           color: isUploaded
-              ? Colors.green.withOpacity(0.2)
+              ? Colors.green.withValues(alpha: 0.2)
               : Colors.transparent,
           width: 1,
         ),
@@ -277,8 +277,8 @@ class _DocumentsPageState extends State<DocumentsPage> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: isUploaded
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.1),
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -377,7 +377,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
             TextButton(
               onPressed: () => _showSourceOptions(docTitle),
               style: TextButton.styleFrom(
-                backgroundColor: OtrTheme.primaryBlue.withOpacity(0.1),
+                backgroundColor: OtrTheme.primaryBlue.withValues(alpha: 0.1),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),

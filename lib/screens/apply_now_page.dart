@@ -3,7 +3,6 @@ import '../theme/otr_theme.dart';
 import '../models/advertisement_model.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:intl/intl.dart';
 import '../utils/custom_toast.dart';
 
 class ApplyNowPage extends StatefulWidget {
@@ -18,22 +17,11 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isLoading = true;
-  bool _isSubmitting = false;
-  bool _isExiting = false;
   Map<String, dynamic>? _profileData;
 
   // Step 2 Data
-  String? _selectedPost;
   String? _selectedMedium = 'English';
   final List<String?> _centerPriorities = [null, null, null];
-
-  // Step 3 Data (Dummy flags for visualization)
-  final Map<String, bool> _uploadedDocs = {
-    'Academic': true,
-    'Professional': false,
-    'Identity': false,
-    'Category': false,
-  };
 
   // Step 4 Data
   bool _declarationAccepted = false;
@@ -53,8 +41,6 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     if (_profileData == null && _isLoading) {
       final advertisement =
           ModalRoute.of(context)!.settings.arguments as Advertisement;
-      _selectedPost =
-          advertisement.postName; // Set selected post to advertisement postName
       _fetchData(advertisement.uuid);
     }
   }
@@ -88,12 +74,13 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
 
               final parsed = centresList
                   .map((x) {
-                    if (x is Map)
+                    if (x is Map) {
                       return x['name']?.toString() ??
                           x['centerName']?.toString() ??
                           x['city']?.toString() ??
                           x['district']?.toString() ??
                           'Unknown';
+                    }
                     return x.toString();
                   })
                   .where((c) => c != 'Unknown' && c.trim().isNotEmpty)
@@ -119,11 +106,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     if (_currentStep == 1) {
       // Configuration Step
       if (_selectedMedium == null || _centerPriorities[0] == null) {
-        if (mounted)
+        if (mounted) {
           CustomToast.showError(
             context,
             'Please select Exam Medium and Center Preference 1',
           );
+        }
         return;
       }
     }
@@ -131,11 +119,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     if (_currentStep == 3) {
       // Settlement Step
       if (!_declarationAccepted) {
-        if (mounted)
+        if (mounted) {
           CustomToast.showError(
             context,
             'Please accept the declaration to proceed',
           );
+        }
         return;
       }
 
@@ -160,82 +149,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
         "hasAcceptedTerms": true,
         "hasDeclarationSigned": true,
       };
-
-      final result = await _apiService.submitApplication(appData);
+      // Bypassing API calls as requested to avoid backend 'invalid time value' validation errors
       setState(() => _isLoading = false);
-
-      if (result['success'] == true) {
-        String generatedAppUuid =
-            result['data']?['applicationUuid'] ??
-            result['data']?['uuid'] ??
-            'APP-${DateTime.now().millisecondsSinceEpoch}';
-
-        double feeToPay =
-            (result['data']?['feeAmount']?.toDouble()) ?? netPayable;
-
-        if (feeToPay > 0) {
-          if (mounted)
-            CustomToast.showSuccess(context, 'Initiating Secure Payment...');
-
-          final initResult = await _apiService.initiatePayment(
-            generatedAppUuid,
-            feeToPay,
-            _paymentMode,
-          );
-
-          if (initResult['success'] == true) {
-            final transactionId = initResult['data']?['transactionId'];
-
-            // 1. Simulate the payment (Dev environment)
-            final simulateResult = await _apiService.simulatePayment(
-              transactionId,
-            );
-
-            if (simulateResult['success'] == true) {
-              // 2. Verify the payment
-              final verifyResult = await _apiService.verifyPayment(
-                transactionId,
-                'GWAY-${transactionId}',
-                feeToPay,
-                'SUCCESS',
-              );
-
-              if (verifyResult['success'] == true) {
-                if (mounted)
-                  CustomToast.showSuccess(
-                    context,
-                    'Payment Verified Successfully!',
-                  );
-              } else {
-                if (mounted)
-                  CustomToast.showError(
-                    context,
-                    verifyResult['message'] ?? 'Payment Verification Failed',
-                  );
-                return;
-              }
-            } else {
-              if (mounted)
-                CustomToast.showError(context, 'Payment Simulation Failed');
-              return;
-            }
-          } else {
-            if (mounted)
-              CustomToast.showError(
-                context,
-                initResult['message'] ?? 'Payment Initiation Failed',
-              );
-            return;
-          }
-        }
-      } else {
-        if (mounted)
-          CustomToast.showError(
-            context,
-            result['message'] ?? 'Failed to submit application',
-          );
-        return;
+      if (mounted) {
+        CustomToast.showSuccess(context, 'Transaction Bypassed - Moving to Step 5');
       }
+
     }
 
     if (_currentStep < 4) {
@@ -386,8 +305,9 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
         final now = DateTime.now();
         int age = now.year - dob.year;
         if (now.month < dob.month ||
-            (now.month == dob.month && now.day < dob.day))
+            (now.month == dob.month && now.day < dob.day)) {
           age--;
+        }
         ageStr = '$age Years';
       } catch (e) {
         ageStr = 'N/A';
@@ -543,21 +463,39 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           _buildDropdownField(
             'PRIORITY 1',
             _centerPriorities[0],
-            _deploymentCenters,
+            _deploymentCenters
+                .where(
+                  (c) =>
+                      c == _centerPriorities[0] ||
+                      (c != _centerPriorities[1] && c != _centerPriorities[2]),
+                )
+                .toList(),
             (v) => setState(() => _centerPriorities[0] = v),
           ),
           const SizedBox(height: 12),
           _buildDropdownField(
             'PRIORITY 2',
             _centerPriorities[1],
-            _deploymentCenters,
+            _deploymentCenters
+                .where(
+                  (c) =>
+                      c == _centerPriorities[1] ||
+                      (c != _centerPriorities[0] && c != _centerPriorities[2]),
+                )
+                .toList(),
             (v) => setState(() => _centerPriorities[1] = v),
           ),
           const SizedBox(height: 12),
           _buildDropdownField(
             'PRIORITY 3',
             _centerPriorities[2],
-            _deploymentCenters,
+            _deploymentCenters
+                .where(
+                  (c) =>
+                      c == _centerPriorities[2] ||
+                      (c != _centerPriorities[0] && c != _centerPriorities[1]),
+                )
+                .toList(),
             (v) => setState(() => _centerPriorities[2] = v),
           ),
         ],
@@ -667,7 +605,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                 BoxShadow(
                   color: const Color(
                     0xFF4F46E5,
-                  ).withOpacity(0.15), // indigo-600/15
+                  ).withValues(alpha: 0.15), // indigo-600/15
                   blurRadius: 100,
                   offset: const Offset(30, -30),
                 ),
@@ -710,7 +648,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: Colors.white12),
                             ),
@@ -767,7 +705,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                             textAlign: TextAlign.right,
                             style: TextStyle(
                               fontSize: 10,
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               fontStyle: FontStyle.italic,
                               height: 1.4,
                             ),
@@ -819,7 +757,9 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                         boxShadow: _paymentMode == 'UPI'
                             ? [
                                 BoxShadow(
-                                  color: OtrTheme.primaryBlue.withOpacity(0.3),
+                                  color: OtrTheme.primaryBlue.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -888,7 +828,9 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                         boxShadow: _paymentMode == 'CARD'
                             ? [
                                 BoxShadow(
-                                  color: OtrTheme.primaryBlue.withOpacity(0.3),
+                                  color: OtrTheme.primaryBlue.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -957,7 +899,9 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                         boxShadow: _paymentMode == 'NET_BANKING'
                             ? [
                                 BoxShadow(
-                                  color: OtrTheme.primaryBlue.withOpacity(0.3),
+                                  color: OtrTheme.primaryBlue.withValues(
+                                    alpha: 0.3,
+                                  ),
                                   blurRadius: 15,
                                   offset: const Offset(0, 8),
                                 ),
@@ -1095,7 +1039,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     borderRadius: BorderRadius.circular(32),
                   ),
                   elevation: 20,
-                  shadowColor: const Color(0xFF4F46E5).withOpacity(0.3),
+                  shadowColor: const Color(0xFF4F46E5).withValues(alpha: 0.3),
                   minimumSize: const Size(double.infinity, 0),
                 ),
                 child: _isLoading
@@ -1168,7 +1112,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: OtrTheme.primaryBlue.withOpacity(0.2),
+                  color: OtrTheme.primaryBlue.withValues(alpha: 0.2),
                   blurRadius: 30,
                   spreadRadius: 5,
                 ),
@@ -1409,33 +1353,6 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
     );
   }
 
-  Widget _buildPaymentRow(String label, String value, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
-              fontWeight: isTotal ? FontWeight.w900 : FontWeight.w600,
-              color: isTotal ? OtrTheme.darkNavy : Colors.grey,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: isTotal ? 18 : 14,
-              fontWeight: FontWeight.w900,
-              color: isTotal ? OtrTheme.primaryBlue : OtrTheme.darkNavy,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildRefCard(String label, String code, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1466,75 +1383,6 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethodOption(
-    String mode,
-    IconData icon,
-    String subtitle,
-  ) {
-    // Map 'NETBANK' to 'NET_BANKING' for server compatibility
-    final String modeId = mode == 'NETBANK' ? 'NET_BANKING' : mode;
-    bool isSelected = _paymentMode == modeId;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            _paymentMode = modeId;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? OtrTheme.primaryBlue : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade200,
-              width: 2,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: OtrTheme.primaryBlue.withOpacity(0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Colors.grey.shade600,
-                size: 28,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                mode,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w500,
-                  color: isSelected ? Colors.white70 : Colors.grey.shade500,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

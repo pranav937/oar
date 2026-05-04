@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'address_page.dart';
 import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
@@ -193,7 +192,10 @@ class _BioPageState extends State<BioPage> {
               _remotePhotoUrl = url;
             } else {
               final String base = ApiConstants.baseUrl.endsWith('/')
-                  ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                  ? ApiConstants.baseUrl.substring(
+                      0,
+                      ApiConstants.baseUrl.length - 1,
+                    )
                   : ApiConstants.baseUrl;
               final String path = url.startsWith('/') ? url : '/$url';
               _remotePhotoUrl = '$base$path';
@@ -205,7 +207,10 @@ class _BioPageState extends State<BioPage> {
               _remoteSignatureUrl = url;
             } else {
               final String base = ApiConstants.baseUrl.endsWith('/')
-                  ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                  ? ApiConstants.baseUrl.substring(
+                      0,
+                      ApiConstants.baseUrl.length - 1,
+                    )
                   : ApiConstants.baseUrl;
               final String path = url.startsWith('/') ? url : '/$url';
               _remoteSignatureUrl = '$base$path';
@@ -374,10 +379,11 @@ class _BioPageState extends State<BioPage> {
         }
       }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -440,10 +446,11 @@ class _BioPageState extends State<BioPage> {
     if (image != null) {
       final file = File(image.path);
       setState(() {
-        if (isPhoto)
+        if (isPhoto) {
           _photoFile = file;
-        else
+        } else {
           _signatureFile = file;
+        }
       });
 
       // Show loading
@@ -471,7 +478,10 @@ class _BioPageState extends State<BioPage> {
                     _remotePhotoUrl = url;
                   } else {
                     final String base = ApiConstants.baseUrl.endsWith('/')
-                        ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                        ? ApiConstants.baseUrl.substring(
+                            0,
+                            ApiConstants.baseUrl.length - 1,
+                          )
                         : ApiConstants.baseUrl;
                     final String path = url.startsWith('/') ? url : '/$url';
                     _remotePhotoUrl = '$base$path';
@@ -482,7 +492,10 @@ class _BioPageState extends State<BioPage> {
                     _remoteSignatureUrl = url;
                   } else {
                     final String base = ApiConstants.baseUrl.endsWith('/')
-                        ? ApiConstants.baseUrl.substring(0, ApiConstants.baseUrl.length - 1)
+                        ? ApiConstants.baseUrl.substring(
+                            0,
+                            ApiConstants.baseUrl.length - 1,
+                          )
                         : ApiConstants.baseUrl;
                     final String path = url.startsWith('/') ? url : '/$url';
                     _remoteSignatureUrl = '$base$path';
@@ -1280,7 +1293,7 @@ class _BioPageState extends State<BioPage> {
             boxShadow: OtrTheme.softShadow,
           ),
           child: DropdownButtonFormField<String>(
-            value: items.contains(value) ? value : null,
+            initialValue: items.contains(value) ? value : null,
             isExpanded: true,
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
@@ -1314,16 +1327,18 @@ class _BioPageState extends State<BioPage> {
               fontWeight: FontWeight.w600,
             ),
             items: items
-                .map((e) => DropdownMenuItem(
-                      value: e,
-                      child: Text(
-                        e,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(
+                      e,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ))
+                    ),
+                  ),
+                )
                 .toList(),
             onChanged: onChanged,
           ),
@@ -1429,7 +1444,7 @@ class _BioPageState extends State<BioPage> {
         ),
         value: value,
         onChanged: onChanged,
-        activeColor: OtrTheme.primaryBlue,
+        activeThumbColor: OtrTheme.primaryBlue,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
         dense: true,
       ),

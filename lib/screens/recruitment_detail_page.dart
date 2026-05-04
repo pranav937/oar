@@ -98,7 +98,7 @@ class RecruitmentDetailPage extends StatelessWidget {
                 child: Icon(
                   Icons.business_center_rounded,
                   size: 180,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ),
               Padding(
@@ -113,10 +113,10 @@ class RecruitmentDetailPage extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.blueAccent.withOpacity(0.2),
+                        color: Colors.blueAccent.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.blueAccent.withOpacity(0.3),
+                          color: Colors.blueAccent.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -209,7 +209,7 @@ class RecruitmentDetailPage extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade100),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -248,7 +248,7 @@ class RecruitmentDetailPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: OtrTheme.primaryBlue.withOpacity(0.1),
+            color: OtrTheme.primaryBlue.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: OtrTheme.primaryBlue, size: 18),
@@ -417,7 +417,7 @@ class RecruitmentDetailPage extends StatelessWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: OtrTheme.primaryBlue.withOpacity(0.3),
+            color: OtrTheme.primaryBlue.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

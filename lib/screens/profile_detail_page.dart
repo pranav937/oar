@@ -34,7 +34,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       } else {
         setState(() => _isLoading = false);
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'Failed to load profile');
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Failed to load profile',
+          );
         }
       }
     } catch (e) {
@@ -46,7 +49,6 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        
         body: Center(child: SpinKitDoubleBounce(color: OtrTheme.primaryBlue)),
       );
     }
@@ -113,7 +115,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  CustomToast.showSuccess(context, 'Profile submitted for verification!');
+                  CustomToast.showSuccess(
+                    context,
+                    'Profile submitted for verification!',
+                  );
                 },
                 child: const Text(
                   'Submit For Verification',
@@ -144,7 +149,7 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -156,10 +161,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
             width: 85,
             height: 85,
             decoration: BoxDecoration(
-              color: OtrTheme.primaryBlue.withOpacity(0.05),
+              color: OtrTheme.primaryBlue.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: OtrTheme.primaryBlue.withOpacity(0.1),
+                color: OtrTheme.primaryBlue.withValues(alpha: 0.1),
                 width: 2,
               ),
             ),
@@ -290,7 +295,10 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.withOpacity(0.1), width: 1.5),
+        border: Border.all(
+          color: Colors.grey.withValues(alpha: 0.1),
+          width: 1.5,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -300,7 +308,9 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Colors.grey.withOpacity(0.05)),
+                  bottom: BorderSide(
+                    color: Colors.grey.withValues(alpha: 0.05),
+                  ),
                 ),
               ),
               child: Row(

@@ -61,33 +61,41 @@ class _RegistrationPageState extends State<RegistrationPage> {
     // Mobile validation (10 digits)
     final mobileRegex = RegExp(r'^\d{10}$');
     if (!mobileRegex.hasMatch(mobile)) {
-      CustomToast.showSuccess(
-        context,
-        'Mobile number must be exactly 10 digits',
-      );
+      if (mounted) {
+        CustomToast.showSuccess(
+          context,
+          'Mobile number must be exactly 10 digits',
+        );
+      }
       return;
     }
 
     // Password complexity validation
     if (password.length < 8) {
-      CustomToast.showSuccess(
-        context,
-        'Password must be at least 8 characters',
-      );
+      if (mounted) {
+        CustomToast.showSuccess(
+          context,
+          'Password must be at least 8 characters',
+        );
+      }
       return;
     }
     if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      CustomToast.showSuccess(
-        context,
-        'Password must contain an uppercase letter',
-      );
+      if (mounted) {
+        CustomToast.showSuccess(
+          context,
+          'Password must contain an uppercase letter',
+        );
+      }
       return;
     }
     if (!RegExp(r'[a-z]').hasMatch(password)) {
-      CustomToast.showSuccess(
-        context,
-        'Password must contain a lowercase letter',
-      );
+      if (mounted) {
+        CustomToast.showSuccess(
+          context,
+          'Password must contain a lowercase letter',
+        );
+      }
       return;
     }
     if (!RegExp(r'[0-9]').hasMatch(password)) {
@@ -95,10 +103,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
       return;
     }
     if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-      CustomToast.showSuccess(
-        context,
-        'Password must contain a special character',
-      );
+      if (mounted) {
+        CustomToast.showSuccess(
+          context,
+          'Password must contain a special character',
+        );
+      }
       return;
     }
 
@@ -110,7 +120,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
 
     if (!_hasAcceptedDeclaration) {
-      CustomToast.showSuccess(context, 'Please accept the declaration');
+      if (mounted) {
+        CustomToast.showSuccess(context, 'Please accept the declaration');
+      }
       return;
     }
 
@@ -130,12 +142,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
       if (result['success'] == true) {
         // Move to OTP step
-        setState(() => _currentStep = 1);
+        if (mounted) {
+          setState(() => _currentStep = 1);
+        }
       } else {
-        CustomToast.showSuccess(
-          context,
-          result['message'] ?? 'Registration failed',
-        );
+        if (mounted) {
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Registration failed',
+          );
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(
@@ -151,10 +167,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
     String mobileOtp = _mobileOtpControllers.map((c) => c.text).join();
 
     if (emailOtp.length < 6 || mobileOtp.length < 6) {
-      CustomToast.showSuccess(
-        context,
-        'Please enter both code verification values',
-      );
+      if (mounted) {
+        CustomToast.showSuccess(
+          context,
+          'Please enter both code verification values',
+        );
+      }
       return;
     }
 
@@ -170,16 +188,22 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
 
       if (emailResult['success'] == true && mobileResult['success'] == true) {
-        _finishRegistration(context);
+        if (mounted) {
+          _finishRegistration(context);
+        }
       } else {
         String msg = "";
-        if (emailResult['success'] != true)
+        if (emailResult['success'] != true) {
           msg += "Email OTP: ${emailResult['message']}. ";
-        if (mobileResult['success'] != true)
+        }
+        if (mobileResult['success'] != true) {
           msg += "Mobile OTP: ${mobileResult['message']}. ";
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(msg)));
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(

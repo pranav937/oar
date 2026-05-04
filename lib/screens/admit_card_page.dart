@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
@@ -67,14 +66,16 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
         });
       } else {
         setState(() => _isLoading = false);
-        CustomToast.showError(
-          context,
-          response['message'] ?? 'Failed to load applications',
-        );
+        if (mounted) {
+          CustomToast.showError(
+            context,
+            response['message'] ?? 'Failed to load applications',
+          );
+        }
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      CustomToast.showError(context, 'Error: $e');
+      if (mounted) CustomToast.showError(context, 'Error: $e');
     }
   }
 
@@ -148,7 +149,7 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.03),
+                color: Colors.black.withValues(alpha: 0.03),
                 blurRadius: 15,
                 offset: const Offset(0, 5),
               ),
@@ -257,10 +258,12 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                                   .replaceAll('/', '_');
 
                           if (id.isEmpty) {
-                            CustomToast.showError(
-                              context,
-                              'Invalid application ID',
-                            );
+                            if (mounted) {
+                              CustomToast.showError(
+                                context,
+                                'Invalid application ID',
+                              );
+                            }
                             return;
                           }
 
@@ -296,12 +299,14 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                             bytes: Uint8List.fromList(bytes!),
                           );
 
-                          CustomToast.showSuccess(
-                            context,
-                            'Admit Card saved to device!',
-                          );
+                          if (mounted) {
+                            CustomToast.showSuccess(
+                              context,
+                              'Admit Card saved to device!',
+                            );
+                          }
                         } catch (e) {
-                          CustomToast.showError(context, 'Failed: $e');
+                          if (mounted) CustomToast.showError(context, 'Failed: $e');
                         }
                       },
                       icon: const Icon(Icons.download_rounded, size: 16),
