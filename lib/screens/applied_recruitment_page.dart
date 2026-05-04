@@ -452,68 +452,12 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                       ),
                     ),
                   ),
-                ] else if (isAdmitCardIssued) ...[
-                  const SizedBox(height: 24),
-
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/admit-card',
-                        arguments: app['applicationUuid'] ?? app['uuid'],
-                      );
-                    },
-                    icon: const Icon(Icons.assignment_ind_rounded, size: 18),
-                    label: const Text(
-                      'VIEW ADMIT CARD',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: OtrTheme.primaryBlue,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(54),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
                 ],
               ],
             ),
           ),
 
-          // Bottom action bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: OtrTheme.background.withValues(alpha: 0.5),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Tap to view tracking details',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-                const Spacer(),
-                const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 12,
-                  color: Colors.grey,
-                ),
-              ],
-            ),
-          ),
+
         ],
       ),
     );

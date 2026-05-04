@@ -155,7 +155,10 @@ class _AddressPageState extends State<AddressPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'Update failed');
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Update failed',
+          );
         }
       }
     } catch (e) {
@@ -293,7 +296,10 @@ class _AddressPageState extends State<AddressPage> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -318,7 +324,9 @@ class _AddressPageState extends State<AddressPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -384,7 +392,10 @@ class _AddressPageState extends State<AddressPage> {
                     ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -409,7 +420,9 @@ class _AddressPageState extends State<AddressPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -476,9 +489,9 @@ class _AddressPageState extends State<AddressPage> {
                   const SizedBox(height: 48),
                   _buildSaveButton(),
                   const SizedBox(height: 60),
-                      ],
-                    ),
-                  ),
+                ],
+              ),
+            ),
     );
   }
 
@@ -506,9 +519,7 @@ class _AddressPageState extends State<AddressPage> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: isActive
-                ? OtrTheme.primaryBlue
-                : Colors.grey.withAlpha(51),
+            color: isActive ? OtrTheme.primaryBlue : Colors.grey.withAlpha(51),
             shape: BoxShape.circle,
             boxShadow: isActive
                 ? [

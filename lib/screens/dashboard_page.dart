@@ -350,7 +350,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   children: [
                     _buildProfileCard(),
                     const SizedBox(height: 32),
-                    _buildSectionHeader('Recruitment Stats'),
+                    _buildSectionHeader('Recruitment Status'),
                     const SizedBox(height: 16),
                     _buildStatCards(),
                     const SizedBox(height: 32),
@@ -385,16 +385,6 @@ class _DashboardPageState extends State<DashboardPage> {
                       title: 'Application Services',
                       onRefresh: _fetchDashboardData,
                       items: [
-                        _GridItemData(
-                          'New Openings',
-                          Icons.business_center_outlined,
-                          color: Colors.indigo,
-                        ),
-                        _GridItemData(
-                          'My Applications',
-                          Icons.history_edu_rounded,
-                          color: Colors.teal,
-                        ),
                         _GridItemData(
                           'Payment History',
                           Icons.account_balance_wallet_outlined,
