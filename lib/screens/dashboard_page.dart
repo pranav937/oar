@@ -5,7 +5,7 @@ import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../models/dashboard_model.dart';
-import '../utils/custom_toast.dart';
+
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -19,7 +19,7 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _isLoading = true;
   DashboardStats? _stats;
   int _totalFromApi = 0;
-  int _pendingFromApi = 0;
+
   int _activeJobsCount = 0;
 
   @override
@@ -58,13 +58,14 @@ class _DashboardPageState extends State<DashboardPage> {
             }
 
             // Calculate pending (Draft or Pending Payment)
-            _pendingFromApi = applications
+            final pendingFromApi = applications
                 .where(
                   (app) =>
                       app['status'] == 'PENDING_PAYMENT' ||
                       app['status'] == 'DRAFT',
                 )
                 .length;
+            debugPrint('Pending applications: $pendingFromApi');
           }
 
           if (jobsResult['success'] == true && jobsResult['data'] != null) {
@@ -326,7 +327,9 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: const Icon(Icons.power_settings_new_rounded, size: 26),
             onPressed: () async {
               await _apiService.logout();
-              if (mounted) Navigator.pushReplacementNamed(context, '/login');
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
             },
           ),
           const SizedBox(width: 8),

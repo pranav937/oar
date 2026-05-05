@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
@@ -33,10 +34,10 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
 
   Future<void> _fetchAdmitCardDetail() async {
     try {
+      if (!mounted) return;
       setState(() => _isLoading = true);
 
       final app = widget.application;
-      // Use applicationUuid from the response structure provided by user
       final String id =
           (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
       final String appNo = (app['applicationNumber'] ?? '').toString();
@@ -45,8 +46,9 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
         throw 'No valid application ID found';
       }
 
-      // Fetch detail from specific Admit Card API
       var response = await _apiService.getAdmitCard(id.isNotEmpty ? id : appNo);
+
+      if (!mounted) return;
 
       if (response['success'] == true && response['data'] != null) {
         setState(() {
@@ -55,19 +57,16 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
         });
       } else {
         setState(() => _isLoading = false);
-        if (mounted) {
-          String errorMsg =
-              response['message'] ?? 'Admit card not found for this application';
-          CustomToast.showError(context, errorMsg);
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        CustomToast.showError(context, 'Error: $e');
+        String errorMsg =
+            response['message'] ?? 'Admit card not found for this application';
+        CustomToast.showError(context, errorMsg);
         Navigator.pop(context);
       }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      CustomToast.showError(context, 'Error: $e');
+      Navigator.pop(context);
     }
   }
 
@@ -160,7 +159,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
           ),
           const SizedBox(height: 20),
 
-          // QR Code Card (New Section)
           if (qrBytes != null)
             Container(
               width: double.infinity,
@@ -242,7 +240,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Candidate Particulars
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -369,7 +366,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   ),
                 ),
 
-                // Schedule
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -427,7 +423,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   ),
                 ),
 
-                // Venue
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
@@ -498,7 +493,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
 
           const SizedBox(height: 30),
 
-          // Print Button (New Requirement)
           if (data['viewUrl'] != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -514,24 +508,22 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                             .toString();
 
                     if (id.isEmpty) {
-                    if (mounted) CustomToast.showError(context, 'Invalid application ID');
+                      if (!mounted) return;
+                      CustomToast.showError(context, 'Invalid application ID');
                       return;
                     }
 
                     final urlString = _apiService.getAdmitCardDownloadUrl(id);
+                    if (!mounted) return;
                     CustomToast.showSuccess(context, 'Loading Hall Ticket...');
 
-                    // 1. Try downloading from server first
                     List<int>? bytes = await _apiService.downloadAdmitCardBytes(
                       urlString,
                     );
 
-                    // 2. Fallback to local generation if needed
                     if (bytes == null || bytes.isEmpty) {
-                      debugPrint(
-                        'Server download failed, falling back to local generation',
-                      );
                       if (_admitCardData != null) {
+                        if (!mounted) return;
                         CustomToast.showSuccess(
                           context,
                           'Generating view locally...',
@@ -548,7 +540,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                       throw 'Failed to download or generate PDF.';
                     }
 
-                    // 3. Show native print/view dialog
                     await Printing.layoutPdf(
                       onLayout: (PdfPageFormat format) async =>
                           Uint8List.fromList(bytes!),
@@ -556,12 +547,11 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                           'AdmitCard_${app['applicationNumber'] ?? 'HallTicket'}',
                     );
                   } catch (e) {
-                    if (mounted) {
-                      CustomToast.showError(
-                        context,
-                        'Error opening print view: $e',
-                      );
-                    }
+                    if (!mounted) return;
+                    CustomToast.showError(
+                      context,
+                      'Error opening print view: $e',
+                    );
                   }
                 },
                 icon: const Icon(Icons.print_rounded),
@@ -608,33 +598,27 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                 }
 
                 final urlString = _apiService.getAdmitCardDownloadUrl(id);
+                if (!mounted) return;
                 CustomToast.showSuccess(context, 'Downloading Admit Card...');
 
-                // 1. Try downloading from server first
                 List<int>? bytes = await _apiService.downloadAdmitCardBytes(
                   urlString,
                 );
 
-                // 2. If server download fails, fallback to local generation
                 if (bytes == null || bytes.isEmpty) {
-                  debugPrint(
-                    'Server download failed or returned empty, falling back to local generation',
+                  if (!mounted) return;
+                  CustomToast.showSuccess(
+                    context,
+                    'Fetching data for local generation...',
                   );
-                  if (mounted) {
-                    CustomToast.showSuccess(
-                      context,
-                      'Fetching data for local generation...',
-                    );
-                  }
 
                   final detailResult = await _apiService.getAdmitCard(id);
                   if (detailResult['success'] == true) {
-                    if (mounted) {
-                      CustomToast.showSuccess(
-                        context,
-                        'Generating PDF locally...',
-                      );
-                    }
+                    if (!mounted) return;
+                    CustomToast.showSuccess(
+                      context,
+                      'Generating PDF locally...',
+                    );
                     final fullData = detailResult['data'] ?? {};
                     bytes = await AdmitCardGenerator.generateAdmitCard(
                       fullData,
@@ -646,7 +630,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   throw 'Failed to get PDF document from server or local generator.';
                 }
 
-                // 2. Save the file using FilePicker
                 String? outputFile = await FilePicker.saveFile(
                   dialogTitle: 'Save Admit Card',
                   fileName: 'AdmitCard_$appNo.pdf',
@@ -655,16 +638,14 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   bytes: Uint8List.fromList(bytes),
                 );
 
-                if (outputFile != null) {
-                  if (mounted) {
-                    CustomToast.showSuccess(
-                      context,
-                      'Admit Card saved to device!',
-                    );
-                  }
+                if (outputFile != null && mounted) {
+                  CustomToast.showSuccess(
+                    context,
+                    'Admit Card saved to device!',
+                  );
                 }
               } catch (e) {
-              if (mounted) CustomToast.showError(context, 'Generation failed: $e');
+                if (mounted) CustomToast.showError(context, 'Generation failed: $e');
               }
             },
             icon: const Icon(Icons.download_rounded),
@@ -699,7 +680,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
         final base64String = dataUri.split(',').last;
         return base64Decode(base64String);
       }
-      // If it's pure base64
       return base64Decode(dataUri);
     } catch (e) {
       debugPrint('Error decoding QR code: $e');

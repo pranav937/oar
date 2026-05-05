@@ -17,7 +17,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
   bool _isLoading = true;
   String _error = '';
   String _selectedFilter = 'ALL';
-  final List<String> _filters = ['ALL', 'SUBMITTED', 'APPROVED', 'REJECTED'];
+
 
   @override
   void initState() {
@@ -440,7 +440,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(Icons.payment_rounded, size: 18),
-                          const SizedBox(width: 10),
+                          SizedBox(width: 10),
                           Text(
                             'COMPLETE PAYMENT - ₹500',
                             style: TextStyle(

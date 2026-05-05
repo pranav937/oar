@@ -176,10 +176,14 @@ class _AddressPageState extends State<AddressPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(
-            context,
-            result['message'] ?? 'Update failed',
-          );
+          String errorMsg = result['message'] ?? 'Update failed';
+          if (result['errors'] != null &&
+              result['errors'] is List &&
+              (result['errors'] as List).isNotEmpty) {
+            final firstError = (result['errors'] as List).first;
+            errorMsg = firstError['message'] ?? errorMsg;
+          }
+          CustomToast.showError(context, errorMsg);
         }
       }
     } catch (e) {

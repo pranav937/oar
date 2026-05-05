@@ -59,7 +59,7 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _exSoldierCatController = TextEditingController();
   final TextEditingController _govtJoinDateController = TextEditingController();
   final TextEditingController _govtDeptController = TextEditingController();
-  final TextEditingController _subCategoryController = TextEditingController();
+
 
   String? _selectedCategory;
   String? _selectedGender;
@@ -88,6 +88,13 @@ class _BioPageState extends State<BioPage> {
   bool _isReadOnly = false;
   bool _isEditingFromProfile = false;
 
+  final Map<String, String> _idProofMapping = {
+    'Aadhaar Card': 'AADHAR',
+    'PAN Card': 'PAN',
+    'Voter ID': 'ELECTION',
+    'Driving License': 'DRIVING',
+  };
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -103,6 +110,13 @@ class _BioPageState extends State<BioPage> {
     _fetchProfile();
     _firstNameController.addListener(_updateFullName);
     _surnameController.addListener(_updateFullName);
+    _aadhaarController.addListener(_syncIdProofWithAadhaar);
+  }
+
+  void _syncIdProofWithAadhaar() {
+    if (_selectedIdProofType == 'Aadhaar Card') {
+      _idProofNumberController.text = _aadhaarController.text;
+    }
   }
 
   void _updateFullName() {
@@ -116,6 +130,7 @@ class _BioPageState extends State<BioPage> {
   void dispose() {
     _firstNameController.removeListener(_updateFullName);
     _surnameController.removeListener(_updateFullName);
+    _aadhaarController.removeListener(_syncIdProofWithAadhaar);
     super.dispose();
   }
 
@@ -143,12 +158,28 @@ class _BioPageState extends State<BioPage> {
               data['twelfthPassingYear']?.toString() ?? '';
 
           _selectedGender = data['gender'];
-          _selectedNationality = data['nationality'] ?? 'Indian';
+          _selectedNationality = data['nationality'] != null
+              ? (data['nationality'][0] +
+                  data['nationality'].substring(1).toLowerCase())
+              : 'Indian';
           _selectedQualification = data['highestQualification'];
-          _selectedMaritalStatus = data['maritalStatus'];
-          _selectedIdProofType = data['idProofType'];
+          _selectedMaritalStatus = data['maritalStatus'] != null
+              ? (data['maritalStatus'][0] +
+                  data['maritalStatus'].substring(1).toLowerCase())
+              : null;
+          
+          // Map ID Proof Type back to display name
+          final backendIdType = data['idProofType'];
+          _selectedIdProofType = _idProofMapping.entries
+              .firstWhere(
+                (e) => e.value == backendIdType,
+                orElse: () => MapEntry(backendIdType ?? '', ''),
+              )
+              .key;
+          if (_selectedIdProofType!.isEmpty) _selectedIdProofType = null;
+
           _selectedCategory = data['category'] ?? 'UR';
-          _subCategoryController.text = data['subCategory'] ?? '';
+
 
           _isPhysicallyDisabled = data['isPhysicallyDisabled'] ?? false;
           _isSportsPerson = data['isSportsPerson'] ?? false;
@@ -317,14 +348,14 @@ class _BioPageState extends State<BioPage> {
         'motherName': _motherController.text,
         'gender': _selectedGender,
         'dateOfBirth': _selectedDate?.toIso8601String(),
-        'maritalStatus': _selectedMaritalStatus,
-        'idProofType': _selectedIdProofType,
+        'maritalStatus': _selectedMaritalStatus?.toUpperCase(),
+        'idProofType': _idProofMapping[_selectedIdProofType],
         'idProofNumber': _idProofNumberController.text,
         'aadhaarNumber': _aadhaarController.text,
         'isPhysicallyDisabled': _isPhysicallyDisabled,
-        'nationality': _selectedNationality,
+        'nationality': _selectedNationality?.toUpperCase(),
         'category': _selectedCategory,
-        'subCategory': _subCategoryController.text,
+
         'isSportsPerson': _isSportsPerson,
         'isWidow': _isWidow,
         'isExSoldier': _isExSoldier,
@@ -394,10 +425,14 @@ class _BioPageState extends State<BioPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showError(
-            context,
-            result['message'] ?? 'Update failed',
-          );
+          String errorMsg = result['message'] ?? 'Update failed';
+          if (result['errors'] != null &&
+              result['errors'] is List &&
+              (result['errors'] as List).isNotEmpty) {
+            final firstError = (result['errors'] as List).first;
+            errorMsg = firstError['message'] ?? errorMsg;
+          }
+          CustomToast.showError(context, errorMsg);
         }
       }
     } catch (e) {
@@ -671,17 +706,28 @@ class _BioPageState extends State<BioPage> {
                           'Voter ID',
                           'Driving License',
                         ],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedIdProofType = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) {
+                                setState(() {
+                                  _selectedIdProofType = val;
+                                  if (val == 'Aadhaar Card') {
+                                    _idProofNumberController.text =
+                                        _aadhaarController.text;
+                                  }
+                                });
+                              },
                       ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'ID Proof Number',
-                        hintText: 'Enter ID number',
-                        icon: Icons.tag_rounded,
-                        controller: _idProofNumberController,
-                        enabled: !_isReadOnly,
-                      ),
+                      if (_selectedIdProofType != 'Aadhaar Card') ...[
+                        const SizedBox(height: 20),
+                        OtrTextField(
+                          label: 'ID Proof Number',
+                          hintText: 'Enter ID number',
+                          icon: Icons.tag_rounded,
+                          controller: _idProofNumberController,
+                          enabled: !_isReadOnly,
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       OtrTextField(
                         label: 'Aadhaar Number',
@@ -749,14 +795,7 @@ class _BioPageState extends State<BioPage> {
                         onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedCategory = val),
                       ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Sub Category',
-                        hintText: 'Enter Sub Category',
-                        icon: Icons.subdirectory_arrow_right_rounded,
-                        controller: _subCategoryController,
-                        enabled: !_isReadOnly,
-                      ),
+
                       const SizedBox(height: 20),
                       _buildFunctionalDropdown(
                         label: 'Highest Qualification',
@@ -917,12 +956,13 @@ class _BioPageState extends State<BioPage> {
                               firstDate: DateTime(1990),
                               lastDate: DateTime.now(),
                             );
-                            if (d != null)
+                            if (d != null) {
                               setState(
                                 () => _widowDateController.text = DateFormat(
                                   'yyyy-MM-dd',
                                 ).format(d),
                               );
+                            }
                           },
                         ),
                       ],
@@ -991,12 +1031,13 @@ class _BioPageState extends State<BioPage> {
                               firstDate: DateTime(1990),
                               lastDate: DateTime.now(),
                             );
-                            if (d != null)
+                            if (d != null) {
                               setState(
                                 () => _govtJoinDateController.text = DateFormat(
                                   'yyyy-MM-dd',
                                 ).format(d),
                               );
+                            }
                           },
                         ),
                       ],
@@ -1520,10 +1561,11 @@ class _BioPageState extends State<BioPage> {
           }
         }
       } catch (e) {
-        if (mounted)
+        if (mounted) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }

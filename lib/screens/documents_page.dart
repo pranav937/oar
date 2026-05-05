@@ -27,19 +27,19 @@ class _DocumentsPageState extends State<DocumentsPage> {
   String? _uploadingFor;
 
   final Map<String, String> _documentMap = {
-    'Aadhaar Card': DocumentType.AADHAR.name,
-    'Driving License': DocumentType.DRIVING.name,
-    'PAN Card': DocumentType.PAN.name,
-    'Voter ID / Election Card': DocumentType.ELECTION.name,
-    '10th Marksheet/Certificate': DocumentType.TENTH.name,
-    '12th Marksheet/Certificate': DocumentType.TWELTH.name,
-    'Graduation Degree': DocumentType.GRADUATE.name,
-    'Post Graduation Degree': DocumentType.POSTGRADUATE.name,
-    'PWD Certificate': DocumentType.PWD.name,
-    'Caste Certificate': DocumentType.CASTE.name,
-    'Widow Certificate': DocumentType.WIDOW.name,
-    'Sports Certificate': DocumentType.SPORT.name,
-    'Ex-Servicemen Certificate': DocumentType.EXSERVICE.name,
+    'Aadhaar Card': DocumentType.aadhar.name.toUpperCase(),
+    'Driving License': DocumentType.driving.name.toUpperCase(),
+    'PAN Card': DocumentType.pan.name.toUpperCase(),
+    'Voter ID / Election Card': DocumentType.election.name.toUpperCase(),
+    '10th Marksheet/Certificate': DocumentType.tenth.name.toUpperCase(),
+    '12th Marksheet/Certificate': DocumentType.twelth.name.toUpperCase(),
+    'Graduation Degree': DocumentType.graduate.name.toUpperCase(),
+    'Post Graduation Degree': DocumentType.postgraduate.name.toUpperCase(),
+    'PWD Certificate': DocumentType.pwd.name.toUpperCase(),
+    'Caste Certificate': DocumentType.caste.name.toUpperCase(),
+    'Widow Certificate': DocumentType.widow.name.toUpperCase(),
+    'Sports Certificate': DocumentType.sport.name.toUpperCase(),
+    'Ex-Servicemen Certificate': DocumentType.exservice.name.toUpperCase(),
   };
 
   @override
@@ -142,10 +142,11 @@ class _DocumentsPageState extends State<DocumentsPage> {
         _uploadToServer(docTitle, pickedPath, pickedName!);
       }
     } catch (e) {
-      if (mounted)
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+    }
     }
   }
 
@@ -177,10 +178,14 @@ class _DocumentsPageState extends State<DocumentsPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(
-            context,
-            result['message'] as String? ?? 'Upload failed',
-          );
+          String errorMsg = result['message'] as String? ?? 'Upload failed';
+          if (result['errors'] != null &&
+              result['errors'] is List &&
+              (result['errors'] as List).isNotEmpty) {
+            final firstError = (result['errors'] as List).first;
+            errorMsg = firstError['message'] ?? errorMsg;
+          }
+          CustomToast.showError(context, errorMsg);
         }
       }
     } catch (e) {
@@ -223,7 +228,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
               style: TextStyle(color: Colors.black54),
             ),
             const SizedBox(height: 24),
-            ..._documentMap.keys.map((doc) => _buildDocCard(doc)).toList(),
+            ..._documentMap.keys.map((doc) => _buildDocCard(doc)),
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () => Navigator.pushNamed(context, '/dashboard'),
@@ -528,10 +533,14 @@ class _DocumentsPageState extends State<DocumentsPage> {
                   }
                 } else {
                   if (mounted) {
-                    CustomToast.showError(
-                      context,
-                      result['message'] ?? 'Failed to delete',
-                    );
+                    String errorMsg = result['message'] ?? 'Failed to delete';
+                    if (result['errors'] != null &&
+                        result['errors'] is List &&
+                        (result['errors'] as List).isNotEmpty) {
+                      final firstError = (result['errors'] as List).first;
+                      errorMsg = firstError['message'] ?? errorMsg;
+                    }
+                    CustomToast.showError(context, errorMsg);
                   }
                 }
               } catch (e) {

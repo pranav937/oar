@@ -399,16 +399,15 @@ class ApiService {
   }) async {
     try {
       final token = await _getToken();
-      if (token == null)
+      if (token == null) {
         return {'success': false, 'message': 'Auth token not found'};
+      }
 
       final request = http.MultipartRequest(
         'POST',
         Uri.parse('${ApiConstants.baseUrl}$endpoint'),
       );
-      if (token != null) {
-        request.headers['Authorization'] = 'Bearer $token';
-      }
+      request.headers['Authorization'] = 'Bearer $token';
 
       // Add extra fields (like documentType, documentName)
       if (extraFields != null) {

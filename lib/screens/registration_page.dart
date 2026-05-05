@@ -136,7 +136,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         "hasAcceptedDeclaration": _hasAcceptedDeclaration,
       };
 
-      print("DEBUG: Sending registration data: $userData");
+      debugPrint("DEBUG: Sending registration data: $userData");
 
       final result = await _apiService.register(userData);
 
@@ -147,16 +147,22 @@ class _RegistrationPageState extends State<RegistrationPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(
-            context,
-            result['message'] ?? 'Registration failed',
-          );
+          String errorMsg = result['message'] ?? 'Registration failed';
+          if (result['errors'] != null &&
+              result['errors'] is List &&
+              (result['errors'] as List).isNotEmpty) {
+            final firstError = (result['errors'] as List).first;
+            errorMsg = firstError['message'] ?? errorMsg;
+          }
+          CustomToast.showError(context, errorMsg);
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -194,21 +200,33 @@ class _RegistrationPageState extends State<RegistrationPage> {
       } else {
         String msg = "";
         if (emailResult['success'] != true) {
-          msg += "Email OTP: ${emailResult['message']}. ";
+          String eMsg = emailResult['message'] ?? 'Email OTP failed';
+          if (emailResult['errors'] != null &&
+              emailResult['errors'] is List &&
+              (emailResult['errors'] as List).isNotEmpty) {
+            eMsg = (emailResult['errors'] as List).first['message'] ?? eMsg;
+          }
+          msg += "Email: $eMsg. ";
         }
         if (mobileResult['success'] != true) {
-          msg += "Mobile OTP: ${mobileResult['message']}. ";
+          String mMsg = mobileResult['message'] ?? 'Mobile OTP failed';
+          if (mobileResult['errors'] != null &&
+              mobileResult['errors'] is List &&
+              (mobileResult['errors'] as List).isNotEmpty) {
+            mMsg = (mobileResult['errors'] as List).first['message'] ?? mMsg;
+          }
+          msg += "Mobile: $mMsg. ";
         }
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(msg)));
+          CustomToast.showError(context, msg);
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     } finally {
       setState(() => _isLoading = false);
     }
@@ -704,9 +722,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
           contentPadding: EdgeInsets.zero,
         ),
         onChanged: (value) {
-          if (value.isNotEmpty && index < 5) FocusScope.of(context).nextFocus();
-          if (value.isEmpty && index > 0)
+          if (value.isNotEmpty && index < 5) {
+            FocusScope.of(context).nextFocus();
+          }
+          if (value.isEmpty && index > 0) {
             FocusScope.of(context).previousFocus();
+          }
         },
       ),
     );

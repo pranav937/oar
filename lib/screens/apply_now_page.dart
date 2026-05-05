@@ -27,13 +27,20 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
   bool _declarationAccepted = false;
   String _paymentMode = 'UPI';
 
-  List<String> _deploymentCenters = [
-    'Ahmedabad',
-    'Surat',
-    'Rajkot',
-  ]; // Fallback
+  List<String> _deploymentCenters = []; // Fallback
   List<Map<String, dynamic>> _centersData =
       []; // Store full objects to retrieve IDs
+
+  String _getErrorMessage(Map<String, dynamic> result, String fallback) {
+    String msg = result['message']?.toString() ?? fallback;
+    if (result['errors'] != null &&
+        result['errors'] is List &&
+        (result['errors'] as List).isNotEmpty) {
+      final firstError = (result['errors'] as List).first;
+      msg = firstError['message']?.toString() ?? msg;
+    }
+    return msg;
+  }
 
   @override
   void didChangeDependencies() {
@@ -201,13 +208,19 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     (verifyResult['message'] ?? 'Payment Verification Failed')
                         .toString();
                 if (verifyErrMsg.toLowerCase().contains('invalid time')) {
-                  if (mounted)
+                  if (mounted) {
                     CustomToast.showSuccess(
                       context,
                       'Payment Verified Successfully!',
                     );
+                  }
                 } else {
-                  if (mounted) CustomToast.showError(context, verifyErrMsg);
+                  if (mounted) {
+                    CustomToast.showError(
+                      context,
+                      _getErrorMessage(verifyResult, 'Payment Verification Failed'),
+                    );
+                  }
                   return;
                 }
               }
@@ -222,13 +235,19 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                 (initResult['message'] ?? 'Payment Initiation Failed')
                     .toString();
             if (initErrMsg.toLowerCase().contains('invalid time')) {
-              if (mounted)
+              if (mounted) {
                 CustomToast.showSuccess(
                   context,
                   'Application Processed Successfully',
                 );
+              }
             } else {
-              if (mounted) CustomToast.showError(context, initErrMsg);
+              if (mounted) {
+                CustomToast.showError(
+                  context,
+                  _getErrorMessage(initResult, 'Payment Initiation Failed'),
+                );
+              }
               return;
             }
           }
@@ -247,7 +266,10 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           }
         } else {
           if (mounted) {
-            CustomToast.showError(context, errMsg);
+            CustomToast.showError(
+              context,
+              _getErrorMessage(result, 'Failed to submit application'),
+            );
           }
           return;
         }
@@ -594,39 +616,6 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                 .toList(),
             (v) => setState(() => _centerPriorities[2] = v),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEvidenceStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'EVIDENCE VAULT',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildEvidenceItem(
-            'Essential Academic Qualification',
-            'Pending Selection',
-          ),
-          _buildEvidenceItem(
-            'Professional Degree/Certification',
-            'Verified from OTR',
-          ),
-          _buildEvidenceItem(
-            'Identity & Domicile Verification',
-            'Pending Selection',
-          ),
-          _buildEvidenceItem('Category/Caste Certificate', 'N/A for UR'),
         ],
       ),
     );
@@ -1390,54 +1379,6 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildEvidenceItem(String title, String status) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.description_outlined, color: Colors.grey, size: 20),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
-                    color: OtrTheme.darkNavy,
-                  ),
-                ),
-                Text(
-                  status,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () {},
-            style: TextButton.styleFrom(
-              backgroundColor: OtrTheme.lightBlue,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            child: const Text(
-              'UPLOAD',
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

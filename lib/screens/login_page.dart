@@ -33,11 +33,33 @@ class _LoginPageState extends State<LoginPage> {
 
       if (result['success'] == true) {
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
+          setState(() => _isLoading = true); // Keep loading while checking profile
+        }
+        
+        final profileResult = await _apiService.getProfile();
+        
+        if (mounted) {
+          if (profileResult['success'] == true && 
+              profileResult['data'] != null && 
+              profileResult['data']['firstName'] != null && 
+              profileResult['data']['firstName'].toString().isNotEmpty) {
+            // OTR Completed -> Dashboard
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          } else {
+            // OTR Not Completed -> Bio Page
+            Navigator.pushReplacementNamed(context, '/bio');
+          }
         }
       } else {
         if (mounted) {
-          CustomToast.showError(context, result['message'] ?? 'Login failed');
+          String errorMsg = result['message'] ?? 'Login failed';
+          if (result['errors'] != null &&
+              result['errors'] is List &&
+              (result['errors'] as List).isNotEmpty) {
+            final firstError = (result['errors'] as List).first;
+            errorMsg = firstError['message'] ?? errorMsg;
+          }
+          CustomToast.showError(context, errorMsg);
         }
       }
     } catch (e) {

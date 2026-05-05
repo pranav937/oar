@@ -53,7 +53,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
             Navigator.pushReplacementNamed(context, '/dashboard');
           }
         } else {
-          CustomToast.showSuccess(context, result['message'] ?? 'Verification failed');
+          String errorMsg = result['message'] ?? 'Verification failed';
+          if (result['errors'] != null &&
+              result['errors'] is List &&
+              (result['errors'] as List).isNotEmpty) {
+            final firstError = (result['errors'] as List).first;
+            errorMsg = firstError['message'] ?? errorMsg;
+          }
+          CustomToast.showError(context, errorMsg);
         }
       }
     } catch (e) {

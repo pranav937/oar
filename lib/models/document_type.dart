@@ -1,20 +1,17 @@
-/**
- * Domain Enum: DocumentType
- * Document types for candidate document uploads.
- * Used for validation and categorization of uploaded documents.
- */
+/// Enumeration of supported document types for the OTR and application workflow.
+/// Used to categorize files for server-side processing.
 enum DocumentType {
-  AADHAR,
-  DRIVING,
-  PAN,
-  ELECTION,
-  TENTH,
-  TWELTH,
-  GRADUATE,
-  POSTGRADUATE,
-  PWD,
-  CASTE,
-  WIDOW,
-  SPORT,
-  EXSERVICE,
+  aadhar,
+  driving,
+  pan,
+  election,
+  tenth,
+  twelth,
+  graduate,
+  postgraduate,
+  pwd,
+  caste,
+  widow,
+  sport,
+  exservice,
 }

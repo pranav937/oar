@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -24,7 +22,6 @@ class AdmitCardGenerator {
     final pdf = pw.Document();
 
     final font = await PdfGoogleFonts.interBold();
-    final fontRegular = await PdfGoogleFonts.interRegular();
 
     // Pre-fetch images with URL resolution
     pw.ImageProvider? photoProvider;

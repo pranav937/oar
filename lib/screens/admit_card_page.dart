@@ -9,7 +9,7 @@ import '../theme/otr_theme.dart';
 import 'admit_card_detail_page.dart';
 
 class AdmitCardPage extends StatefulWidget {
-  const AdmitCardPage({Key? key}) : super(key: key);
+  const AdmitCardPage({super.key});
 
   @override
   State<AdmitCardPage> createState() => _AdmitCardPageState();
@@ -276,9 +276,11 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                           // 2. If server download fails, fallback to local generation
                           if (bytes == null || bytes.isEmpty) {
                             debugPrint('Server download failed or returned empty, falling back to local generation');
+                            if (!mounted) return;
                             CustomToast.showSuccess(context, 'Fetching data for local generation...');
                             
                             final detailResult = await _apiService.getAdmitCard(id);
+                            if (!mounted) return;
                             if (detailResult['success'] == true) {
                               CustomToast.showSuccess(context, 'Generating PDF locally...');
                               final fullData = detailResult['data'] ?? {};
