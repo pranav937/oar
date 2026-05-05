@@ -236,7 +236,7 @@ class _BioPageState extends State<BioPage> {
               final String base = ApiConstants.baseUrl.endsWith('/')
                   ? ApiConstants.baseUrl.substring(
                       0,
-                      
+
                       ApiConstants.baseUrl.length - 1,
                     )
                   : ApiConstants.baseUrl;
@@ -327,7 +327,7 @@ class _BioPageState extends State<BioPage> {
         '10th passing year must be between 1980 and $currentYear',
       );
       return;
-    }
+    } 
     if (twelfthYear != null &&
         (twelfthYear < 1980 || twelfthYear > currentYear)) {
       CustomToast.showError(
