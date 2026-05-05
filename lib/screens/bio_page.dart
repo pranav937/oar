@@ -236,6 +236,7 @@ class _BioPageState extends State<BioPage> {
               final String base = ApiConstants.baseUrl.endsWith('/')
                   ? ApiConstants.baseUrl.substring(
                       0,
+                      
                       ApiConstants.baseUrl.length - 1,
                     )
                   : ApiConstants.baseUrl;
