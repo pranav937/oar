@@ -19,6 +19,17 @@ class _AddressPageState extends State<AddressPage> {
   bool _isCorrespondenceSameAsCurrent = false;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isReadOnly = true;
+  bool _isEditingFromProfile = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    if (args != null && args['isEditing'] == true) {
+      _isEditingFromProfile = true;
+    }
+  }
 
   final TextEditingController _pFlatController = TextEditingController();
   final TextEditingController _pTalukaController = TextEditingController();
@@ -126,6 +137,12 @@ class _AddressPageState extends State<AddressPage> {
             }
           }
 
+          if (_currFlatController.text.isNotEmpty && !_isEditingFromProfile) {
+            _isReadOnly = true;
+          } else {
+            _isReadOnly = false;
+          }
+
           _isLoading = false;
         });
       }
@@ -151,7 +168,11 @@ class _AddressPageState extends State<AddressPage> {
       if (result['success'] == true) {
         if (mounted) {
           CustomToast.showSuccess(context, 'Address updated successfully');
-          Navigator.pushNamed(context, '/documents');
+          Navigator.pushNamed(
+            context,
+            '/documents',
+            arguments: {'isEditing': _isEditingFromProfile},
+          );
         }
       } else {
         if (mounted) {
@@ -173,6 +194,7 @@ class _AddressPageState extends State<AddressPage> {
   }
 
   void _handlePermanentSync(bool? value) {
+    if (_isReadOnly) return;
     setState(() {
       _isPermanentSameAsCurrent = value ?? false;
       if (_isPermanentSameAsCurrent) {
@@ -186,6 +208,7 @@ class _AddressPageState extends State<AddressPage> {
   }
 
   void _handleCorrespondenceSync(bool? value) {
+    if (_isReadOnly) return;
     setState(() {
       _isCorrespondenceSameAsCurrent = value ?? false;
       if (_isCorrespondenceSameAsCurrent) {
@@ -228,8 +251,6 @@ class _AddressPageState extends State<AddressPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildProgressTracker(),
-                  const SizedBox(height: 32),
                   _buildSectionHeader(
                     'Residence Details',
                     'Update your permanent and current addresses',
@@ -246,6 +267,7 @@ class _AddressPageState extends State<AddressPage> {
                         icon: Icons.map_rounded,
                         controller: _currFlatController,
                         maxLines: 2,
+                        enabled: !_isReadOnly,
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -256,6 +278,7 @@ class _AddressPageState extends State<AddressPage> {
                               hintText: 'Taluka',
                               icon: Icons.location_on_rounded,
                               controller: _currTalukaController,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -265,6 +288,7 @@ class _AddressPageState extends State<AddressPage> {
                               hintText: 'District',
                               icon: Icons.location_city_rounded,
                               controller: _currDistrictController,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                         ],
@@ -278,6 +302,7 @@ class _AddressPageState extends State<AddressPage> {
                               hintText: 'State',
                               icon: Icons.flag_rounded,
                               controller: _currStateController,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -288,6 +313,7 @@ class _AddressPageState extends State<AddressPage> {
                               icon: Icons.pin_drop_rounded,
                               controller: _currPincodeController,
                               keyboardType: TextInputType.number,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                         ],
@@ -342,6 +368,7 @@ class _AddressPageState extends State<AddressPage> {
                           icon: Icons.map_rounded,
                           controller: _pFlatController,
                           maxLines: 2,
+                          enabled: !_isReadOnly,
                         ),
                         const SizedBox(height: 20),
                         Row(
@@ -352,6 +379,7 @@ class _AddressPageState extends State<AddressPage> {
                                 hintText: 'Taluka',
                                 icon: Icons.location_on_rounded,
                                 controller: _pTalukaController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -361,6 +389,7 @@ class _AddressPageState extends State<AddressPage> {
                                 hintText: 'District',
                                 icon: Icons.location_city_rounded,
                                 controller: _pDistrictController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                           ],
@@ -374,6 +403,7 @@ class _AddressPageState extends State<AddressPage> {
                                 hintText: 'State',
                                 icon: Icons.flag_rounded,
                                 controller: _pStateController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -384,6 +414,7 @@ class _AddressPageState extends State<AddressPage> {
                                 icon: Icons.pin_drop_rounded,
                                 controller: _pPincodeController,
                                 keyboardType: TextInputType.number,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                           ],
@@ -438,6 +469,7 @@ class _AddressPageState extends State<AddressPage> {
                           icon: Icons.map_rounded,
                           controller: _cFlatController,
                           maxLines: 2,
+                          enabled: !_isReadOnly,
                         ),
                         const SizedBox(height: 20),
                         Row(
@@ -448,6 +480,7 @@ class _AddressPageState extends State<AddressPage> {
                                 hintText: 'Taluka',
                                 icon: Icons.location_on_rounded,
                                 controller: _cTalukaController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -457,6 +490,7 @@ class _AddressPageState extends State<AddressPage> {
                                 hintText: 'District',
                                 icon: Icons.location_city_rounded,
                                 controller: _cDistrictController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                           ],
@@ -470,6 +504,7 @@ class _AddressPageState extends State<AddressPage> {
                                 hintText: 'State',
                                 icon: Icons.flag_rounded,
                                 controller: _cStateController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -480,6 +515,7 @@ class _AddressPageState extends State<AddressPage> {
                                 icon: Icons.pin_drop_rounded,
                                 controller: _cPincodeController,
                                 keyboardType: TextInputType.number,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                           ],
@@ -495,77 +531,7 @@ class _AddressPageState extends State<AddressPage> {
     );
   }
 
-  Widget _buildProgressTracker() {
-    return Row(
-      children: [
-        _buildStepIndicator('1', 'Bio', true, true),
-        _buildStepLine(true),
-        _buildStepIndicator('2', 'Address', true, false),
-        _buildStepLine(false),
-        _buildStepIndicator('3', 'Docs', false, false),
-      ],
-    );
-  }
 
-  Widget _buildStepIndicator(
-    String step,
-    String label,
-    bool isActive,
-    bool isDone,
-  ) {
-    return Column(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isActive ? OtrTheme.primaryBlue : Colors.grey.withAlpha(51),
-            shape: BoxShape.circle,
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: OtrTheme.primaryBlue.withAlpha(76),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Center(
-            child: isDone
-                ? const Icon(Icons.check, color: Colors.white, size: 16)
-                : Text(
-                    step,
-                    style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isActive ? OtrTheme.primaryBlue : Colors.grey,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepLine(bool isDone) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 14, left: 4, right: 4),
-        color: isDone ? OtrTheme.primaryBlue : Colors.grey.withAlpha(51),
-      ),
-    );
-  }
 
   Widget _buildSectionHeader(String title, String subtitle) {
     return Column(
@@ -595,7 +561,17 @@ class _AddressPageState extends State<AddressPage> {
 
   Widget _buildSaveButton() {
     return ElevatedButton(
-      onPressed: _isSaving ? null : _handleSave,
+      onPressed: _isSaving ? null : () {
+        if (_isReadOnly) {
+          Navigator.pushNamed(
+            context,
+            '/documents',
+            arguments: {'isEditing': _isEditingFromProfile},
+          );
+        } else {
+          _handleSave();
+        }
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: OtrTheme.primaryBlue,
         foregroundColor: Colors.white,
@@ -613,18 +589,18 @@ class _AddressPageState extends State<AddressPage> {
                 strokeWidth: 2,
               ),
             )
-          : const Row(
+          : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'SAVE & PROCEED',
-                  style: TextStyle(
+                  _isReadOnly ? 'PROCEED TO DOCUMENTS' : 'SAVE & PROCEED',
+                  style: const TextStyle(
                     letterSpacing: 1,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward_rounded, size: 18),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded, size: 18),
               ],
             ),
     );

@@ -310,6 +310,36 @@ class ApiService {
     try {
       final response = await put(ApiConstants.candidateProfile, profileData);
       final Map<String, dynamic> data = jsonDecode(response.body);
+
+      String parseMsg(dynamic body) {
+        if (body['errors'] != null) {
+          if (body['errors'] is List) {
+            return body['errors']
+                .map((e) {
+                  if (e is Map) {
+                    return "${e['field'] ?? ''}: ${e['message'] ?? e.toString()}";
+                  }
+                  return e.toString();
+                })
+                .join('\n');
+          }
+          if (body['errors'] is Map) {
+            return body['errors'].entries
+                .map((e) {
+                  final val = e.value;
+                  return "${e.key}: ${val is List ? val.join(', ') : val}";
+                })
+                .join('\n');
+          }
+          return body['errors'].toString();
+        }
+        if (body['error'] != null) return body['error'].toString();
+        var msg = body['message'];
+        if (msg is List) return msg.join(', ');
+        if (msg != null && msg.toString().isNotEmpty) return msg.toString();
+        return 'Update failed (Error ${response.statusCode})';
+      }
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return data.containsKey('success')
             ? data
@@ -317,7 +347,7 @@ class ApiService {
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Failed to update profile',
+          'message': parseMsg(data),
         };
       }
     } catch (e) {

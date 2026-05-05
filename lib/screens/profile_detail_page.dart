@@ -72,7 +72,11 @@ class _ProfileDetailPageState extends State<ProfileDetailPage> {
         ),
         actions: [
           TextButton.icon(
-            onPressed: () => Navigator.pushNamed(context, '/bio'),
+            onPressed: () => Navigator.pushNamed(
+              context,
+              '/bio',
+              arguments: {'isEditing': true},
+            ),
             icon: const Icon(Icons.edit_note_rounded, size: 18),
             label: const Text(
               'EDIT',

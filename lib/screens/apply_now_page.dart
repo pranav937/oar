@@ -116,7 +116,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
       }
     }
 
-    if (_currentStep == 3) {
+    if (_currentStep == 2) {
       // Settlement Step
       if (!_declarationAccepted) {
         if (mounted) {
@@ -197,9 +197,15 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                   );
                 }
               } else {
-                String verifyErrMsg = (verifyResult['message'] ?? 'Payment Verification Failed').toString();
+                String verifyErrMsg =
+                    (verifyResult['message'] ?? 'Payment Verification Failed')
+                        .toString();
                 if (verifyErrMsg.toLowerCase().contains('invalid time')) {
-                  if (mounted) CustomToast.showSuccess(context, 'Payment Verified Successfully!');
+                  if (mounted)
+                    CustomToast.showSuccess(
+                      context,
+                      'Payment Verified Successfully!',
+                    );
                 } else {
                   if (mounted) CustomToast.showError(context, verifyErrMsg);
                   return;
@@ -212,9 +218,15 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
               return;
             }
           } else {
-            String initErrMsg = (initResult['message'] ?? 'Payment Initiation Failed').toString();
+            String initErrMsg =
+                (initResult['message'] ?? 'Payment Initiation Failed')
+                    .toString();
             if (initErrMsg.toLowerCase().contains('invalid time')) {
-              if (mounted) CustomToast.showSuccess(context, 'Application Processed Successfully');
+              if (mounted)
+                CustomToast.showSuccess(
+                  context,
+                  'Application Processed Successfully',
+                );
             } else {
               if (mounted) CustomToast.showError(context, initErrMsg);
               return;
@@ -222,12 +234,16 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           }
         }
       } else {
-        String errMsg = (result['message'] ?? 'Failed to submit application').toString();
-        
+        String errMsg = (result['message'] ?? 'Failed to submit application')
+            .toString();
+
         if (errMsg.toLowerCase().contains('invalid time')) {
           // Hide backend bug and proceed as requested
           if (mounted) {
-            CustomToast.showSuccess(context, 'Application Processed Successfully');
+            CustomToast.showSuccess(
+              context,
+              'Application Processed Successfully',
+            );
           }
         } else {
           if (mounted) {
@@ -236,10 +252,9 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
           return;
         }
       }
-
     }
 
-    if (_currentStep < 4) {
+    if (_currentStep < 3) {
       setState(() => _currentStep++);
       _pageController.animateToPage(
         _currentStep,
@@ -308,13 +323,12 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                     children: [
                       _buildEligibilityStep(advertisement),
                       _buildConfigurationStep(advertisement),
-                      _buildEvidenceStep(),
                       _buildSettlementStep(advertisement),
                       _buildSuccessStep(advertisement.uuid),
                     ],
                   ),
                 ),
-                if (_currentStep < 4) _buildBottomNavbar(advertisement),
+                if (_currentStep < 3) _buildBottomNavbar(advertisement),
               ],
             ),
     );
@@ -326,7 +340,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
       color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(5, (index) {
+        children: List.generate(4, (index) {
           bool isActive = index <= _currentStep;
           bool isCurrent = index == _currentStep;
           return Expanded(
@@ -356,7 +370,7 @@ class _ApplyNowPageState extends State<ApplyNowPage> {
                           ),
                   ),
                 ),
-                if (index < 4)
+                if (index < 3)
                   Expanded(
                     child: Container(
                       height: 2,

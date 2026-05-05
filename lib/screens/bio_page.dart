@@ -85,6 +85,17 @@ class _BioPageState extends State<BioPage> {
   bool _engRead = false, _engWrite = false, _engSpeak = false;
   bool _hinRead = false, _hinWrite = false, _hinSpeak = false;
   bool _gujRead = false, _gujWrite = false, _gujSpeak = false;
+  bool _isReadOnly = false;
+  bool _isEditingFromProfile = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as Map?;
+    if (args != null && args['isEditing'] == true) {
+      _isEditingFromProfile = true;
+    }
+  }
 
   @override
   void initState() {
@@ -217,6 +228,12 @@ class _BioPageState extends State<BioPage> {
             }
           }
 
+          if (_firstNameController.text.isNotEmpty && !_isEditingFromProfile) {
+            _isReadOnly = true;
+          } else {
+            _isReadOnly = false;
+          }
+
           _isLoading = false;
         });
       }
@@ -237,7 +254,7 @@ class _BioPageState extends State<BioPage> {
         age--;
       }
       if (age < 18 || age > 65) {
-        CustomToast.showSuccess(
+        CustomToast.showError(
           context,
           'Candidate must be between 18 and 65 years old',
         );
@@ -259,7 +276,7 @@ class _BioPageState extends State<BioPage> {
     if (_isPhysicallyDisabled) {
       final percent = int.tryParse(_disabilityPercentController.text);
       if (percent == null || percent < 0 || percent > 100) {
-        CustomToast.showSuccess(
+        CustomToast.showError(
           context,
           'Disability percentage must be between 0 and 100',
         );
@@ -273,7 +290,7 @@ class _BioPageState extends State<BioPage> {
     final twelfthYear = int.tryParse(_twelfthYearController.text);
 
     if (tenthYear != null && (tenthYear < 1980 || tenthYear > currentYear)) {
-      CustomToast.showSuccess(
+        CustomToast.showError(
         context,
         '10th passing year must be between 1980 and $currentYear',
       );
@@ -281,7 +298,7 @@ class _BioPageState extends State<BioPage> {
     }
     if (twelfthYear != null &&
         (twelfthYear < 1980 || twelfthYear > currentYear)) {
-      CustomToast.showSuccess(
+      CustomToast.showError(
         context,
         '12th passing year must be between 1980 and $currentYear',
       );
@@ -367,12 +384,17 @@ class _BioPageState extends State<BioPage> {
           CustomToast.showSuccess(context, 'Profile updated successfully');
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddressPage()),
+            MaterialPageRoute(
+              builder: (context) => const AddressPage(),
+              settings: RouteSettings(
+                arguments: {'isEditing': _isEditingFromProfile},
+              ),
+            ),
           );
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(
+          CustomToast.showError(
             context,
             result['message'] ?? 'Update failed',
           );
@@ -570,8 +592,6 @@ class _BioPageState extends State<BioPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildProgressTracker(),
-                  const SizedBox(height: 32),
                   _buildSectionHeader(
                     'Candidate Profile',
                     'Complete your personal and social details',
@@ -590,7 +610,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.title_rounded,
                         value: _selectedTitle,
                         items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedTitle = val),
                       ),
                       const SizedBox(height: 20),
@@ -599,6 +619,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: 'Surname',
                         icon: Icons.person_outline_rounded,
                         controller: _surnameController,
+                        enabled: !_isReadOnly,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -606,6 +627,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: 'Enter first name',
                         icon: Icons.person_rounded,
                         controller: _firstNameController,
+                        enabled: !_isReadOnly,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -621,6 +643,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: 'Father\'s Name',
                         icon: Icons.person_add_rounded,
                         controller: _fatherController,
+                        enabled: !_isReadOnly,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -628,6 +651,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: 'Mother\'s Name',
                         icon: Icons.person_add_rounded,
                         controller: _motherController,
+                        enabled: !_isReadOnly,
                       ),
                     ],
                   ),
@@ -647,7 +671,7 @@ class _BioPageState extends State<BioPage> {
                           'Voter ID',
                           'Driving License',
                         ],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedIdProofType = val),
                       ),
                       const SizedBox(height: 20),
@@ -656,6 +680,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: 'Enter ID number',
                         icon: Icons.tag_rounded,
                         controller: _idProofNumberController,
+                        enabled: !_isReadOnly,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -663,6 +688,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: '12-digit number',
                         icon: Icons.credit_card_rounded,
                         controller: _aadhaarController,
+                        enabled: !_isReadOnly,
                       ),
                     ],
                   ),
@@ -677,7 +703,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.transgender_rounded,
                         value: _selectedGender,
                         items: ['MALE', 'FEMALE', 'OTHER'],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedGender = val),
                       ),
                       const SizedBox(height: 20),
@@ -685,7 +711,7 @@ class _BioPageState extends State<BioPage> {
                         label: 'Date of Birth',
                         value: _getFormattedDate(),
                         icon: Icons.calendar_today_rounded,
-                        onTap: () => _selectDate(context),
+                        onTap: _isReadOnly ? null : () => _selectDate(context),
                       ),
                       const SizedBox(height: 20),
                       _buildFunctionalDropdown(
@@ -694,7 +720,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.favorite_rounded,
                         value: _selectedMaritalStatus,
                         items: ['Single', 'Married', 'Divorced', 'Widow'],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedMaritalStatus = val),
                       ),
                       const SizedBox(height: 20),
@@ -704,7 +730,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.flag_rounded,
                         value: _selectedNationality,
                         items: ['Indian', 'Other'],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedNationality = val),
                       ),
                     ],
@@ -720,7 +746,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.category_rounded,
                         value: _selectedCategory,
                         items: ['UR', 'EWS', 'SC', 'ST', 'OBC'],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedCategory = val),
                       ),
                       const SizedBox(height: 20),
@@ -729,6 +755,7 @@ class _BioPageState extends State<BioPage> {
                         hintText: 'Enter Sub Category',
                         icon: Icons.subdirectory_arrow_right_rounded,
                         controller: _subCategoryController,
+                        enabled: !_isReadOnly,
                       ),
                       const SizedBox(height: 20),
                       _buildFunctionalDropdown(
@@ -737,7 +764,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.school_rounded,
                         value: _selectedQualification,
                         items: ['10th', '12th', 'Bachelor', 'Master', 'PhD'],
-                        onChanged: (val) =>
+                        onChanged: _isReadOnly ? null : (val) =>
                             setState(() => _selectedQualification = val),
                       ),
                       const SizedBox(height: 20),
@@ -749,6 +776,7 @@ class _BioPageState extends State<BioPage> {
                               hintText: 'Education Board',
                               icon: Icons.history_edu_rounded,
                               controller: _tenthBoardController,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -759,6 +787,7 @@ class _BioPageState extends State<BioPage> {
                               icon: Icons.calendar_today,
                               controller: _tenthYearController,
                               keyboardType: TextInputType.number,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                         ],
@@ -772,6 +801,7 @@ class _BioPageState extends State<BioPage> {
                               hintText: 'Education Board',
                               icon: Icons.history_edu_rounded,
                               controller: _twelfthBoardController,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -782,6 +812,7 @@ class _BioPageState extends State<BioPage> {
                               icon: Icons.calendar_today,
                               controller: _twelfthYearController,
                               keyboardType: TextInputType.number,
+                              enabled: !_isReadOnly,
                             ),
                           ),
                         ],
@@ -792,7 +823,7 @@ class _BioPageState extends State<BioPage> {
                       _buildSwitchTile(
                         'Physically Disabled',
                         _isPhysicallyDisabled,
-                        (val) => setState(() => _isPhysicallyDisabled = val),
+                        _isReadOnly ? null : (val) => setState(() => _isPhysicallyDisabled = val),
                       ),
                       if (_isPhysicallyDisabled) ...[
                         OtrTextField(
@@ -800,6 +831,7 @@ class _BioPageState extends State<BioPage> {
                           hintText: 'Type',
                           icon: Icons.accessibility_new_rounded,
                           controller: _disabilityTypeController,
+                          enabled: !_isReadOnly,
                         ),
                         const SizedBox(height: 12),
                         OtrTextField(
@@ -808,12 +840,13 @@ class _BioPageState extends State<BioPage> {
                           icon: Icons.percent_rounded,
                           controller: _disabilityPercentController,
                           keyboardType: TextInputType.number,
+                          enabled: !_isReadOnly,
                         ),
                       ],
                       _buildSwitchTile(
                         'Sports Person',
                         _isSportsPerson,
-                        (val) => setState(() => _isSportsPerson = val),
+                        _isReadOnly ? null : (val) => setState(() => _isSportsPerson = val),
                       ),
                       if (_isSportsPerson) ...[
                         OtrTextField(
@@ -821,6 +854,7 @@ class _BioPageState extends State<BioPage> {
                           hintText: 'Name',
                           icon: Icons.emoji_events_rounded,
                           controller: _sportsNameController,
+                          enabled: !_isReadOnly,
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -831,6 +865,7 @@ class _BioPageState extends State<BioPage> {
                                 hintText: 'State/Nat.',
                                 icon: Icons.leaderboard_rounded,
                                 controller: _sportsLevelController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -841,6 +876,7 @@ class _BioPageState extends State<BioPage> {
                                 icon: Icons.calendar_today,
                                 controller: _sportsYearController,
                                 keyboardType: TextInputType.number,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                           ],
@@ -851,12 +887,13 @@ class _BioPageState extends State<BioPage> {
                           hintText: 'Issuing Org',
                           icon: Icons.account_balance_rounded,
                           controller: _sportsAuthController,
+                          enabled: !_isReadOnly,
                         ),
                       ],
                       _buildSwitchTile(
                         'Widow Person',
                         _isWidow,
-                        (val) => setState(() => _isWidow = val),
+                        _isReadOnly ? null : (val) => setState(() => _isWidow = val),
                       ),
                       if (_isWidow) ...[
                         OtrTextField(
@@ -864,6 +901,7 @@ class _BioPageState extends State<BioPage> {
                           hintText: 'Number',
                           icon: Icons.description_rounded,
                           controller: _widowCertController,
+                          enabled: !_isReadOnly,
                         ),
                         const SizedBox(height: 12),
                         _buildClickableField(
@@ -872,7 +910,7 @@ class _BioPageState extends State<BioPage> {
                               ? 'Select Date'
                               : _widowDateController.text,
                           icon: Icons.calendar_month_rounded,
-                          onTap: () async {
+                          onTap: _isReadOnly ? null : () async {
                             final d = await showDatePicker(
                               context: context,
                               initialDate: DateTime.now(),
@@ -891,7 +929,7 @@ class _BioPageState extends State<BioPage> {
                       _buildSwitchTile(
                         'Ex-Soldier',
                         _isExSoldier,
-                        (val) => setState(() => _isExSoldier = val),
+                        _isReadOnly ? null : (val) => setState(() => _isExSoldier = val),
                       ),
                       if (_isExSoldier) ...[
                         Row(
@@ -902,6 +940,7 @@ class _BioPageState extends State<BioPage> {
                                 hintText: '2010',
                                 icon: Icons.login_rounded,
                                 controller: _exSoldierFromController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -911,6 +950,7 @@ class _BioPageState extends State<BioPage> {
                                 hintText: '2020',
                                 icon: Icons.logout_rounded,
                                 controller: _exSoldierToController,
+                                enabled: !_isReadOnly,
                               ),
                             ),
                           ],
@@ -921,12 +961,13 @@ class _BioPageState extends State<BioPage> {
                           hintText: 'Number',
                           icon: Icons.badge_rounded,
                           controller: _exSoldierIdController,
+                          enabled: !_isReadOnly,
                         ),
                       ],
                       _buildSwitchTile(
                         'Govt Employee',
                         _isGovtEmployee,
-                        (val) => setState(() => _isGovtEmployee = val),
+                        _isReadOnly ? null : (val) => setState(() => _isGovtEmployee = val),
                       ),
                       if (_isGovtEmployee) ...[
                         OtrTextField(
@@ -934,6 +975,7 @@ class _BioPageState extends State<BioPage> {
                           hintText: 'Department',
                           icon: Icons.business_rounded,
                           controller: _govtDeptController,
+                          enabled: !_isReadOnly,
                         ),
                         const SizedBox(height: 12),
                         _buildClickableField(
@@ -942,7 +984,7 @@ class _BioPageState extends State<BioPage> {
                               ? 'Select Date'
                               : _govtJoinDateController.text,
                           icon: Icons.calendar_month_rounded,
-                          onTap: () async {
+                          onTap: _isReadOnly ? null : () async {
                             final d = await showDatePicker(
                               context: context,
                               initialDate: DateTime.now(),
@@ -970,7 +1012,7 @@ class _BioPageState extends State<BioPage> {
                         _engRead,
                         _engWrite,
                         _engSpeak,
-                        (r, w, s) => setState(() {
+                        _isReadOnly ? null : (r, w, s) => setState(() {
                           _engRead = r;
                           _engWrite = w;
                           _engSpeak = s;
@@ -982,7 +1024,7 @@ class _BioPageState extends State<BioPage> {
                         _hinRead,
                         _hinWrite,
                         _hinSpeak,
-                        (r, w, s) => setState(() {
+                        _isReadOnly ? null : (r, w, s) => setState(() {
                           _hinRead = r;
                           _hinWrite = w;
                           _hinSpeak = s;
@@ -994,7 +1036,7 @@ class _BioPageState extends State<BioPage> {
                         _gujRead,
                         _gujWrite,
                         _gujSpeak,
-                        (r, w, s) => setState(() {
+                        _isReadOnly ? null : (r, w, s) => setState(() {
                           _gujRead = r;
                           _gujWrite = w;
                           _gujSpeak = s;
@@ -1008,75 +1050,6 @@ class _BioPageState extends State<BioPage> {
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildProgressTracker() {
-    return Row(
-      children: [
-        _buildStepIndicator('1', 'Bio', true),
-        _buildStepLine(false),
-        _buildStepIndicator('2', 'Address', false),
-        _buildStepLine(false),
-        _buildStepIndicator('3', 'Docs', false),
-      ],
-    );
-  }
-
-  Widget _buildStepIndicator(String step, String label, bool isActive) {
-    return Column(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isActive
-                ? OtrTheme.primaryBlue
-                : Colors.grey.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            boxShadow: isActive
-                ? [
-                    BoxShadow(
-                      color: OtrTheme.primaryBlue.withValues(alpha: 0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Center(
-            child: Text(
-              step,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.grey,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isActive ? OtrTheme.primaryBlue : Colors.grey,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepLine(bool isDone) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 14, left: 4, right: 4),
-        color: isDone
-            ? OtrTheme.primaryBlue
-            : Colors.grey.withValues(alpha: 0.1),
-      ),
     );
   }
 
@@ -1108,7 +1081,21 @@ class _BioPageState extends State<BioPage> {
 
   Widget _buildSaveButton() {
     return ElevatedButton(
-      onPressed: _isSaving ? null : _handleSave,
+      onPressed: _isSaving ? null : () {
+        if (_isReadOnly) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AddressPage(),
+              settings: RouteSettings(
+                arguments: {'isEditing': _isEditingFromProfile},
+              ),
+            ),
+          );
+        } else {
+          _handleSave();
+        }
+      },
       style: ElevatedButton.styleFrom(
         backgroundColor: OtrTheme.primaryBlue,
         foregroundColor: Colors.white,
@@ -1119,18 +1106,18 @@ class _BioPageState extends State<BioPage> {
       ),
       child: _isSaving
           ? const SpinKitThreeBounce(color: Colors.white, size: 20)
-          : const Row(
+          : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'SAVE & PROCEED',
-                  style: TextStyle(
+                  _isReadOnly ? 'PROCEED TO ADDRESS' : 'SAVE & PROCEED',
+                  style: const TextStyle(
                     letterSpacing: 1,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward_rounded, size: 18),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded, size: 18),
               ],
             ),
     );
@@ -1212,7 +1199,7 @@ class _BioPageState extends State<BioPage> {
     required String label,
     required String value,
     required IconData icon,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1227,7 +1214,7 @@ class _BioPageState extends State<BioPage> {
         ),
         const SizedBox(height: 10),
         InkWell(
-          onTap: onTap,
+          onTap: _isReadOnly ? null : onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
@@ -1267,7 +1254,7 @@ class _BioPageState extends State<BioPage> {
     required IconData icon,
     required String? value,
     required List<String> items,
-    required ValueChanged<String?> onChanged,
+    required ValueChanged<String?>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1340,7 +1327,7 @@ class _BioPageState extends State<BioPage> {
                   ),
                 )
                 .toList(),
-            onChanged: onChanged,
+            onChanged: _isReadOnly ? null : onChanged,
           ),
         ),
       ],
@@ -1352,7 +1339,7 @@ class _BioPageState extends State<BioPage> {
     bool read,
     bool write,
     bool speak,
-    Function(bool, bool, bool) onChanged,
+    Function(bool, bool, bool)? onChanged,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1379,17 +1366,17 @@ class _BioPageState extends State<BioPage> {
               _buildProficiencyChip(
                 'Read',
                 read,
-                (val) => onChanged(val, write, speak),
+                onChanged == null ? null : (val) => onChanged(val, write, speak),
               ),
               _buildProficiencyChip(
                 'Write',
                 write,
-                (val) => onChanged(read, val, speak),
+                onChanged == null ? null : (val) => onChanged(read, val, speak),
               ),
               _buildProficiencyChip(
                 'Speak',
                 speak,
-                (val) => onChanged(read, write, val),
+                onChanged == null ? null : (val) => onChanged(read, write, val),
               ),
             ],
           ),
@@ -1401,7 +1388,7 @@ class _BioPageState extends State<BioPage> {
   Widget _buildProficiencyChip(
     String label,
     bool isSelected,
-    ValueChanged<bool> onTap,
+    ValueChanged<bool>? onTap,
   ) {
     return FilterChip(
       label: Text(
@@ -1425,7 +1412,7 @@ class _BioPageState extends State<BioPage> {
   Widget _buildSwitchTile(
     String title,
     bool value,
-    ValueChanged<bool> onChanged,
+    ValueChanged<bool>? onChanged,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
