@@ -138,10 +138,10 @@ class _AddressPageState extends State<AddressPage> {
       if (result['success'] == true) {
         if (mounted) {
           CustomToast.showSuccess(context, 'Address updated successfully');
-          Navigator.pushNamed(
+          Navigator.pushNamedAndRemoveUntil(
             context,
-            '/documents',
-            arguments: {'isEditing': _isEditingFromProfile},
+            '/dashboard',
+            (route) => false,
           );
         }
       } else {
@@ -228,6 +228,8 @@ class _AddressPageState extends State<AddressPage> {
                         controller: _currFlatController,
                         maxLines: 2,
                         enabled: !_isReadOnly,
+                        isRequired: true,
+                        textCapitalization: TextCapitalization.words,
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -239,6 +241,7 @@ class _AddressPageState extends State<AddressPage> {
                               icon: Icons.location_on_rounded,
                               controller: _currTalukaController,
                               enabled: !_isReadOnly,
+                              textCapitalization: TextCapitalization.words,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -249,6 +252,7 @@ class _AddressPageState extends State<AddressPage> {
                               icon: Icons.location_city_rounded,
                               controller: _currDistrictController,
                               enabled: !_isReadOnly,
+                              textCapitalization: TextCapitalization.words,
                             ),
                           ),
                         ],
@@ -263,6 +267,7 @@ class _AddressPageState extends State<AddressPage> {
                               icon: Icons.flag_rounded,
                               controller: _currStateController,
                               enabled: !_isReadOnly,
+                              textCapitalization: TextCapitalization.words,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -329,6 +334,8 @@ class _AddressPageState extends State<AddressPage> {
                           controller: _pFlatController,
                           maxLines: 2,
                           enabled: !_isReadOnly,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
                         ),
                         const SizedBox(height: 20),
                         Row(
@@ -340,6 +347,7 @@ class _AddressPageState extends State<AddressPage> {
                                 icon: Icons.location_on_rounded,
                                 controller: _pTalukaController,
                                 enabled: !_isReadOnly,
+                                textCapitalization: TextCapitalization.words,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -350,6 +358,7 @@ class _AddressPageState extends State<AddressPage> {
                                 icon: Icons.location_city_rounded,
                                 controller: _pDistrictController,
                                 enabled: !_isReadOnly,
+                                textCapitalization: TextCapitalization.words,
                               ),
                             ),
                           ],
@@ -364,6 +373,7 @@ class _AddressPageState extends State<AddressPage> {
                                 icon: Icons.flag_rounded,
                                 controller: _pStateController,
                                 enabled: !_isReadOnly,
+                                textCapitalization: TextCapitalization.words,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -422,10 +432,10 @@ class _AddressPageState extends State<AddressPage> {
           ? null
           : () {
               if (_isReadOnly) {
-                Navigator.pushNamed(
+                Navigator.pushNamedAndRemoveUntil(
                   context,
-                  '/documents',
-                  arguments: {'isEditing': _isEditingFromProfile},
+                  '/dashboard',
+                  (route) => false,
                 );
               } else {
                 _handleSave();
@@ -452,7 +462,7 @@ class _AddressPageState extends State<AddressPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  _isReadOnly ? 'PROCEED TO DOCUMENTS' : 'SAVE & PROCEED',
+                  _isReadOnly ? 'PROCEED TO DASHBOARD' : 'FINISH OTR SETUP',
                   style: const TextStyle(
                     letterSpacing: 1,
                     fontWeight: FontWeight.w900,

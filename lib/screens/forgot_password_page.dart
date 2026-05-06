@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
@@ -176,6 +177,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 icon: Icons.phone_android_rounded,
                 controller: _mobileController,
                 keyboardType: TextInputType.phone,
+                maxLength: 10,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
               const SizedBox(height: 40),
               ElevatedButton(

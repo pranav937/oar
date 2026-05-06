@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/otr_theme.dart';
 import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
@@ -544,6 +545,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
           icon: Icons.phone_iphone_rounded,
           controller: _mobileController,
           keyboardType: TextInputType.phone,
+          maxLength: 10,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         const SizedBox(height: 20),
         OtrTextField(

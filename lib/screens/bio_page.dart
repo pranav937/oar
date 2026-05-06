@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'address_page.dart';
 import '../theme/otr_theme.dart';
@@ -265,7 +266,7 @@ class _BioPageState extends State<BioPage> {
           } else {
             _isReadOnly = false;
           }
-          
+
           _fetchAadhaarDocument();
           _isLoading = false;
         });
@@ -309,37 +310,100 @@ class _BioPageState extends State<BioPage> {
     } catch (e) {
       debugPrint('Error fetching Aadhaar document: $e');
     }
-  } Future<void> _handleSave() async {
-    // Validation based on Backend OTRProfileUpdateSchema
+  }
 
-    // 1. Age Validation (18 to 65)
-    if (_selectedDate != null) {
-      final now = DateTime.now();
-      int age = now.year - _selectedDate!.year;
-      if (now.month < _selectedDate!.month ||
-          (now.month == _selectedDate!.month && now.day < _selectedDate!.day)) {
-        age--;
-      }
-      if (age < 18 || age > 65) {
-        CustomToast.showError(
-          context,
-          'Candidate must be between 18 and 65 years old',
-        );
-        return;
-      }
+  Future<void> _handleSave() async {
+    // 1. Mandatory Fields Check (matches backend OTRProfileUpdateSchema)
+    if (_firstNameController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'First Name is required');
+      return;
+    }
+    if (_surnameController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'Surname is required');
+      return;
+    }
+    if (_selectedGender == null) {
+      CustomToast.showError(context, 'Gender is required');
+      return;
+    }
+    if (_selectedDate == null) {
+      CustomToast.showError(context, 'Date of Birth is required');
+      return;
+    }
+    if (_selectedIdProofType == null) {
+      CustomToast.showError(context, 'ID Proof Type is required');
+      return;
+    }
+    if (_idProofNumberController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'ID Proof Number is required');
+      return;
+    }
+    if (_aadhaarController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'Aadhaar Number is required');
+      return;
+    }
+    if (_selectedCategory == null) {
+      CustomToast.showError(context, 'Category is required');
+      return;
+    }
+    if (_selectedQualification == null) {
+      CustomToast.showError(context, 'Highest Qualification is required');
+      return;
+    }
+    if (_tenthBoardController.text.trim().isEmpty) {
+      CustomToast.showError(context, '10th Board Name is required');
+      return;
+    }
+    if (_twelfthBoardController.text.trim().isEmpty) {
+      CustomToast.showError(context, '12th Board Name is required');
+      return;
     }
 
-    // 2. Aadhaar Validation (12 digits)
-    final aadhaar = _aadhaarController.text;
-    if (aadhaar.isNotEmpty && !RegExp(r'^\d{12}$').hasMatch(aadhaar)) {
+    // 2. Age Validation (18 to 65)
+    final now = DateTime.now();
+    int age = now.year - _selectedDate!.year;
+    if (now.month < _selectedDate!.month ||
+        (now.month == _selectedDate!.month && now.day < _selectedDate!.day)) {
+      age--;
+    }
+    if (age < 18 || age > 65) {
       CustomToast.showError(
         context,
-        'Invalid Aadhaar number (must be 12 digits)',
+        'Candidate must be between 18 and 65 years old',
       );
       return;
     }
 
-    // 3. Disability Percentage Validation (0-100)
+    // 3. Aadhaar Validation (exactly 12 digits)
+    if (!RegExp(r'^\d{12}$').hasMatch(_aadhaarController.text.trim())) {
+      CustomToast.showError(
+        context,
+        'Aadhaar Number must be exactly 12 digits',
+      );
+      return;
+    }
+
+    // 4. Educational Years Validation (1980 to current year)
+    final currentYear = DateTime.now().year;
+    final tenthYear = int.tryParse(_tenthYearController.text);
+    final twelfthYear = int.tryParse(_twelfthYearController.text);
+
+    if (tenthYear == null || tenthYear < 1980 || tenthYear > currentYear) {
+      CustomToast.showError(
+        context,
+        '10th passing year must be between 1980 and $currentYear',
+      );
+      return;
+    }
+    if (twelfthYear == null || twelfthYear < 1980 || twelfthYear > currentYear) {
+      CustomToast.showError(
+        context,
+        '12th passing year must be between 1980 and $currentYear',
+      );
+      return;
+    }
+
+    // 5. Disability Percentage Validation (0-100)
     if (_isPhysicallyDisabled) {
       final percent = int.tryParse(_disabilityPercentController.text);
       if (percent == null || percent < 0 || percent > 100) {
@@ -351,34 +415,13 @@ class _BioPageState extends State<BioPage> {
       }
     }
 
-    // 4. Educational Years Validation (1980 to current year)
-    final currentYear = DateTime.now().year;
-    final tenthYear = int.tryParse(_tenthYearController.text);
-    final twelfthYear = int.tryParse(_twelfthYearController.text);
-
-    if (tenthYear != null && (tenthYear < 1980 || tenthYear > currentYear)) {
-      CustomToast.showError(
-        context,
-        '10th passing year must be between 1980 and $currentYear',
-      );
-      return;
-    }
-    if (twelfthYear != null &&
-        (twelfthYear < 1980 || twelfthYear > currentYear)) {
-      CustomToast.showError(
-        context,
-        '12th passing year must be between 1980 and $currentYear',
-      );
-      return;
-    }
-
-    // Mandatory Checks
+    // 6. Mandatory Documents Check
     if ((_remotePhotoUrl == null && _photoFile == null) ||
         (_remoteSignatureUrl == null && _signatureFile == null) ||
         (_remoteAadharUrl == null && _aadhaarFile == null)) {
       CustomToast.showError(
         context,
-        'Photo, Signature, and Aadhaar Card are mandatory',
+        'Photo, Signature, and Aadhaar Card document are mandatory',
       );
       return;
     }
@@ -717,10 +760,16 @@ class _BioPageState extends State<BioPage> {
 
         if (mounted) {
           if (result['success'] == true) {
-            CustomToast.showSuccess(context, 'Aadhaar card uploaded successfully');
+            CustomToast.showSuccess(
+              context,
+              'Aadhaar card uploaded successfully',
+            );
             _fetchAadhaarDocument();
           } else {
-            CustomToast.showError(context, result['message'] ?? 'Upload failed');
+            CustomToast.showError(
+              context,
+              result['message'] ?? 'Upload failed',
+            );
           }
         }
       } catch (e) {
@@ -807,6 +856,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.person_outline_rounded,
                         controller: _surnameController,
                         enabled: !_isReadOnly,
+                        isRequired: true,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -815,6 +865,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.person_rounded,
                         controller: _firstNameController,
                         enabled: !_isReadOnly,
+                        isRequired: true,
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -852,6 +903,7 @@ class _BioPageState extends State<BioPage> {
                         hint: 'Select ID Type',
                         icon: Icons.badge,
                         value: _selectedIdProofType,
+                        isRequired: true,
                         items: [
                           'Aadhaar Card',
                           'PAN Card',
@@ -878,6 +930,7 @@ class _BioPageState extends State<BioPage> {
                           icon: Icons.tag_rounded,
                           controller: _idProofNumberController,
                           enabled: !_isReadOnly,
+                          isRequired: true,
                         ),
                       ],
                       const SizedBox(height: 20),
@@ -887,6 +940,13 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.credit_card_rounded,
                         controller: _aadhaarController,
                         enabled: !_isReadOnly,
+                        isRequired: true,
+                        keyboardType: TextInputType.number,
+                        maxLength: 12,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(12),
+                        ],
                       ),
                     ],
                   ),
@@ -901,6 +961,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.transgender_rounded,
                         value: _selectedGender,
                         items: ['MALE', 'FEMALE', 'OTHER'],
+                        isRequired: true,
                         onChanged: _isReadOnly
                             ? null
                             : (val) => setState(() => _selectedGender = val),
@@ -949,6 +1010,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.category_rounded,
                         value: _selectedCategory,
                         items: ['UR', 'EWS', 'SC', 'ST', 'OBC'],
+                        isRequired: true,
                         onChanged: _isReadOnly
                             ? null
                             : (val) => setState(() => _selectedCategory = val),
@@ -961,6 +1023,7 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.school_rounded,
                         value: _selectedQualification,
                         items: ['10th', '12th', 'Bachelor', 'Master', 'PhD'],
+                        isRequired: true,
                         onChanged: _isReadOnly
                             ? null
                             : (val) =>
@@ -976,6 +1039,8 @@ class _BioPageState extends State<BioPage> {
                               icon: Icons.history_edu_rounded,
                               controller: _tenthBoardController,
                               enabled: !_isReadOnly,
+                              isRequired: true,
+                              textCapitalization: TextCapitalization.words,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -987,6 +1052,7 @@ class _BioPageState extends State<BioPage> {
                               controller: _tenthYearController,
                               keyboardType: TextInputType.number,
                               enabled: !_isReadOnly,
+                              isRequired: true,
                             ),
                           ),
                         ],
@@ -1001,6 +1067,8 @@ class _BioPageState extends State<BioPage> {
                               icon: Icons.history_edu_rounded,
                               controller: _twelfthBoardController,
                               enabled: !_isReadOnly,
+                              isRequired: true,
+                              textCapitalization: TextCapitalization.words,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1012,6 +1080,7 @@ class _BioPageState extends State<BioPage> {
                               controller: _twelfthYearController,
                               keyboardType: TextInputType.number,
                               enabled: !_isReadOnly,
+                              isRequired: true,
                             ),
                           ),
                         ],
@@ -1422,16 +1491,27 @@ class _BioPageState extends State<BioPage> {
     required String value,
     required IconData icon,
     required VoidCallback? onTap,
+    bool isRequired = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: OtrTheme.darkNavy,
+        RichText(
+          text: TextSpan(
+            text: label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: OtrTheme.darkNavy,
+              fontFamily: 'Inter',
+            ),
+            children: [
+              if (isRequired)
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: Colors.red, fontSize: 16),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 10),
@@ -1477,19 +1557,30 @@ class _BioPageState extends State<BioPage> {
     required String? value,
     required List<String> items,
     required ValueChanged<String?>? onChanged,
+    bool isRequired = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: OtrTheme.darkNavy,
-              letterSpacing: -0.2,
+          child: RichText(
+            text: TextSpan(
+              text: label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: OtrTheme.darkNavy,
+                letterSpacing: -0.2,
+                fontFamily: 'Inter',
+              ),
+              children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+              ],
             ),
           ),
         ),
@@ -1803,9 +1894,15 @@ class _BioPageState extends State<BioPage> {
               _aadhaarFile = null;
               _remoteAadharUrl = null;
             });
-            CustomToast.showSuccess(context, 'Aadhaar card deleted successfully');
+            CustomToast.showSuccess(
+              context,
+              'Aadhaar card deleted successfully',
+            );
           } else {
-            CustomToast.showError(context, result['message'] ?? 'Delete failed');
+            CustomToast.showError(
+              context,
+              result['message'] ?? 'Delete failed',
+            );
           }
         }
       } catch (e) {

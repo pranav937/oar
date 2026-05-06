@@ -21,7 +21,7 @@ class ApiConstants {
   static const String candidateVerifyMobileOtp =
       "/api/ora/candidates/verify-mobile-otp";
   static const String candidateForgotPassword =
-      "/api/ora/candidates/forgot-password"; 
+      "/api/ora/candidates/forgot-password";
   static const String candidateResetPassword =
       "/api/ora/candidates/reset-password";
 

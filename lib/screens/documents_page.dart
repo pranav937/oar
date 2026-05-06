@@ -231,7 +231,13 @@ class _DocumentsPageState extends State<DocumentsPage> {
             ..._documentMap.keys.map((doc) => _buildDocCard(doc)),
             const SizedBox(height: 40),
             ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, '/dashboard'),
+              onPressed: () {
+                if (!_uploadedDocs.containsKey('Aadhaar Card')) {
+                  CustomToast.showError(context, 'Aadhaar Card is mandatory');
+                  return;
+                }
+                Navigator.pushNamed(context, '/dashboard');
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: OtrTheme.primaryBlue,
                 foregroundColor: Colors.white,
@@ -297,13 +303,22 @@ class _DocumentsPageState extends State<DocumentsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  docTitle,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                    color: Colors.grey,
-                    letterSpacing: 0.5,
+                RichText(
+                  text: TextSpan(
+                    text: docTitle,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                      color: Colors.grey,
+                      letterSpacing: 0.5,
+                    ),
+                    children: [
+                      if (docTitle == 'Aadhaar Card')
+                        const TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                        ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 4),

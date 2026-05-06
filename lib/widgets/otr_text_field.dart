@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/otr_theme.dart';
 
 class OtrTextField extends StatefulWidget {
@@ -10,6 +11,10 @@ class OtrTextField extends StatefulWidget {
   final bool enabled;
   final TextInputType keyboardType;
   final int maxLines;
+  final bool isRequired;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   const OtrTextField({
     super.key,
@@ -21,6 +26,10 @@ class OtrTextField extends StatefulWidget {
     this.enabled = true,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
+    this.isRequired = false,
+    this.maxLength,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -43,13 +52,23 @@ class _OtrTextFieldState extends State<OtrTextField> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text(
-            widget.label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: OtrTheme.darkNavy,
-              letterSpacing: -0.2,
+          child: RichText(
+            text: TextSpan(
+              text: widget.label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: OtrTheme.darkNavy,
+                letterSpacing: -0.2,
+                fontFamily: 'Inter', // Ensuring font consistency
+              ),
+              children: [
+                if (widget.isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+              ],
             ),
           ),
         ),
@@ -59,7 +78,9 @@ class _OtrTextFieldState extends State<OtrTextField> {
             color: widget.enabled ? Colors.white : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.enabled ? Colors.grey.shade100 : Colors.grey.shade200,
+              color: widget.enabled
+                  ? Colors.grey.shade100
+                  : Colors.grey.shade200,
               width: 1.5,
             ),
             boxShadow: OtrTheme.softShadow,
@@ -68,8 +89,11 @@ class _OtrTextFieldState extends State<OtrTextField> {
             controller: widget.controller,
             enabled: widget.enabled,
             keyboardType: widget.keyboardType,
+            textCapitalization: widget.textCapitalization,
             obscureText: widget.isPassword ? _obscureText : false,
             maxLines: widget.maxLines,
+            maxLength: widget.maxLength,
+            inputFormatters: widget.inputFormatters,
             style: TextStyle(
               fontSize: 15,
               color: widget.enabled ? OtrTheme.darkNavy : Colors.grey.shade500,
@@ -84,11 +108,7 @@ class _OtrTextFieldState extends State<OtrTextField> {
               ),
               prefixIcon: Container(
                 padding: const EdgeInsets.all(12),
-                child: Icon(
-                  widget.icon,
-                  color: OtrTheme.primaryBlue,
-                  size: 22,
-                ),
+                child: Icon(widget.icon, color: OtrTheme.primaryBlue, size: 22),
               ),
               suffixIcon: widget.isPassword
                   ? IconButton(
@@ -110,6 +130,7 @@ class _OtrTextFieldState extends State<OtrTextField> {
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
+              counterText: '',
             ),
           ),
         ),
@@ -117,4 +138,3 @@ class _OtrTextFieldState extends State<OtrTextField> {
     );
   }
 }
-

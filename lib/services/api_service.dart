@@ -345,10 +345,7 @@ class ApiService {
             ? data
             : {'success': true, 'data': data};
       } else {
-        return {
-          'success': false,
-          'message': parseMsg(data),
-        };
+        return {'success': false, 'message': parseMsg(data)};
       }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
