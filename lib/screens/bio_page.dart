@@ -60,7 +60,6 @@ class _BioPageState extends State<BioPage> {
   final TextEditingController _govtJoinDateController = TextEditingController();
   final TextEditingController _govtDeptController = TextEditingController();
 
-
   String? _selectedCategory;
   String? _selectedGender;
   String? _selectedNationality;
@@ -80,6 +79,8 @@ class _BioPageState extends State<BioPage> {
   File? _signatureFile;
   String? _remotePhotoUrl;
   String? _remoteSignatureUrl;
+  File? _aadhaarFile;
+  String? _remoteAadharUrl;
 
   // Language Proficiency
   bool _engRead = false, _engWrite = false, _engSpeak = false;
@@ -160,14 +161,14 @@ class _BioPageState extends State<BioPage> {
           _selectedGender = data['gender'];
           _selectedNationality = data['nationality'] != null
               ? (data['nationality'][0] +
-                  data['nationality'].substring(1).toLowerCase())
+                    data['nationality'].substring(1).toLowerCase())
               : 'Indian';
           _selectedQualification = data['highestQualification'];
           _selectedMaritalStatus = data['maritalStatus'] != null
               ? (data['maritalStatus'][0] +
-                  data['maritalStatus'].substring(1).toLowerCase())
+                    data['maritalStatus'].substring(1).toLowerCase())
               : null;
-          
+
           // Map ID Proof Type back to display name
           final backendIdType = data['idProofType'];
           _selectedIdProofType = _idProofMapping.entries
@@ -179,7 +180,6 @@ class _BioPageState extends State<BioPage> {
           if (_selectedIdProofType!.isEmpty) _selectedIdProofType = null;
 
           _selectedCategory = data['category'] ?? 'UR';
-
 
           _isPhysicallyDisabled = data['isPhysicallyDisabled'] ?? false;
           _isSportsPerson = data['isSportsPerson'] ?? false;
@@ -265,16 +265,51 @@ class _BioPageState extends State<BioPage> {
           } else {
             _isReadOnly = false;
           }
-
+          
+          _fetchAadhaarDocument();
           _isLoading = false;
         });
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  Future<void> _handleSave() async {
+  Future<void> _fetchAadhaarDocument() async {
+    try {
+      final docsResult = await _apiService.getDocuments();
+      if (docsResult['success'] == true && docsResult['data'] != null) {
+        final List docs = docsResult['data'];
+        final aadhaarDoc = docs.firstWhere(
+          (doc) => doc['documentType'] == 'AADHAR',
+          orElse: () => null,
+        );
+        if (aadhaarDoc != null) {
+          String url = aadhaarDoc['url'] ?? aadhaarDoc['fileUrl'] ?? '';
+          if (url.isNotEmpty) {
+            setState(() {
+              if (url.startsWith('http')) {
+                _remoteAadharUrl = url;
+              } else {
+                final String base = ApiConstants.baseUrl.endsWith('/')
+                    ? ApiConstants.baseUrl.substring(
+                        0,
+                        ApiConstants.baseUrl.length - 1,
+                      )
+                    : ApiConstants.baseUrl;
+                final String path = url.startsWith('/') ? url : '/$url';
+                _remoteAadharUrl = '$base$path';
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching Aadhaar document: $e');
+    }
+  } Future<void> _handleSave() async {
     // Validation based on Backend OTRProfileUpdateSchema
 
     // 1. Age Validation (18 to 65)
@@ -322,17 +357,28 @@ class _BioPageState extends State<BioPage> {
     final twelfthYear = int.tryParse(_twelfthYearController.text);
 
     if (tenthYear != null && (tenthYear < 1980 || tenthYear > currentYear)) {
-        CustomToast.showError(
+      CustomToast.showError(
         context,
         '10th passing year must be between 1980 and $currentYear',
       );
       return;
-    } 
+    }
     if (twelfthYear != null &&
         (twelfthYear < 1980 || twelfthYear > currentYear)) {
       CustomToast.showError(
         context,
         '12th passing year must be between 1980 and $currentYear',
+      );
+      return;
+    }
+
+    // Mandatory Checks
+    if ((_remotePhotoUrl == null && _photoFile == null) ||
+        (_remoteSignatureUrl == null && _signatureFile == null) ||
+        (_remoteAadharUrl == null && _aadhaarFile == null)) {
+      CustomToast.showError(
+        context,
+        'Photo, Signature, and Aadhaar Card are mandatory',
       );
       return;
     }
@@ -503,6 +549,13 @@ class _BioPageState extends State<BioPage> {
     );
     if (image != null) {
       final file = File(image.path);
+      final int sizeInBytes = await file.length();
+      if (sizeInBytes > 500 * 1024) {
+        if (mounted) {
+          CustomToast.showError(context, 'File size exceeds 500 KB limit');
+        }
+        return;
+      }
       setState(() {
         if (isPhoto) {
           _photoFile = file;
@@ -583,6 +636,103 @@ class _BioPageState extends State<BioPage> {
     }
   }
 
+  Future<void> _pickAadhaar() async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Upload Aadhaar Card',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: OtrTheme.darkNavy,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ListTile(
+              leading: const Icon(
+                Icons.photo_library_rounded,
+                color: OtrTheme.primaryBlue,
+              ),
+              title: const Text(
+                'Choose from Gallery',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.camera_alt_rounded,
+                color: OtrTheme.primaryBlue,
+              ),
+              title: const Text(
+                'Capture from Camera',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final XFile? image = await _picker.pickImage(
+      source: source,
+      imageQuality: 70,
+    );
+    if (image != null) {
+      final file = File(image.path);
+      final int sizeInBytes = await file.length();
+      if (sizeInBytes > 500 * 1024) {
+        if (mounted) {
+          CustomToast.showError(context, 'File size exceeds 500 KB limit');
+        }
+        return;
+      }
+      setState(() {
+        _aadhaarFile = file;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Uploading Aadhaar card...'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      try {
+        final result = await _apiService.uploadDocument(file, 'AADHAR');
+
+        if (mounted) {
+          if (result['success'] == true) {
+            CustomToast.showSuccess(context, 'Aadhaar card uploaded successfully');
+            _fetchAadhaarDocument();
+          } else {
+            CustomToast.showError(context, result['message'] ?? 'Upload failed');
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Upload error: $e')));
+        }
+      }
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -646,8 +796,9 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.title_rounded,
                         value: _selectedTitle,
                         items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedTitle = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) => setState(() => _selectedTitle = val),
                       ),
                       const SizedBox(height: 20),
                       OtrTextField(
@@ -750,8 +901,9 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.transgender_rounded,
                         value: _selectedGender,
                         items: ['MALE', 'FEMALE', 'OTHER'],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedGender = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) => setState(() => _selectedGender = val),
                       ),
                       const SizedBox(height: 20),
                       _buildClickableField(
@@ -767,8 +919,10 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.favorite_rounded,
                         value: _selectedMaritalStatus,
                         items: ['Single', 'Married', 'Divorced', 'Widow'],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedMaritalStatus = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) =>
+                                  setState(() => _selectedMaritalStatus = val),
                       ),
                       const SizedBox(height: 20),
                       _buildFunctionalDropdown(
@@ -777,8 +931,10 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.flag_rounded,
                         value: _selectedNationality,
                         items: ['Indian', 'Other'],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedNationality = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) =>
+                                  setState(() => _selectedNationality = val),
                       ),
                     ],
                   ),
@@ -793,8 +949,9 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.category_rounded,
                         value: _selectedCategory,
                         items: ['UR', 'EWS', 'SC', 'ST', 'OBC'],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedCategory = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) => setState(() => _selectedCategory = val),
                       ),
 
                       const SizedBox(height: 20),
@@ -804,8 +961,10 @@ class _BioPageState extends State<BioPage> {
                         icon: Icons.school_rounded,
                         value: _selectedQualification,
                         items: ['10th', '12th', 'Bachelor', 'Master', 'PhD'],
-                        onChanged: _isReadOnly ? null : (val) =>
-                            setState(() => _selectedQualification = val),
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) =>
+                                  setState(() => _selectedQualification = val),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -863,7 +1022,10 @@ class _BioPageState extends State<BioPage> {
                       _buildSwitchTile(
                         'Physically Disabled',
                         _isPhysicallyDisabled,
-                        _isReadOnly ? null : (val) => setState(() => _isPhysicallyDisabled = val),
+                        _isReadOnly
+                            ? null
+                            : (val) =>
+                                  setState(() => _isPhysicallyDisabled = val),
                       ),
                       if (_isPhysicallyDisabled) ...[
                         OtrTextField(
@@ -886,7 +1048,9 @@ class _BioPageState extends State<BioPage> {
                       _buildSwitchTile(
                         'Sports Person',
                         _isSportsPerson,
-                        _isReadOnly ? null : (val) => setState(() => _isSportsPerson = val),
+                        _isReadOnly
+                            ? null
+                            : (val) => setState(() => _isSportsPerson = val),
                       ),
                       if (_isSportsPerson) ...[
                         OtrTextField(
@@ -933,7 +1097,9 @@ class _BioPageState extends State<BioPage> {
                       _buildSwitchTile(
                         'Widow Person',
                         _isWidow,
-                        _isReadOnly ? null : (val) => setState(() => _isWidow = val),
+                        _isReadOnly
+                            ? null
+                            : (val) => setState(() => _isWidow = val),
                       ),
                       if (_isWidow) ...[
                         OtrTextField(
@@ -950,27 +1116,30 @@ class _BioPageState extends State<BioPage> {
                               ? 'Select Date'
                               : _widowDateController.text,
                           icon: Icons.calendar_month_rounded,
-                          onTap: _isReadOnly ? null : () async {
-                            final d = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime(1990),
-                              lastDate: DateTime.now(),
-                            );
-                            if (d != null) {
-                              setState(
-                                () => _widowDateController.text = DateFormat(
-                                  'yyyy-MM-dd',
-                                ).format(d),
-                              );
-                            }
-                          },
+                          onTap: _isReadOnly
+                              ? null
+                              : () async {
+                                  final d = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime(1990),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (d != null) {
+                                    setState(
+                                      () => _widowDateController.text =
+                                          DateFormat('yyyy-MM-dd').format(d),
+                                    );
+                                  }
+                                },
                         ),
                       ],
                       _buildSwitchTile(
                         'Ex-Soldier',
                         _isExSoldier,
-                        _isReadOnly ? null : (val) => setState(() => _isExSoldier = val),
+                        _isReadOnly
+                            ? null
+                            : (val) => setState(() => _isExSoldier = val),
                       ),
                       if (_isExSoldier) ...[
                         Row(
@@ -1008,7 +1177,9 @@ class _BioPageState extends State<BioPage> {
                       _buildSwitchTile(
                         'Govt Employee',
                         _isGovtEmployee,
-                        _isReadOnly ? null : (val) => setState(() => _isGovtEmployee = val),
+                        _isReadOnly
+                            ? null
+                            : (val) => setState(() => _isGovtEmployee = val),
                       ),
                       if (_isGovtEmployee) ...[
                         OtrTextField(
@@ -1025,21 +1196,22 @@ class _BioPageState extends State<BioPage> {
                               ? 'Select Date'
                               : _govtJoinDateController.text,
                           icon: Icons.calendar_month_rounded,
-                          onTap: _isReadOnly ? null : () async {
-                            final d = await showDatePicker(
-                              context: context,
-                              initialDate: DateTime.now(),
-                              firstDate: DateTime(1990),
-                              lastDate: DateTime.now(),
-                            );
-                            if (d != null) {
-                              setState(
-                                () => _govtJoinDateController.text = DateFormat(
-                                  'yyyy-MM-dd',
-                                ).format(d),
-                              );
-                            }
-                          },
+                          onTap: _isReadOnly
+                              ? null
+                              : () async {
+                                  final d = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime(1990),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (d != null) {
+                                    setState(
+                                      () => _govtJoinDateController.text =
+                                          DateFormat('yyyy-MM-dd').format(d),
+                                    );
+                                  }
+                                },
                         ),
                       ],
                     ],
@@ -1054,11 +1226,13 @@ class _BioPageState extends State<BioPage> {
                         _engRead,
                         _engWrite,
                         _engSpeak,
-                        _isReadOnly ? null : (r, w, s) => setState(() {
-                          _engRead = r;
-                          _engWrite = w;
-                          _engSpeak = s;
-                        }),
+                        _isReadOnly
+                            ? null
+                            : (r, w, s) => setState(() {
+                                _engRead = r;
+                                _engWrite = w;
+                                _engSpeak = s;
+                              }),
                       ),
                       const SizedBox(height: 12),
                       _buildLanguageCard(
@@ -1066,11 +1240,13 @@ class _BioPageState extends State<BioPage> {
                         _hinRead,
                         _hinWrite,
                         _hinSpeak,
-                        _isReadOnly ? null : (r, w, s) => setState(() {
-                          _hinRead = r;
-                          _hinWrite = w;
-                          _hinSpeak = s;
-                        }),
+                        _isReadOnly
+                            ? null
+                            : (r, w, s) => setState(() {
+                                _hinRead = r;
+                                _hinWrite = w;
+                                _hinSpeak = s;
+                              }),
                       ),
                       const SizedBox(height: 12),
                       _buildLanguageCard(
@@ -1078,11 +1254,13 @@ class _BioPageState extends State<BioPage> {
                         _gujRead,
                         _gujWrite,
                         _gujSpeak,
-                        _isReadOnly ? null : (r, w, s) => setState(() {
-                          _gujRead = r;
-                          _gujWrite = w;
-                          _gujSpeak = s;
-                        }),
+                        _isReadOnly
+                            ? null
+                            : (r, w, s) => setState(() {
+                                _gujRead = r;
+                                _gujWrite = w;
+                                _gujSpeak = s;
+                              }),
                       ),
                     ],
                   ),
@@ -1123,21 +1301,23 @@ class _BioPageState extends State<BioPage> {
 
   Widget _buildSaveButton() {
     return ElevatedButton(
-      onPressed: _isSaving ? null : () {
-        if (_isReadOnly) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddressPage(),
-              settings: RouteSettings(
-                arguments: {'isEditing': _isEditingFromProfile},
-              ),
-            ),
-          );
-        } else {
-          _handleSave();
-        }
-      },
+      onPressed: _isSaving
+          ? null
+          : () {
+              if (_isReadOnly) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddressPage(),
+                    settings: RouteSettings(
+                      arguments: {'isEditing': _isEditingFromProfile},
+                    ),
+                  ),
+                );
+              } else {
+                _handleSave();
+              }
+            },
       style: ElevatedButton.styleFrom(
         backgroundColor: OtrTheme.primaryBlue,
         foregroundColor: Colors.white,
@@ -1408,7 +1588,9 @@ class _BioPageState extends State<BioPage> {
               _buildProficiencyChip(
                 'Read',
                 read,
-                onChanged == null ? null : (val) => onChanged(val, write, speak),
+                onChanged == null
+                    ? null
+                    : (val) => onChanged(val, write, speak),
               ),
               _buildProficiencyChip(
                 'Write',
@@ -1481,34 +1663,47 @@ class _BioPageState extends State<BioPage> {
   }
 
   Widget _buildMediaUploadSection() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _buildMediaCard(
-            'Photo',
-            _photoFile,
-            _remotePhotoUrl,
-            Icons.camera_alt_rounded,
-            () => _pickImage(true),
-            () => _handleDelete(true),
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMediaCard(
+                'Photo',
+                _photoFile,
+                _remotePhotoUrl,
+                Icons.camera_alt_rounded,
+                () => _pickImage(true),
+                () => _handleDeleteMedia(true),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildMediaCard(
+                'Signature',
+                _signatureFile,
+                _remoteSignatureUrl,
+                Icons.edit_note_rounded,
+                () => _pickImage(false),
+                () => _handleDeleteMedia(false),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildMediaCard(
-            'Signature',
-            _signatureFile,
-            _remoteSignatureUrl,
-            Icons.edit_note_rounded,
-            () => _pickImage(false),
-            () => _handleDelete(false),
-          ),
+        const SizedBox(height: 16),
+        _buildMediaCard(
+          'Aadhaar Card',
+          _aadhaarFile,
+          _remoteAadharUrl,
+          Icons.credit_card_rounded,
+          () => _pickAadhaar(),
+          () => _handleDeleteAadhaar(),
         ),
       ],
     );
   }
 
-  Future<void> _handleDelete(bool isPhoto) async {
+  Future<void> _handleDeleteMedia(bool isPhoto) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1555,10 +1750,62 @@ class _BioPageState extends State<BioPage> {
               '${isPhoto ? 'Photo' : 'Signature'} deleted successfully',
             );
           } else {
-            CustomToast.showSuccess(
+            CustomToast.showError(
               context,
               result['message'] ?? 'Delete failed',
             );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleDeleteAadhaar() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Aadhaar Card?'),
+        content: const Text(
+          'Are you sure you want to permanently remove this document?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'DELETE',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        final result = await _apiService.deleteDocument('AADHAR');
+
+        if (mounted) {
+          if (result['success'] == true) {
+            setState(() {
+              _aadhaarFile = null;
+              _remoteAadharUrl = null;
+            });
+            CustomToast.showSuccess(context, 'Aadhaar card deleted successfully');
+          } else {
+            CustomToast.showError(context, result['message'] ?? 'Delete failed');
           }
         }
       } catch (e) {
@@ -1691,17 +1938,29 @@ class _BioPageState extends State<BioPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w800,
-              color: OtrTheme.darkNavy,
-              fontSize: 13,
+          RichText(
+            text: TextSpan(
+              text: label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: OtrTheme.darkNavy,
+                fontSize: 13,
+              ),
+              children: const [
+                TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: Colors.red, fontSize: 16),
+                ),
+              ],
             ),
           ),
           Text(
-            isError ? 'Reload Required' : 'Upload',
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+            isError ? 'Reload Required' : 'Max Size: 500 KB',
+            style: TextStyle(
+              color: isError ? Colors.red : Colors.grey.shade500,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

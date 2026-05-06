@@ -142,11 +142,11 @@ class _DocumentsPageState extends State<DocumentsPage> {
         _uploadToServer(docTitle, pickedPath, pickedName!);
       }
     } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
-    }
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+      }
     }
   }
 

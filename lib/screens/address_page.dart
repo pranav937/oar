@@ -16,7 +16,6 @@ class _AddressPageState extends State<AddressPage> {
   final ApiService _apiService = ApiService();
   int _expandedIndex = 0;
   bool _isPermanentSameAsCurrent = false;
-  bool _isCorrespondenceSameAsCurrent = false;
   bool _isLoading = true;
   bool _isSaving = false;
   bool _isReadOnly = true;
@@ -36,12 +35,6 @@ class _AddressPageState extends State<AddressPage> {
   final TextEditingController _pDistrictController = TextEditingController();
   final TextEditingController _pStateController = TextEditingController();
   final TextEditingController _pPincodeController = TextEditingController();
-
-  final TextEditingController _cFlatController = TextEditingController();
-  final TextEditingController _cTalukaController = TextEditingController();
-  final TextEditingController _cDistrictController = TextEditingController();
-  final TextEditingController _cStateController = TextEditingController();
-  final TextEditingController _cPincodeController = TextEditingController();
 
   final TextEditingController _currFlatController = TextEditingController();
   final TextEditingController _currTalukaController = TextEditingController();
@@ -75,12 +68,6 @@ class _AddressPageState extends State<AddressPage> {
     _pDistrictController.dispose();
     _pStateController.dispose();
     _pPincodeController.dispose();
-
-    _cFlatController.dispose();
-    _cTalukaController.dispose();
-    _cDistrictController.dispose();
-    _cStateController.dispose();
-    _cPincodeController.dispose();
     super.dispose();
   }
 
@@ -91,13 +78,6 @@ class _AddressPageState extends State<AddressPage> {
       _pDistrictController.text = _currDistrictController.text;
       _pStateController.text = _currStateController.text;
       _pPincodeController.text = _currPincodeController.text;
-    }
-    if (_isCorrespondenceSameAsCurrent) {
-      _cFlatController.text = _currFlatController.text;
-      _cTalukaController.text = _currTalukaController.text;
-      _cDistrictController.text = _currDistrictController.text;
-      _cStateController.text = _currStateController.text;
-      _cPincodeController.text = _currPincodeController.text;
     }
   }
 
@@ -114,13 +94,6 @@ class _AddressPageState extends State<AddressPage> {
           _pTalukaController.text = data['taluka'] ?? '';
           _pPincodeController.text = data['pinCode'] ?? '';
 
-          // Correspondence Address
-          _cFlatController.text = data['correspondenceAddress'] ?? '';
-          _cStateController.text = data['state'] ?? '';
-          _cDistrictController.text = data['district'] ?? '';
-          _cTalukaController.text = data['taluka'] ?? '';
-          _cPincodeController.text = data['pinCode'] ?? '';
-
           // Current/Present Address
           _currFlatController.text = data['presentAddress'] ?? '';
           _currTalukaController.text = data['taluka'] ?? '';
@@ -131,9 +104,6 @@ class _AddressPageState extends State<AddressPage> {
           if (_currFlatController.text.isNotEmpty) {
             if (_currFlatController.text == _pFlatController.text) {
               _isPermanentSameAsCurrent = true;
-            }
-            if (_currFlatController.text == _cFlatController.text) {
-              _isCorrespondenceSameAsCurrent = true;
             }
           }
 
@@ -156,7 +126,7 @@ class _AddressPageState extends State<AddressPage> {
     try {
       final profileData = {
         'permanentAddress': _pFlatController.text,
-        'correspondenceAddress': _cFlatController.text,
+        'correspondenceAddress': _pFlatController.text, // Same as Permanent
         'presentAddress': _currFlatController.text,
         'state': _currStateController.text, // Using current as primary
         'district': _currDistrictController.text,
@@ -207,20 +177,6 @@ class _AddressPageState extends State<AddressPage> {
         _pDistrictController.text = _currDistrictController.text;
         _pStateController.text = _currStateController.text;
         _pPincodeController.text = _currPincodeController.text;
-      }
-    });
-  }
-
-  void _handleCorrespondenceSync(bool? value) {
-    if (_isReadOnly) return;
-    setState(() {
-      _isCorrespondenceSameAsCurrent = value ?? false;
-      if (_isCorrespondenceSameAsCurrent) {
-        _cFlatController.text = _currFlatController.text;
-        _cTalukaController.text = _currTalukaController.text;
-        _cDistrictController.text = _currDistrictController.text;
-        _cStateController.text = _currStateController.text;
-        _cPincodeController.text = _currPincodeController.text;
       }
     });
   }
@@ -425,107 +381,6 @@ class _AddressPageState extends State<AddressPage> {
                         ),
                       ],
                     ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _isCorrespondenceSameAsCurrent
-                            ? OtrTheme.primaryBlue.withAlpha(76)
-                            : Colors.transparent,
-                      ),
-                    ),
-                    child: CheckboxListTile(
-                      value: _isCorrespondenceSameAsCurrent,
-                      onChanged: _handleCorrespondenceSync,
-                      title: const Text(
-                        'Correspondence Address Same as Current',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: OtrTheme.darkNavy,
-                        ),
-                      ),
-                      activeColor: OtrTheme.primaryBlue,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (!_isCorrespondenceSameAsCurrent)
-                    _buildCollapsibleSection(
-                      index: 2,
-                      title: 'Correspondence Address',
-                      icon: Icons.mail_rounded,
-                      children: [
-                        OtrTextField(
-                          label: 'Full Address',
-                          hintText: 'Enter correspondence address',
-                          icon: Icons.map_rounded,
-                          controller: _cFlatController,
-                          maxLines: 2,
-                          enabled: !_isReadOnly,
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'Taluka/City',
-                                hintText: 'Taluka',
-                                icon: Icons.location_on_rounded,
-                                controller: _cTalukaController,
-                                enabled: !_isReadOnly,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'District',
-                                hintText: 'District',
-                                icon: Icons.location_city_rounded,
-                                controller: _cDistrictController,
-                                enabled: !_isReadOnly,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'State',
-                                hintText: 'State',
-                                icon: Icons.flag_rounded,
-                                controller: _cStateController,
-                                enabled: !_isReadOnly,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'Pincode',
-                                hintText: '6 digits',
-                                icon: Icons.pin_drop_rounded,
-                                controller: _cPincodeController,
-                                keyboardType: TextInputType.number,
-                                enabled: !_isReadOnly,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
                   const SizedBox(height: 48),
                   _buildSaveButton(),
                   const SizedBox(height: 60),
@@ -534,8 +389,6 @@ class _AddressPageState extends State<AddressPage> {
             ),
     );
   }
-
-
 
   Widget _buildSectionHeader(String title, String subtitle) {
     return Column(
@@ -565,17 +418,19 @@ class _AddressPageState extends State<AddressPage> {
 
   Widget _buildSaveButton() {
     return ElevatedButton(
-      onPressed: _isSaving ? null : () {
-        if (_isReadOnly) {
-          Navigator.pushNamed(
-            context,
-            '/documents',
-            arguments: {'isEditing': _isEditingFromProfile},
-          );
-        } else {
-          _handleSave();
-        }
-      },
+      onPressed: _isSaving
+          ? null
+          : () {
+              if (_isReadOnly) {
+                Navigator.pushNamed(
+                  context,
+                  '/documents',
+                  arguments: {'isEditing': _isEditingFromProfile},
+                );
+              } else {
+                _handleSave();
+              }
+            },
       style: ElevatedButton.styleFrom(
         backgroundColor: OtrTheme.primaryBlue,
         foregroundColor: Colors.white,
