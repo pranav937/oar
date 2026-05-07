@@ -888,4 +888,27 @@ class ApiService {
       return null;
     }
   }
+  // --- Master Data ---
+  Future<Map<String, dynamic>> getStates() async {
+    try {
+      final response = await get(ApiConstants.masterStates, authenticated: false);
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getCities(String stateCode) async {
+    try {
+      final response = await get(
+        "${ApiConstants.masterCities}/$stateCode",
+        authenticated: false,
+      );
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
 }

@@ -75,6 +75,15 @@ class _BioPageState extends State<BioPage> {
   bool _isExSoldier = false;
   bool _isGovtEmployee = false;
 
+  // Address fields to preserve during bio update
+  String? _savedPresentAddress;
+  String? _savedPermanentAddress;
+  String? _savedCorrespondenceAddress;
+  String? _savedState;
+  String? _savedDistrict;
+  String? _savedTaluka;
+  String? _savedPinCode;
+
   // Media
   File? _photoFile;
   File? _signatureFile;
@@ -207,7 +216,14 @@ class _BioPageState extends State<BioPage> {
           _govtJoinDateController.text = data['govtServiceJoinDate'] ?? '';
           _govtDeptController.text = data['govtDeptName'] ?? '';
 
-          // Languages
+          // Preserve address fields
+          _savedPresentAddress = data['presentAddress'];
+          _savedPermanentAddress = data['permanentAddress'];
+          _savedCorrespondenceAddress = data['correspondenceAddress'];
+          _savedState = data['state'];
+          _savedDistrict = data['district'];
+          _savedTaluka = data['taluka'];
+          _savedPinCode = data['pinCode'];
           if (data['englishProficiency'] != null) {
             _engRead = data['englishProficiency']['read'] ?? false;
             _engWrite = data['englishProficiency']['write'] ?? false;
@@ -395,7 +411,9 @@ class _BioPageState extends State<BioPage> {
       );
       return;
     }
-    if (twelfthYear == null || twelfthYear < 1980 || twelfthYear > currentYear) {
+    if (twelfthYear == null ||
+        twelfthYear < 1980 ||
+        twelfthYear > currentYear) {
       CustomToast.showError(
         context,
         '12th passing year must be between 1980 and $currentYear',
@@ -497,6 +515,15 @@ class _BioPageState extends State<BioPage> {
             ? _govtJoinDateController.text
             : null,
         'govtDeptName': _isGovtEmployee ? _govtDeptController.text : null,
+
+        // Include existing address data to satisfy backend validation
+        'presentAddress': _savedPresentAddress ?? '',
+        'permanentAddress': _savedPermanentAddress ?? '',
+        'correspondenceAddress': _savedCorrespondenceAddress ?? '',
+        'state': _savedState ?? '',
+        'district': _savedDistrict ?? '',
+        'taluka': _savedTaluka ?? '',
+        'pinCode': _savedPinCode ?? '',
       };
 
       final result = await _apiService.updateProfile(profileData);
@@ -971,6 +998,7 @@ class _BioPageState extends State<BioPage> {
                         label: 'Date of Birth',
                         value: _getFormattedDate(),
                         icon: Icons.calendar_today_rounded,
+                        isRequired: true,
                         onTap: _isReadOnly ? null : () => _selectDate(context),
                       ),
                       const SizedBox(height: 20),
@@ -1053,6 +1081,11 @@ class _BioPageState extends State<BioPage> {
                               keyboardType: TextInputType.number,
                               enabled: !_isReadOnly,
                               isRequired: true,
+                              maxLength: 4,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(4),
+                              ],
                             ),
                           ),
                         ],
@@ -1081,6 +1114,11 @@ class _BioPageState extends State<BioPage> {
                               keyboardType: TextInputType.number,
                               enabled: !_isReadOnly,
                               isRequired: true,
+                              maxLength: 4,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(4),
+                              ],
                             ),
                           ),
                         ],

@@ -21,6 +21,17 @@ class _AddressPageState extends State<AddressPage> {
   bool _isReadOnly = true;
   bool _isEditingFromProfile = false;
 
+  // Saved profile data to preserve bio fields during address update
+  Map<String, dynamic> _savedProfileData = {};
+
+  // Master Data
+  List<dynamic> _states = [];
+  List<dynamic> _cities = [];
+  bool _isLoadingStates = false;
+  bool _isLoadingCities = false;
+  String? _selectedStateCode; // to keep track for city fetch
+  String? _selectedPStateCode;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -53,6 +64,64 @@ class _AddressPageState extends State<AddressPage> {
     _currDistrictController.addListener(_syncAddresses);
     _currStateController.addListener(_syncAddresses);
     _currPincodeController.addListener(_syncAddresses);
+
+    _fetchStates();
+  }
+
+  Future<void> _fetchStates() async {
+    setState(() => _isLoadingStates = true);
+    final result = await _apiService.getStates();
+    if (mounted) {
+      setState(() {
+        if (result['success'] == true) {
+          _states = result['data'] ?? [];
+        }
+        _isLoadingStates = false;
+      });
+      // After fetching states, if there's an existing state in the controller,
+      // trigger city fetch for it
+      if (_currStateController.text.isNotEmpty) {
+        final state = _states.firstWhere(
+          (s) => s['name'] == _currStateController.text,
+          orElse: () => null,
+        );
+        if (state != null) {
+          _selectedStateCode = state['isoCode'];
+          _fetchCities(_selectedStateCode!);
+        }
+      }
+      if (_pStateController.text.isNotEmpty && !_isPermanentSameAsCurrent) {
+        final pState = _states.firstWhere(
+          (s) => s['name'] == _pStateController.text,
+          orElse: () => null,
+        );
+        if (pState != null) {
+          _selectedPStateCode = pState['isoCode'];
+          _fetchCities(_selectedPStateCode!, isPermanent: true);
+        }
+      }
+    }
+  }
+
+  Future<void> _fetchCities(
+    String stateCode, {
+    bool isPermanent = false,
+  }) async {
+    if (isPermanent) {
+      setState(() => _isLoadingCities = true);
+    } else {
+      setState(() => _isLoadingCities = true);
+    }
+
+    final result = await _apiService.getCities(stateCode);
+    if (mounted) {
+      setState(() {
+        if (result['success'] == true) {
+          _cities = result['data'] ?? [];
+        }
+        _isLoadingCities = false;
+      });
+    }
   }
 
   @override
@@ -86,6 +155,7 @@ class _AddressPageState extends State<AddressPage> {
       final result = await _apiService.getProfile();
       if (result['success'] == true) {
         final data = result['data'];
+        _savedProfileData = Map<String, dynamic>.from(data);
         setState(() {
           // Permanent Address
           _pFlatController.text = data['permanentAddress'] ?? '';
@@ -113,6 +183,18 @@ class _AddressPageState extends State<AddressPage> {
             _isReadOnly = false;
           }
 
+          // Trigger city fetch if state exists
+          if (_currStateController.text.isNotEmpty && _states.isNotEmpty) {
+            final state = _states.firstWhere(
+              (s) => s['name'] == _currStateController.text,
+              orElse: () => null,
+            );
+            if (state != null) {
+              _selectedStateCode = state['isoCode'];
+              _fetchCities(_selectedStateCode!);
+            }
+          }
+
           _isLoading = false;
         });
       }
@@ -122,13 +204,67 @@ class _AddressPageState extends State<AddressPage> {
   }
 
   Future<void> _handleSave() async {
+    // Mandatory Fields Validation
+    if (_currFlatController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'Current address is required');
+      return;
+    }
+    if (_currTalukaController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'Taluka/City is required');
+      return;
+    }
+    if (_currDistrictController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'District is required');
+      return;
+    }
+    if (_currStateController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'State is required');
+      return;
+    }
+    if (_currPincodeController.text.trim().isEmpty) {
+      CustomToast.showError(context, 'Pincode is required');
+      return;
+    }
+    if (!RegExp(r'^\d{6}$').hasMatch(_currPincodeController.text.trim())) {
+      CustomToast.showError(context, 'Pincode must be 6 digits');
+      return;
+    }
+
+    if (!_isPermanentSameAsCurrent) {
+      if (_pFlatController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Permanent address is required');
+        return;
+      }
+      if (_pTalukaController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Permanent Taluka/City is required');
+        return;
+      }
+      if (_pDistrictController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Permanent District is required');
+        return;
+      }
+      if (_pStateController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Permanent State is required');
+        return;
+      }
+      if (_pPincodeController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Permanent Pincode is required');
+        return;
+      }
+      if (!RegExp(r'^\d{6}$').hasMatch(_pPincodeController.text.trim())) {
+        CustomToast.showError(context, 'Permanent Pincode must be 6 digits');
+        return;
+      }
+    }
+
     setState(() => _isSaving = true);
     try {
       final profileData = {
+        ..._savedProfileData,
         'permanentAddress': _pFlatController.text,
-        'correspondenceAddress': _pFlatController.text, // Same as Permanent
+        'correspondenceAddress': _pFlatController.text,
         'presentAddress': _currFlatController.text,
-        'state': _currStateController.text, // Using current as primary
+        'state': _currStateController.text,
         'district': _currDistrictController.text,
         'taluka': _currTalukaController.text,
         'pinCode': _currPincodeController.text,
@@ -232,56 +368,82 @@ class _AddressPageState extends State<AddressPage> {
                         textCapitalization: TextCapitalization.words,
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OtrTextField(
-                              label: 'Taluka/City',
-                              hintText: 'Taluka',
-                              icon: Icons.location_on_rounded,
-                              controller: _currTalukaController,
-                              enabled: !_isReadOnly,
-                              textCapitalization: TextCapitalization.words,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: OtrTextField(
-                              label: 'District',
-                              hintText: 'District',
-                              icon: Icons.location_city_rounded,
-                              controller: _currDistrictController,
-                              enabled: !_isReadOnly,
-                              textCapitalization: TextCapitalization.words,
-                            ),
-                          ),
-                        ],
+                      _buildFunctionalDropdown(
+                        label: 'State',
+                        hint: 'Select State',
+                        icon: Icons.flag_rounded,
+                        value: _currStateController.text.isEmpty
+                            ? null
+                            : _currStateController.text,
+                        items: _states.map((s) => s['name'] as String).toList(),
+                        isRequired: true,
+                        onChanged: _isReadOnly
+                            ? null
+                            : (val) {
+                                setState(() {
+                                  _currStateController.text = val ?? '';
+                                  final state = _states.firstWhere(
+                                    (s) => s['name'] == val,
+                                    orElse: () => null,
+                                  );
+                                  if (state != null) {
+                                    _selectedStateCode = state['isoCode'];
+                                    _currDistrictController.clear();
+                                    _fetchCities(_selectedStateCode!);
+                                  }
+                                });
+                              },
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OtrTextField(
-                              label: 'State',
-                              hintText: 'State',
-                              icon: Icons.flag_rounded,
-                              controller: _currStateController,
-                              enabled: !_isReadOnly,
-                              textCapitalization: TextCapitalization.words,
+                      _isLoadingCities
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(12.0),
+                                child: SpinKitThreeBounce(
+                                  color: OtrTheme.primaryBlue,
+                                  size: 20,
+                                ),
+                              ),
+                            )
+                          : _buildFunctionalDropdown(
+                              label: 'District',
+                              hint: 'Select District',
+                              icon: Icons.location_city_rounded,
+                              value: _currDistrictController.text.isEmpty
+                                  ? null
+                                  : _currDistrictController.text,
+                              items: _cities
+                                  .map((c) => c['name'] as String)
+                                  .toList(),
+                              isRequired: true,
+                              onChanged: _isReadOnly
+                                  ? null
+                                  : (val) {
+                                      setState(() {
+                                        _currDistrictController.text =
+                                            val ?? '';
+                                      });
+                                    },
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: OtrTextField(
-                              label: 'Pincode',
-                              hintText: '6 digits',
-                              icon: Icons.pin_drop_rounded,
-                              controller: _currPincodeController,
-                              keyboardType: TextInputType.number,
-                              enabled: !_isReadOnly,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 20),
+                      OtrTextField(
+                        label: 'Taluka/City',
+                        hintText: 'Taluka',
+                        icon: Icons.location_on_rounded,
+                        controller: _currTalukaController,
+                        enabled: !_isReadOnly,
+                        isRequired: true,
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                      const SizedBox(height: 20),
+                      OtrTextField(
+                        label: 'Pincode',
+                        hintText: '6 digits',
+                        icon: Icons.pin_drop_rounded,
+                        controller: _currPincodeController,
+                        keyboardType: TextInputType.number,
+                        enabled: !_isReadOnly,
+                        isRequired: true,
                       ),
                     ],
                   ),
@@ -338,56 +500,86 @@ class _AddressPageState extends State<AddressPage> {
                           textCapitalization: TextCapitalization.words,
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'Taluka/City',
-                                hintText: 'Taluka',
-                                icon: Icons.location_on_rounded,
-                                controller: _pTalukaController,
-                                enabled: !_isReadOnly,
-                                textCapitalization: TextCapitalization.words,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'District',
-                                hintText: 'District',
-                                icon: Icons.location_city_rounded,
-                                controller: _pDistrictController,
-                                enabled: !_isReadOnly,
-                                textCapitalization: TextCapitalization.words,
-                              ),
-                            ),
-                          ],
+                        _buildFunctionalDropdown(
+                          label: 'State',
+                          hint: 'Select State',
+                          icon: Icons.flag_rounded,
+                          value: _pStateController.text.isEmpty
+                              ? null
+                              : _pStateController.text,
+                          items: _states
+                              .map((s) => s['name'] as String)
+                              .toList(),
+                          isRequired: true,
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) {
+                                  setState(() {
+                                    _pStateController.text = val ?? '';
+                                    final state = _states.firstWhere(
+                                      (s) => s['name'] == val,
+                                      orElse: () => null,
+                                    );
+                                    if (state != null) {
+                                      _selectedPStateCode = state['isoCode'];
+                                      _pDistrictController.clear();
+                                      _fetchCities(
+                                        _selectedPStateCode!,
+                                        isPermanent: true,
+                                      );
+                                    }
+                                  });
+                                },
                         ),
                         const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'State',
-                                hintText: 'State',
-                                icon: Icons.flag_rounded,
-                                controller: _pStateController,
-                                enabled: !_isReadOnly,
-                                textCapitalization: TextCapitalization.words,
+                        _isLoadingCities
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(12.0),
+                                  child: SpinKitThreeBounce(
+                                    color: OtrTheme.primaryBlue,
+                                    size: 20,
+                                  ),
+                                ),
+                              )
+                            : _buildFunctionalDropdown(
+                                label: 'District',
+                                hint: 'Select District',
+                                icon: Icons.location_city_rounded,
+                                value: _pDistrictController.text.isEmpty
+                                    ? null
+                                    : _pDistrictController.text,
+                                items: _cities
+                                    .map((c) => c['name'] as String)
+                                    .toList(),
+                                isRequired: true,
+                                onChanged: _isReadOnly
+                                    ? null
+                                    : (val) {
+                                        setState(() {
+                                          _pDistrictController.text = val ?? '';
+                                        });
+                                      },
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: OtrTextField(
-                                label: 'Pincode',
-                                hintText: '6 digits',
-                                icon: Icons.pin_drop_rounded,
-                                controller: _pPincodeController,
-                                keyboardType: TextInputType.number,
-                                enabled: !_isReadOnly,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 20),
+                        OtrTextField(
+                          label: 'Taluka/City',
+                          hintText: 'Taluka',
+                          icon: Icons.location_on_rounded,
+                          controller: _pTalukaController,
+                          enabled: !_isReadOnly,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                        ),
+                        const SizedBox(height: 20),
+                        OtrTextField(
+                          label: 'Pincode',
+                          hintText: '6 digits',
+                          icon: Icons.pin_drop_rounded,
+                          controller: _pPincodeController,
+                          keyboardType: TextInputType.number,
+                          enabled: !_isReadOnly,
+                          isRequired: true,
                         ),
                       ],
                     ),
@@ -544,6 +736,99 @@ class _AddressPageState extends State<AddressPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFunctionalDropdown({
+    required String label,
+    required String hint,
+    required IconData icon,
+    required String? value,
+    required List<String> items,
+    required ValueChanged<String?>? onChanged,
+    bool isRequired = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: RichText(
+            text: TextSpan(
+              text: label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: OtrTheme.darkNavy,
+                letterSpacing: -0.2,
+                fontFamily: 'Inter',
+              ),
+              children: [
+                if (isRequired)
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey.shade100, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(13),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: DropdownButtonFormField<String>(
+            value: items.contains(value) ? value : null,
+            isExpanded: true,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.grey,
+              size: 20,
+            ),
+            decoration: InputDecoration(
+              prefixIcon: Container(
+                padding: const EdgeInsets.all(12),
+                child: Icon(icon, color: OtrTheme.primaryBlue, size: 22),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 16,
+                horizontal: 4,
+              ),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+            ),
+            hint: Text(
+              hint,
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: OtrTheme.darkNavy,
+              fontFamily: 'Inter',
+            ),
+            items: items.toSet().map((String val) {
+              return DropdownMenuItem<String>(value: val, child: Text(val));
+            }).toList(),
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }
