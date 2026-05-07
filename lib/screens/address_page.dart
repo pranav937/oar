@@ -21,6 +21,8 @@ class _AddressPageState extends State<AddressPage> {
   bool _isReadOnly = true;
   bool _isEditingFromProfile = false;
 
+  Map<String, dynamic>? _bioData;
+
   // Saved profile data to preserve bio fields during address update
   Map<String, dynamic> _savedProfileData = {};
 
@@ -36,8 +38,13 @@ class _AddressPageState extends State<AddressPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final args = ModalRoute.of(context)?.settings.arguments as Map?;
-    if (args != null && args['isEditing'] == true) {
-      _isEditingFromProfile = true;
+    if (args != null) {
+      if (args['isEditing'] == true) {
+        _isEditingFromProfile = true;
+      }
+      if (args.containsKey('bioData')) {
+        _bioData = args['bioData'] as Map<String, dynamic>?;
+      }
     }
   }
 
@@ -261,6 +268,7 @@ class _AddressPageState extends State<AddressPage> {
     try {
       final profileData = {
         ..._savedProfileData,
+        if (_bioData != null) ..._bioData!,
         'permanentAddress': _pFlatController.text,
         'correspondenceAddress': _pFlatController.text,
         'presentAddress': _currFlatController.text,

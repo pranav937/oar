@@ -421,6 +421,33 @@ class _BioPageState extends State<BioPage> {
       return;
     }
 
+    if (tenthYear == twelfthYear) {
+      CustomToast.showError(
+        context,
+        '10th and 12th passing year cannot be the same',
+      );
+      return;
+    }
+
+    if (tenthYear > twelfthYear) {
+      CustomToast.showError(
+        context,
+        '10th passing year cannot be after 12th passing year',
+      );
+      return;
+    }
+
+    if (_selectedDate != null) {
+      if (tenthYear <= _selectedDate!.year ||
+          twelfthYear <= _selectedDate!.year) {
+        CustomToast.showError(
+          context,
+          'Passing year cannot be same as or before Date of Birth year',
+        );
+        return;
+      }
+    }
+
     // 5. Disability Percentage Validation (0-100)
     if (_isPhysicallyDisabled) {
       final percent = int.tryParse(_disabilityPercentController.text);
@@ -526,31 +553,19 @@ class _BioPageState extends State<BioPage> {
         'pinCode': _savedPinCode ?? '',
       };
 
-      final result = await _apiService.updateProfile(profileData);
-      if (result['success'] == true) {
-        if (mounted) {
-          CustomToast.showSuccess(context, 'Profile updated successfully');
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddressPage(),
-              settings: RouteSettings(
-                arguments: {'isEditing': _isEditingFromProfile},
-              ),
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const AddressPage(),
+            settings: RouteSettings(
+              arguments: {
+                'isEditing': _isEditingFromProfile,
+                'bioData': profileData,
+              },
             ),
-          );
-        }
-      } else {
-        if (mounted) {
-          String errorMsg = result['message'] ?? 'Update failed';
-          if (result['errors'] != null &&
-              result['errors'] is List &&
-              (result['errors'] as List).isNotEmpty) {
-            final firstError = (result['errors'] as List).first;
-            errorMsg = firstError['message'] ?? errorMsg;
-          }
-          CustomToast.showError(context, errorMsg);
-        }
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -971,7 +986,7 @@ class _BioPageState extends State<BioPage> {
                         keyboardType: TextInputType.number,
                         maxLength: 12,
                         inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                           LengthLimitingTextInputFormatter(12),
                         ],
                       ),
@@ -1069,6 +1084,11 @@ class _BioPageState extends State<BioPage> {
                               enabled: !_isReadOnly,
                               isRequired: true,
                               textCapitalization: TextCapitalization.words,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[a-zA-Z\s]'),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1102,6 +1122,11 @@ class _BioPageState extends State<BioPage> {
                               enabled: !_isReadOnly,
                               isRequired: true,
                               textCapitalization: TextCapitalization.words,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r'[a-zA-Z\s]'),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -1438,9 +1463,9 @@ class _BioPageState extends State<BioPage> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  _isReadOnly ? 'PROCEED TO ADDRESS' : 'SAVE & PROCEED',
-                  style: const TextStyle(
+                const Text(
+                  'PROCEED TO ADDRESS',
+                  style: TextStyle(
                     letterSpacing: 1,
                     fontWeight: FontWeight.w900,
                   ),

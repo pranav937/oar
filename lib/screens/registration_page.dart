@@ -546,7 +546,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           controller: _mobileController,
           keyboardType: TextInputType.phone,
           maxLength: 10,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
         ),
         const SizedBox(height: 20),
         OtrTextField(
