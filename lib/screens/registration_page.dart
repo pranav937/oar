@@ -59,13 +59,23 @@ class _RegistrationPageState extends State<RegistrationPage> {
       return;
     }
 
-    // Mobile validation (10 digits)
-    final mobileRegex = RegExp(r'^\d{10}$');
+    // Mobile validation (10 digits starting with 6-9)
+    final mobileRegex = RegExp(r'^[6-9]\d{9}$');
     if (!mobileRegex.hasMatch(mobile)) {
       if (mounted) {
-        CustomToast.showSuccess(
+        CustomToast.showError(
           context,
-          'Mobile number must be exactly 10 digits',
+          'Mobile number must be exactly 10 digits and start with 6-9',
+        );
+      }
+      return;
+    }
+
+    if (RegExp(r'^(\d)\1{9}$').hasMatch(mobile)) {
+      if (mounted) {
+        CustomToast.showError(
+          context,
+          'Mobile number cannot be all same digits',
         );
       }
       return;
@@ -108,6 +118,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
         CustomToast.showSuccess(
           context,
           'Password must contain a special character',
+        );
+      }
+      return;
+    }
+    
+    if (password.contains(' ')) {
+      if (mounted) {
+        CustomToast.showError(
+          context,
+          'Password cannot contain spaces',
         );
       }
       return;
@@ -546,7 +566,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           controller: _mobileController,
           keyboardType: TextInputType.phone,
           maxLength: 10,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         ),
         const SizedBox(height: 20),
         OtrTextField(
@@ -555,6 +575,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           icon: Icons.lock_person_outlined,
           isPassword: true,
           controller: _passwordController,
+          inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
         ),
         const SizedBox(height: 20),
         OtrTextField(
@@ -563,6 +584,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           icon: Icons.verified_user_outlined,
           isPassword: true,
           controller: _confirmPasswordController,
+          inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
         ),
         const SizedBox(height: 24),
         Container(

@@ -30,8 +30,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   Future<void> _handleSendOtp() async {
     final mobile = _mobileController.text.trim();
-    if (mobile.isEmpty || mobile.length < 10) {
-      CustomToast.showSuccess(context, 'Please enter a valid mobile number');
+    final mobileRegex = RegExp(r'^[6-9]\d{9}$');
+    if (!mobileRegex.hasMatch(mobile)) {
+      CustomToast.showError(context, 'Mobile number must be exactly 10 digits and start with 6-9');
+      return;
+    }
+    
+    if (RegExp(r'^(\d)\1{9}$').hasMatch(mobile)) {
+      CustomToast.showError(context, 'Mobile number cannot be all same digits');
       return;
     }
 
@@ -94,6 +100,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     if (password.isEmpty || password.length < 6) {
       CustomToast.showSuccess(context, 'Password must be at least 6 characters');
+      return;
+    }
+
+    if (password.contains(' ')) {
+      CustomToast.showError(context, 'Password cannot contain spaces');
       return;
     }
 
@@ -178,7 +189,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 controller: _mobileController,
                 keyboardType: TextInputType.phone,
                 maxLength: 10,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9]'))],
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               ),
               const SizedBox(height: 40),
               ElevatedButton(
@@ -206,6 +217,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 icon: Icons.lock_rounded,
                 controller: _passwordController,
                 isPassword: true,
+                inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
               ),
               const SizedBox(height: 20),
               OtrTextField(
@@ -214,6 +226,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 icon: Icons.lock_reset_rounded,
                 controller: _confirmPasswordController,
                 isPassword: true,
+                inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
               ),
               const SizedBox(height: 40),
               ElevatedButton(

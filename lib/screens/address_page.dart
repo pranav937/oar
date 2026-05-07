@@ -4,6 +4,7 @@ import '../widgets/otr_text_field.dart';
 import '../services/api_service.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import '../utils/custom_toast.dart';
+import 'package:flutter/services.dart';
 
 class AddressPage extends StatefulWidget {
   const AddressPage({super.key});
@@ -452,6 +453,8 @@ class _AddressPageState extends State<AddressPage> {
                         keyboardType: TextInputType.number,
                         enabled: !_isReadOnly,
                         isRequired: true,
+                        maxLength: 6,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       ),
                     ],
                   ),
@@ -588,6 +591,8 @@ class _AddressPageState extends State<AddressPage> {
                           keyboardType: TextInputType.number,
                           enabled: !_isReadOnly,
                           isRequired: true,
+                          maxLength: 6,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         ),
                       ],
                     ),
