@@ -110,33 +110,45 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
           ? const Center(
               child: SpinKitWave(color: OtrTheme.primaryBlue, size: 30),
             )
-          : _buildListView(),
+          : RefreshIndicator(
+              onRefresh: _fetchApplications,
+              child: _buildListView(),
+            ),
     );
   }
 
   // --- List View ---
   Widget _buildListView() {
     if (_applications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.assignment_late_outlined,
-              size: 60,
-              color: Colors.grey.shade200,
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.assignment_late_outlined,
+                    size: 60,
+                    color: Colors.grey.shade200,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No issued admit cards found',
+                    style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'No issued admit cards found',
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: _applications.length,
       itemBuilder: (context, index) {

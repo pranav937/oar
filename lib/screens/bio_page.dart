@@ -399,6 +399,34 @@ class _BioPageState extends State<BioPage> {
       return;
     }
 
+    // 3.5 ID Proof Validation
+    final idProofStr = _idProofNumberController.text.trim().toUpperCase();
+    if (_selectedIdProofType == 'Voter ID') {
+      if (!RegExp(r'^[A-Z]{3}\d{7}$').hasMatch(idProofStr)) {
+        CustomToast.showError(
+          context,
+          'Invalid Voter ID format. It should be 10 characters (3 letters followed by 7 digits, e.g., ABC1234567).',
+        );
+        return;
+      }
+    } else if (_selectedIdProofType == 'PAN Card') {
+      if (!RegExp(r'^[A-Z]{5}\d{4}[A-Z]{1}$').hasMatch(idProofStr)) {
+        CustomToast.showError(
+          context,
+          'Invalid PAN Card format. (e.g., ABCDE1234F)',
+        );
+        return;
+      }
+    } else if (_selectedIdProofType == 'Driving License') {
+      if (idProofStr.length < 10) {
+        CustomToast.showError(
+          context,
+          'Invalid Driving License format. Please enter a valid DL number.',
+        );
+        return;
+      }
+    }
+
     // 4. Educational Years Validation (1980 to current year)
     final currentYear = DateTime.now().year;
     final tenthYear = int.tryParse(_tenthYearController.text);
@@ -864,8 +892,11 @@ class _BioPageState extends State<BioPage> {
       ),
       body: _isLoading
           ? const Center(child: SpinKitRing(color: OtrTheme.primaryBlue))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          : RefreshIndicator(
+              onRefresh: _fetchProfile,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1401,6 +1432,7 @@ class _BioPageState extends State<BioPage> {
                   const SizedBox(height: 60),
                 ],
               ),
+            ),
             ),
     );
   }

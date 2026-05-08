@@ -92,7 +92,10 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
           ? const Center(
               child: SpinKitWave(color: OtrTheme.primaryBlue, size: 30),
             )
-          : _buildDetailView(),
+          : RefreshIndicator(
+              onRefresh: _fetchAdmitCardDetail,
+              child: _buildDetailView(),
+            ),
     );
   }
 
@@ -111,6 +114,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
     final qrBytes = _getQrBytes(data['qrCodeImage']);
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
@@ -154,7 +158,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                     color: OtrTheme.darkNavy,
                     fontSize: 12,
                   ),
-                ),
+                )
             ],
           ),
           const SizedBox(height: 20),

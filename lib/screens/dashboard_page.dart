@@ -6,7 +6,6 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 import '../models/dashboard_model.dart';
 
-
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 

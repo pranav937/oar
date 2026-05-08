@@ -219,8 +219,11 @@ class _DocumentsPageState extends State<DocumentsPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20.0),
+      body: RefreshIndicator(
+        onRefresh: _fetchInitialDocs,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             const Text(
@@ -254,6 +257,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
             const SizedBox(height: 60),
           ],
         ),
+      ),
       ),
     );
   }

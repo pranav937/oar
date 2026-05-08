@@ -22,8 +22,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     (index) => TextEditingController(),
   );
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
   final ApiService _apiService = ApiService();
   bool _isLoading = false;
   ForgotPasswordStep _currentStep = ForgotPasswordStep.mobile;
@@ -32,10 +33,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final mobile = _mobileController.text.trim();
     final mobileRegex = RegExp(r'^[6-9]\d{9}$');
     if (!mobileRegex.hasMatch(mobile)) {
-      CustomToast.showError(context, 'Mobile number must be exactly 10 digits and start with 6-9');
+      CustomToast.showError(
+        context,
+        'Mobile number must be exactly 10 digits and start with 6-9',
+      );
       return;
     }
-    
+
     if (RegExp(r'^(\d)\1{9}$').hasMatch(mobile)) {
       CustomToast.showError(context, 'Mobile number cannot be all same digits');
       return;
@@ -46,14 +50,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       final result = await _apiService.forgotPassword(mobile);
       if (result['success'] == true) {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'OTP sent successfully');
-          
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'OTP sent successfully',
+          );
+
           // Pre-fill OTP logic removed as per user request
           setState(() => _currentStep = ForgotPasswordStep.otp);
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'Failed to send OTP');
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Failed to send OTP',
+          );
         }
       }
     } catch (e) {
@@ -74,7 +84,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     setState(() => _isLoading = true);
     try {
-      final result = await _apiService.verifyMobileOtp(_mobileController.text.trim(), otp);
+      final result = await _apiService.verifyMobileOtp(
+        _mobileController.text.trim(),
+        otp,
+      );
       if (result['success'] == true) {
         if (mounted) {
           CustomToast.showSuccess(context, 'OTP Verified Successfully!');
@@ -82,7 +95,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'Verification failed');
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Verification failed',
+          );
         }
       }
     } catch (e) {
@@ -99,7 +115,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final confirmPassword = _confirmPasswordController.text;
 
     if (password.isEmpty || password.length < 6) {
-      CustomToast.showSuccess(context, 'Password must be at least 6 characters');
+      CustomToast.showSuccess(
+        context,
+        'Password must be at least 6 characters',
+      );
       return;
     }
 
@@ -116,15 +135,30 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() => _isLoading = true);
     try {
       final otp = _otpControllers.map((c) => c.text).join();
-      final result = await _apiService.resetPassword(_mobileController.text.trim(), password, confirmPassword, otp);
+      final result = await _apiService.resetPassword(
+        _mobileController.text.trim(),
+        password,
+        confirmPassword,
+        otp,
+      );
       if (result['success'] == true) {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'Password reset successfully');
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Password reset successfully',
+          );
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/login',
+            (route) => false,
+          );
         }
       } else {
         if (mounted) {
-          CustomToast.showSuccess(context, result['message'] ?? 'Failed to reset password');
+          CustomToast.showSuccess(
+            context,
+            result['message'] ?? 'Failed to reset password',
+          );
         }
       }
     } catch (e) {
@@ -144,7 +178,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: OtrTheme.darkNavy, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: OtrTheme.darkNavy,
+            size: 20,
+          ),
           onPressed: () {
             if (_currentStep == ForgotPasswordStep.otp) {
               setState(() => _currentStep = ForgotPasswordStep.mobile);
@@ -162,23 +200,31 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           children: [
             const SizedBox(height: 40),
             Text(
-              _currentStep == ForgotPasswordStep.mobile 
-                  ? 'Forgot Password' 
-                  : _currentStep == ForgotPasswordStep.otp 
-                      ? 'Verify OTP' 
-                      : 'Reset Password',
+              _currentStep == ForgotPasswordStep.mobile
+                  ? 'Forgot Password'
+                  : _currentStep == ForgotPasswordStep.otp
+                  ? 'Verify OTP'
+                  : 'Reset Password',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy),
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                color: OtrTheme.darkNavy,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               _currentStep == ForgotPasswordStep.mobile
                   ? 'Enter your registered mobile number to receive an OTP'
                   : _currentStep == ForgotPasswordStep.otp
-                      ? 'Enter the 6 digit code sent to +91 ${_mobileController.text}'
-                      : 'Enter your new password below',
+                  ? 'Enter the 6 digit code sent to +91 ${_mobileController.text}'
+                  : 'Enter your new password below',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: Colors.black45, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black45,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: 60),
             if (_currentStep == ForgotPasswordStep.mobile) ...[
@@ -217,7 +263,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 icon: Icons.lock_rounded,
                 controller: _passwordController,
                 isPassword: true,
-                inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
               ),
               const SizedBox(height: 20),
               OtrTextField(
@@ -226,7 +274,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 icon: Icons.lock_reset_rounded,
                 controller: _confirmPasswordController,
                 isPassword: true,
-                inputFormatters: [FilteringTextInputFormatter.deny(RegExp(r'\s'))],
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
               ),
               const SizedBox(height: 40),
               ElevatedButton(

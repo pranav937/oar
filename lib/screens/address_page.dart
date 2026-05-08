@@ -351,8 +351,14 @@ class _AddressPageState extends State<AddressPage> {
       ),
       body: _isLoading
           ? const Center(child: SpinKitRing(color: OtrTheme.primaryBlue))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+          : RefreshIndicator(
+              onRefresh: () async {
+                await _fetchAddress();
+                await _fetchStates();
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -601,6 +607,7 @@ class _AddressPageState extends State<AddressPage> {
                   const SizedBox(height: 60),
                 ],
               ),
+            ),
             ),
     );
   }
