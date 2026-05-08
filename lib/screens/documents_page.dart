@@ -547,25 +547,22 @@ class _DocumentsPageState extends State<DocumentsPage> {
                 final result = await _apiService.deleteDocument(docType);
                 if (result['success'] == true) {
                   setState(() => _uploadedDocs.remove(docTitle));
-                  if (mounted) {
-                    CustomToast.showSuccess(context, 'Document removed!');
-                  }
+                  if (!context.mounted) return;
+                  CustomToast.showSuccess(context, 'Document removed!');
                 } else {
-                  if (mounted) {
-                    String errorMsg = result['message'] ?? 'Failed to delete';
-                    if (result['errors'] != null &&
-                        result['errors'] is List &&
-                        (result['errors'] as List).isNotEmpty) {
-                      final firstError = (result['errors'] as List).first;
-                      errorMsg = firstError['message'] ?? errorMsg;
-                    }
-                    CustomToast.showError(context, errorMsg);
+                  if (!context.mounted) return;
+                  String errorMsg = result['message'] ?? 'Failed to delete';
+                  if (result['errors'] != null &&
+                      result['errors'] is List &&
+                      (result['errors'] as List).isNotEmpty) {
+                    final firstError = (result['errors'] as List).first;
+                    errorMsg = firstError['message'] ?? errorMsg;
                   }
+                  CustomToast.showError(context, errorMsg);
                 }
               } catch (e) {
-                if (mounted) {
-                  CustomToast.showError(context, 'Error deleting: $e');
-                }
+                if (!context.mounted) return;
+                CustomToast.showError(context, 'Error deleting: $e');
               } finally {
                 setState(() {
                   _isUploading = false;

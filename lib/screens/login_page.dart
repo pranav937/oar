@@ -33,15 +33,17 @@ class _LoginPageState extends State<LoginPage> {
 
       if (result['success'] == true) {
         if (mounted) {
-          setState(() => _isLoading = true); // Keep loading while checking profile
+          setState(
+            () => _isLoading = true,
+          ); // Keep loading while checking profile
         }
-        
+
         final profileResult = await _apiService.getProfile();
-        
+
         if (mounted) {
-          if (profileResult['success'] == true && 
-              profileResult['data'] != null && 
-              profileResult['data']['firstName'] != null && 
+          if (profileResult['success'] == true &&
+              profileResult['data'] != null &&
+              profileResult['data']['firstName'] != null &&
               profileResult['data']['firstName'].toString().isNotEmpty) {
             // OTR Completed -> Dashboard
             Navigator.pushReplacementNamed(context, '/dashboard');

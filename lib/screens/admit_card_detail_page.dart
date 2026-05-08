@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -467,7 +466,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                           fontSize: 11,
                           color: Colors.grey.shade600,
                           height: 1.5,
-                        ),
+                        ),  
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -540,7 +539,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                       }
                     }
 
-                    if (bytes == null || bytes.isEmpty) {
+                    if (bytes.isEmpty) {
                       throw 'Failed to download or generate PDF.';
                     }
 

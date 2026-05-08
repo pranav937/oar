@@ -326,9 +326,8 @@ class _DashboardPageState extends State<DashboardPage> {
             icon: const Icon(Icons.power_settings_new_rounded, size: 26),
             onPressed: () async {
               await _apiService.logout();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
+              if (!context.mounted) return;
+              Navigator.pushReplacementNamed(context, '/login');
             },
           ),
           const SizedBox(width: 8),

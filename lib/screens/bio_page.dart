@@ -1887,6 +1887,69 @@ class _BioPageState extends State<BioPage> {
     );
   }
 
+  void _showPreview(String label, File? file, String? remoteUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black.withValues(alpha: 0.9),
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4,
+              child: Center(
+                child: file != null
+                    ? Image.file(file)
+                    : Image.network(
+                        remoteUrl!,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(color: Colors.white),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Text(
+                          'Error loading image',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            Positioned(
+              bottom: 40,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMediaUploadSection() {
     return Column(
       children: [
@@ -2063,7 +2126,7 @@ class _BioPageState extends State<BioPage> {
     return Stack(
       children: [
         GestureDetector(
-          onTap: onTap,
+          onTap: hasMedia ? () => _showPreview(label, file, remoteUrl) : onTap,
           child: Container(
             height: 140,
             width: double.infinity,
@@ -2071,7 +2134,9 @@ class _BioPageState extends State<BioPage> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: OtrTheme.primaryBlue.withValues(alpha: 0.1),
+                color: hasMedia
+                    ? OtrTheme.primaryBlue.withValues(alpha: 0.3)
+                    : OtrTheme.primaryBlue.withValues(alpha: 0.1),
                 width: 1.5,
               ),
               boxShadow: [
@@ -2087,40 +2152,111 @@ class _BioPageState extends State<BioPage> {
               child: Stack(
                 children: [
                   if (file != null)
-                    Image.file(
-                      file,
+                    Container(
+                      color: Colors.grey.shade50,
                       width: double.infinity,
                       height: double.infinity,
-                      fit: BoxFit.cover,
+                      child: Image.file(
+                        file,
+                        fit: BoxFit.contain,
+                      ),
                     )
                   else if (remoteUrl != null)
-                    Image.network(
-                      remoteUrl,
+                    Container(
+                      color: Colors.grey.shade50,
                       width: double.infinity,
                       height: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildUploadPlaceholder(label, icon, true),
+                      child: Image.network(
+                        remoteUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildUploadPlaceholder(label, icon, true),
+                      ),
                     )
                   else
                     _buildUploadPlaceholder(label, icon, false),
-                  if (hasMedia)
+                  if (hasMedia) ...[
                     Positioned(
-                      top: 8,
-                      right: 8,
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
                       child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+                        padding: const EdgeInsets.fromLTRB(12, 20, 12, 8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.7),
+                            ],
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 20,
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: onTap,
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.edit_rounded,
+                                  color: OtrTheme.primaryBlue,
+                                  size: 14,
+                                ),
+                                SizedBox(width: 4),
+                                Text(
+                                  'CHANGE',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    color: OtrTheme.primaryBlue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -2128,21 +2264,30 @@ class _BioPageState extends State<BioPage> {
         ),
         if (hasMedia)
           Positioned(
-            top: -5,
-            left: -5,
-            child: IconButton(
-              onPressed: onDelete,
-              icon: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.red.shade100),
-                ),
-                child: Icon(
-                  Icons.delete_forever_rounded,
-                  color: Colors.red.shade700,
-                  size: 18,
+            top: 4,
+            left: 4,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onDelete,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.red,
+                    size: 16,
+                  ),
                 ),
               ),
             ),

@@ -288,12 +288,13 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                           // 2. If server download fails, fallback to local generation
                           if (bytes == null || bytes.isEmpty) {
                             debugPrint('Server download failed or returned empty, falling back to local generation');
-                            if (!mounted) return;
+                            if (!context.mounted) return;
                             CustomToast.showSuccess(context, 'Fetching data for local generation...');
                             
                             final detailResult = await _apiService.getAdmitCard(id);
                             if (!mounted) return;
                             if (detailResult['success'] == true) {
+                              if (!context.mounted) return;
                               CustomToast.showSuccess(context, 'Generating PDF locally...');
                               final fullData = detailResult['data'] ?? {};
                               bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
@@ -310,17 +311,17 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
                             fileName: 'AdmitCard_$appNo.pdf',
                             type: FileType.custom,
                             allowedExtensions: ['pdf'],
-                            bytes: Uint8List.fromList(bytes!),
+                            bytes: Uint8List.fromList(bytes),
                           );
 
-                          if (mounted) {
+                            if (!context.mounted) return;
                             CustomToast.showSuccess(
                               context,
                               'Admit Card saved to device!',
                             );
-                          }
                         } catch (e) {
-                          if (mounted) CustomToast.showError(context, 'Failed: $e');
+                          if (!context.mounted) return;
+                          CustomToast.showError(context, 'Failed: $e');
                         }
                       },
                       icon: const Icon(Icons.download_rounded, size: 16),

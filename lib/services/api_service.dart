@@ -259,7 +259,7 @@ class ApiService {
       } else {
         return {'success': false, 'message': parseMessage(decoded['message'])};
       }
-    } catch (e) {
+    } catch (e) { 
       return {'success': false, 'message': 'Network error: $e'};
     }
   }

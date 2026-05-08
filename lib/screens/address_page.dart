@@ -30,7 +30,6 @@ class _AddressPageState extends State<AddressPage> {
   // Master Data
   List<dynamic> _states = [];
   List<dynamic> _cities = [];
-  bool _isLoadingStates = false;
   bool _isLoadingCities = false;
   String? _selectedStateCode; // to keep track for city fetch
   String? _selectedPStateCode;
@@ -77,14 +76,12 @@ class _AddressPageState extends State<AddressPage> {
   }
 
   Future<void> _fetchStates() async {
-    setState(() => _isLoadingStates = true);
     final result = await _apiService.getStates();
     if (mounted) {
       setState(() {
         if (result['success'] == true) {
           _states = result['data'] ?? [];
         }
-        _isLoadingStates = false;
       });
       // After fetching states, if there's an existing state in the controller,
       // trigger city fetch for it
@@ -818,7 +815,7 @@ class _AddressPageState extends State<AddressPage> {
             ],
           ),
           child: DropdownButtonFormField<String>(
-            value: items.contains(value) ? value : null,
+            initialValue: items.contains(value) ? value : null,
             isExpanded: true,
             icon: const Icon(
               Icons.keyboard_arrow_down_rounded,
