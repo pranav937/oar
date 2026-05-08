@@ -261,13 +261,13 @@
     },
     {
       "name": "image_picker",
-      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker-1.2.1",
+      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker-1.2.2",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.9"
     },
     {
       "name": "image_picker_android",
-      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+16",
+      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_android-0.8.13+17",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
@@ -663,7 +663,7 @@
     },
     {
       "name": "vector_graphics",
-      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/vector_graphics-1.1.21",
+      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/vector_graphics-1.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
@@ -675,7 +675,7 @@
     },
     {
       "name": "vector_graphics_compiler",
-      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/vector_graphics_compiler-1.2.0",
+      "rootUri": "file:///C:/Users/Dell/AppData/Local/Pub/Cache/hosted/pub.dev/vector_graphics_compiler-1.2.1",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },

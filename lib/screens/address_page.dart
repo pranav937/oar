@@ -441,15 +441,20 @@ class _AddressPageState extends State<AddressPage> {
                                     },
                             ),
                       const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Taluka/City',
-                        hintText: 'Taluka',
-                        icon: Icons.location_on_rounded,
-                        controller: _currTalukaController,
-                        enabled: !_isReadOnly,
-                        isRequired: true,
-                        textCapitalization: TextCapitalization.words,
-                      ),
+                        OtrTextField(
+                          label: 'Taluka/City',
+                          hintText: 'Taluka',
+                          icon: Icons.location_on_rounded,
+                          controller: _currTalukaController,
+                          enabled: !_isReadOnly,
+                          isRequired: true,
+                          textCapitalization: TextCapitalization.words,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 20),
                       OtrTextField(
                         label: 'Pincode',
@@ -587,6 +592,11 @@ class _AddressPageState extends State<AddressPage> {
                           enabled: !_isReadOnly,
                           isRequired: true,
                           textCapitalization: TextCapitalization.words,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 20),
                         OtrTextField(

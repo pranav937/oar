@@ -10,6 +10,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import '../utils/constants.dart';
 import '../utils/custom_toast.dart';
+import '../utils/signature_validator.dart';
 
 class BioPage extends StatefulWidget {
   const BioPage({super.key});
@@ -669,6 +670,29 @@ class _BioPageState extends State<BioPage> {
         }
         return;
       }
+
+      // Validate signature if it's not a photo
+      if (!isPhoto) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Validating signature...'),
+              duration: Duration(milliseconds: 500),
+            ),
+          );
+        }
+        final isValid = await SignatureValidator.validateHandwritten(file);
+        if (!isValid) {
+          if (mounted) {
+            CustomToast.showError(
+              context,
+              'Please upload a clear handwritten signature only',
+            );
+          }
+          return;
+        }
+      }
+
       setState(() {
         if (isPhoto) {
           _photoFile = file;
@@ -897,542 +921,557 @@ class _BioPageState extends State<BioPage> {
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildSectionHeader(
-                    'Candidate Profile',
-                    'Complete your personal and social details',
-                  ),
-                  const SizedBox(height: 24),
-                  _buildMediaUploadSection(),
-                  const SizedBox(height: 16),
-                  _buildCollapsibleSection(
-                    index: 0,
-                    title: 'Basic Information',
-                    icon: Icons.person_pin_rounded,
-                    children: [
-                      _buildFunctionalDropdown(
-                        label: 'Title',
-                        hint: 'Mr.',
-                        icon: Icons.title_rounded,
-                        value: _selectedTitle,
-                        items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) => setState(() => _selectedTitle = val),
-                      ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Surname',
-                        hintText: 'Surname',
-                        icon: Icons.person_outline_rounded,
-                        controller: _surnameController,
-                        enabled: !_isReadOnly,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'First Name',
-                        hintText: 'Enter first name',
-                        icon: Icons.person_rounded,
-                        controller: _firstNameController,
-                        enabled: !_isReadOnly,
-                        isRequired: true,
-                      ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Full Name',
-                        hintText: 'Auto-generated',
-                        icon: Icons.badge_rounded,
-                        controller: _nameController,
-                        enabled: false,
-                      ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Father\'s Name',
-                        hintText: 'Father\'s Name',
-                        icon: Icons.person_add_rounded,
-                        controller: _fatherController,
-                        enabled: !_isReadOnly,
-                      ),
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Mother\'s Name',
-                        hintText: 'Mother\'s Name',
-                        icon: Icons.person_add_rounded,
-                        controller: _motherController,
-                        enabled: !_isReadOnly,
-                      ),
-                    ],
-                  ),
-                  _buildCollapsibleSection(
-                    index: 1,
-                    title: 'Identity & Authentication',
-                    icon: Icons.shield_rounded,
-                    children: [
-                      _buildFunctionalDropdown(
-                        label: 'ID Proof Type',
-                        hint: 'Select ID Type',
-                        icon: Icons.badge,
-                        value: _selectedIdProofType,
-                        isRequired: true,
-                        items: [
-                          'Aadhaar Card',
-                          'PAN Card',
-                          'Voter ID',
-                          'Driving License',
-                        ],
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) {
-                                setState(() {
-                                  _selectedIdProofType = val;
-                                  if (val == 'Aadhaar Card') {
-                                    _idProofNumberController.text =
-                                        _aadhaarController.text;
-                                  }
-                                });
-                              },
-                      ),
-                      if (_selectedIdProofType != 'Aadhaar Card') ...[
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader(
+                      'Candidate Profile',
+                      'Complete your personal and social details',
+                    ),
+                    const SizedBox(height: 24),
+                    _buildMediaUploadSection(),
+                    const SizedBox(height: 16),
+                    _buildCollapsibleSection(
+                      index: 0,
+                      title: 'Basic Information',
+                      icon: Icons.person_pin_rounded,
+                      children: [
+                        _buildFunctionalDropdown(
+                          label: 'Title',
+                          hint: 'Mr.',
+                          icon: Icons.title_rounded,
+                          value: _selectedTitle,
+                          items: ['Mr.', 'Ms.', 'Mrs.', 'Dr.'],
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) => setState(() => _selectedTitle = val),
+                        ),
                         const SizedBox(height: 20),
                         OtrTextField(
-                          label: 'ID Proof Number',
-                          hintText: 'Enter ID number',
-                          icon: Icons.tag_rounded,
-                          controller: _idProofNumberController,
+                          label: 'Surname',
+                          hintText: 'Surname',
+                          icon: Icons.person_outline_rounded,
+                          controller: _surnameController,
                           enabled: !_isReadOnly,
                           isRequired: true,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
                         ),
-                      ],
-                      const SizedBox(height: 20),
-                      OtrTextField(
-                        label: 'Aadhaar Number',
-                        hintText: '12-digit number',
-                        icon: Icons.credit_card_rounded,
-                        controller: _aadhaarController,
-                        enabled: !_isReadOnly,
-                        isRequired: true,
-                        keyboardType: TextInputType.number,
-                        maxLength: 12,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                          LengthLimitingTextInputFormatter(12),
-                        ],
-                      ),
-                    ],
-                  ),
-                  _buildCollapsibleSection(
-                    index: 2,
-                    title: 'Personal Demographics',
-                    icon: Icons.public_rounded,
-                    children: [
-                      _buildFunctionalDropdown(
-                        label: 'Gender',
-                        hint: 'Gender',
-                        icon: Icons.transgender_rounded,
-                        value: _selectedGender,
-                        items: ['MALE', 'FEMALE', 'OTHER'],
-                        isRequired: true,
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) => setState(() => _selectedGender = val),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildClickableField(
-                        label: 'Date of Birth',
-                        value: _getFormattedDate(),
-                        icon: Icons.calendar_today_rounded,
-                        isRequired: true,
-                        onTap: _isReadOnly ? null : () => _selectDate(context),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildFunctionalDropdown(
-                        label: 'Marital Status',
-                        hint: 'Select status',
-                        icon: Icons.favorite_rounded,
-                        value: _selectedMaritalStatus,
-                        items: ['Single', 'Married', 'Divorced', 'Widow'],
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) =>
-                                  setState(() => _selectedMaritalStatus = val),
-                      ),
-                      const SizedBox(height: 20),
-                      _buildFunctionalDropdown(
-                        label: 'Nationality',
-                        hint: 'Select nationality',
-                        icon: Icons.flag_rounded,
-                        value: _selectedNationality,
-                        items: ['Indian', 'Other'],
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) =>
-                                  setState(() => _selectedNationality = val),
-                      ),
-                    ],
-                  ),
-                  _buildCollapsibleSection(
-                    index: 3,
-                    title: 'Educational & Social Status',
-                    icon: Icons.school_rounded,
-                    children: [
-                      _buildFunctionalDropdown(
-                        label: 'Category',
-                        hint: 'Select Category',
-                        icon: Icons.category_rounded,
-                        value: _selectedCategory,
-                        items: ['UR', 'EWS', 'SC', 'ST', 'OBC'],
-                        isRequired: true,
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) => setState(() => _selectedCategory = val),
-                      ),
-
-                      const SizedBox(height: 20),
-                      _buildFunctionalDropdown(
-                        label: 'Highest Qualification',
-                        hint: 'Select Highest',
-                        icon: Icons.school_rounded,
-                        value: _selectedQualification,
-                        items: ['10th', '12th', 'Bachelor', 'Master', 'PhD'],
-                        isRequired: true,
-                        onChanged: _isReadOnly
-                            ? null
-                            : (val) =>
-                                  setState(() => _selectedQualification = val),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OtrTextField(
-                              label: '10th Board',
-                              hintText: 'Education Board',
-                              icon: Icons.history_edu_rounded,
-                              controller: _tenthBoardController,
-                              enabled: !_isReadOnly,
-                              isRequired: true,
-                              textCapitalization: TextCapitalization.words,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'[a-zA-Z\s]'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: OtrTextField(
-                              label: 'Year',
-                              hintText: '2010',
-                              icon: Icons.calendar_today,
-                              controller: _tenthYearController,
-                              keyboardType: TextInputType.number,
-                              enabled: !_isReadOnly,
-                              isRequired: true,
-                              maxLength: 4,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(4),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OtrTextField(
-                              label: '12th Board',
-                              hintText: 'Education Board',
-                              icon: Icons.history_edu_rounded,
-                              controller: _twelfthBoardController,
-                              enabled: !_isReadOnly,
-                              isRequired: true,
-                              textCapitalization: TextCapitalization.words,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'[a-zA-Z\s]'),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: OtrTextField(
-                              label: 'Year',
-                              hintText: '2012',
-                              icon: Icons.calendar_today,
-                              controller: _twelfthYearController,
-                              keyboardType: TextInputType.number,
-                              enabled: !_isReadOnly,
-                              isRequired: true,
-                              maxLength: 4,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(4),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
-                      const SizedBox(height: 24),
-                      _buildSwitchTile(
-                        'Physically Disabled',
-                        _isPhysicallyDisabled,
-                        _isReadOnly
-                            ? null
-                            : (val) =>
-                                  setState(() => _isPhysicallyDisabled = val),
-                      ),
-                      if (_isPhysicallyDisabled) ...[
+                        const SizedBox(height: 20),
                         OtrTextField(
-                          label: 'Disability Type',
-                          hintText: 'Type',
-                          icon: Icons.accessibility_new_rounded,
-                          controller: _disabilityTypeController,
+                          label: 'First Name',
+                          hintText: 'Enter first name',
+                          icon: Icons.person_rounded,
+                          controller: _firstNameController,
+                          enabled: !_isReadOnly,
+                          isRequired: true,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z\s]'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        OtrTextField(
+                          label: 'Full Name',
+                          hintText: 'Auto-generated',
+                          icon: Icons.badge_rounded,
+                          controller: _nameController,
+                          enabled: false,
+                        ),
+                        const SizedBox(height: 20),
+                        OtrTextField(
+                          label: 'Father\'s Name',
+                          hintText: 'Father\'s Name',
+                          icon: Icons.person_add_rounded,
+                          controller: _fatherController,
                           enabled: !_isReadOnly,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 20),
                         OtrTextField(
-                          label: 'Percentage (%)',
-                          hintText: '40',
-                          icon: Icons.percent_rounded,
-                          controller: _disabilityPercentController,
+                          label: 'Mother\'s Name',
+                          hintText: 'Mother\'s Name',
+                          icon: Icons.person_add_rounded,
+                          controller: _motherController,
+                          enabled: !_isReadOnly,
+                        ),
+                      ],
+                    ),
+                    _buildCollapsibleSection(
+                      index: 1,
+                      title: 'Identity & Authentication',
+                      icon: Icons.shield_rounded,
+                      children: [
+                        _buildFunctionalDropdown(
+                          label: 'ID Proof Type',
+                          hint: 'Select ID Type',
+                          icon: Icons.badge,
+                          value: _selectedIdProofType,
+                          isRequired: true,
+                          items: [
+                            'Aadhaar Card',
+                            'PAN Card',
+                            'Voter ID',
+                            'Driving License',
+                          ],
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) {
+                                  setState(() {
+                                    _selectedIdProofType = val;
+                                    if (val == 'Aadhaar Card') {
+                                      _idProofNumberController.text =
+                                          _aadhaarController.text;
+                                    }
+                                  });
+                                },
+                        ),
+                        if (_selectedIdProofType != 'Aadhaar Card') ...[
+                          const SizedBox(height: 20),
+                          OtrTextField(
+                            label: 'ID Proof Number',
+                            hintText: 'Enter ID number',
+                            icon: Icons.tag_rounded,
+                            controller: _idProofNumberController,
+                            enabled: !_isReadOnly,
+                            isRequired: true,
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                        OtrTextField(
+                          label: 'Aadhaar Number',
+                          hintText: '12-digit number',
+                          icon: Icons.credit_card_rounded,
+                          controller: _aadhaarController,
+                          enabled: !_isReadOnly,
+                          isRequired: true,
                           keyboardType: TextInputType.number,
-                          enabled: !_isReadOnly,
+                          maxLength: 12,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
+                            LengthLimitingTextInputFormatter(12),
+                          ],
                         ),
                       ],
-                      _buildSwitchTile(
-                        'Sports Person',
-                        _isSportsPerson,
-                        _isReadOnly
-                            ? null
-                            : (val) => setState(() => _isSportsPerson = val),
-                      ),
-                      if (_isSportsPerson) ...[
-                        OtrTextField(
-                          label: 'Sports Name',
-                          hintText: 'Name',
-                          icon: Icons.emoji_events_rounded,
-                          controller: _sportsNameController,
-                          enabled: !_isReadOnly,
+                    ),
+                    _buildCollapsibleSection(
+                      index: 2,
+                      title: 'Personal Demographics',
+                      icon: Icons.public_rounded,
+                      children: [
+                        _buildFunctionalDropdown(
+                          label: 'Gender',
+                          hint: 'Gender',
+                          icon: Icons.transgender_rounded,
+                          value: _selectedGender,
+                          items: ['MALE', 'FEMALE', 'OTHER'],
+                          isRequired: true,
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) => setState(() => _selectedGender = val),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 20),
+                        _buildClickableField(
+                          label: 'Date of Birth',
+                          value: _getFormattedDate(),
+                          icon: Icons.calendar_today_rounded,
+                          isRequired: true,
+                          onTap: _isReadOnly
+                              ? null
+                              : () => _selectDate(context),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildFunctionalDropdown(
+                          label: 'Marital Status',
+                          hint: 'Select status',
+                          icon: Icons.favorite_rounded,
+                          value: _selectedMaritalStatus,
+                          items: ['Single', 'Married', 'Divorced', 'Widow'],
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) => setState(
+                                  () => _selectedMaritalStatus = val,
+                                ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildFunctionalDropdown(
+                          label: 'Nationality',
+                          hint: 'Select nationality',
+                          icon: Icons.flag_rounded,
+                          value: _selectedNationality,
+                          items: ['Indian', 'Other'],
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) =>
+                                    setState(() => _selectedNationality = val),
+                        ),
+                      ],
+                    ),
+                    _buildCollapsibleSection(
+                      index: 3,
+                      title: 'Educational & Social Status',
+                      icon: Icons.school_rounded,
+                      children: [
+                        _buildFunctionalDropdown(
+                          label: 'Category',
+                          hint: 'Select Category',
+                          icon: Icons.category_rounded,
+                          value: _selectedCategory,
+                          items: ['UR', 'EWS', 'SC', 'ST', 'OBC'],
+                          isRequired: true,
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) =>
+                                    setState(() => _selectedCategory = val),
+                        ),
+
+                        const SizedBox(height: 20),
+                        _buildFunctionalDropdown(
+                          label: 'Education Qualification',
+                          hint: 'Select Highest',
+                          icon: Icons.school_rounded,
+                          value: _selectedQualification,
+                          items: ['10th', '12th', 'Bachelor', 'Master', 'PhD'],
+                          isRequired: true,
+                          onChanged: _isReadOnly
+                              ? null
+                              : (val) => setState(
+                                  () => _selectedQualification = val,
+                                ),
+                        ),
+                        const SizedBox(height: 20),
                         Row(
                           children: [
                             Expanded(
                               child: OtrTextField(
-                                label: 'Level',
-                                hintText: 'State/Nat.',
-                                icon: Icons.leaderboard_rounded,
-                                controller: _sportsLevelController,
+                                label: '10th Board',
+                                hintText: 'Education Board',
+                                icon: Icons.history_edu_rounded,
+                                controller: _tenthBoardController,
                                 enabled: !_isReadOnly,
+                                isRequired: true,
+                                textCapitalization: TextCapitalization.words,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'[a-zA-Z\s]'),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: OtrTextField(
                                 label: 'Year',
-                                hintText: '2020',
+                                hintText: '2010',
                                 icon: Icons.calendar_today,
-                                controller: _sportsYearController,
+                                controller: _tenthYearController,
                                 keyboardType: TextInputType.number,
                                 enabled: !_isReadOnly,
+                                isRequired: true,
+                                maxLength: 4,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(4),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        OtrTextField(
-                          label: 'Authority',
-                          hintText: 'Issuing Org',
-                          icon: Icons.account_balance_rounded,
-                          controller: _sportsAuthController,
-                          enabled: !_isReadOnly,
-                        ),
-                      ],
-                      _buildSwitchTile(
-                        'Widow Person',
-                        _isWidow,
-                        _isReadOnly
-                            ? null
-                            : (val) => setState(() => _isWidow = val),
-                      ),
-                      if (_isWidow) ...[
-                        OtrTextField(
-                          label: 'Certificate No.',
-                          hintText: 'Number',
-                          icon: Icons.description_rounded,
-                          controller: _widowCertController,
-                          enabled: !_isReadOnly,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildClickableField(
-                          label: 'Certificate Date',
-                          value: _widowDateController.text.isEmpty
-                              ? 'Select Date'
-                              : _widowDateController.text,
-                          icon: Icons.calendar_month_rounded,
-                          onTap: _isReadOnly
-                              ? null
-                              : () async {
-                                  final d = await showDatePicker(
-                                    context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(1990),
-                                    lastDate: DateTime.now(),
-                                  );
-                                  if (d != null) {
-                                    setState(
-                                      () => _widowDateController.text =
-                                          DateFormat('yyyy-MM-dd').format(d),
-                                    );
-                                  }
-                                },
-                        ),
-                      ],
-                      _buildSwitchTile(
-                        'Ex-Soldier',
-                        _isExSoldier,
-                        _isReadOnly
-                            ? null
-                            : (val) => setState(() => _isExSoldier = val),
-                      ),
-                      if (_isExSoldier) ...[
+                        const SizedBox(height: 20),
                         Row(
                           children: [
                             Expanded(
                               child: OtrTextField(
-                                label: 'Service From',
-                                hintText: '2010',
-                                icon: Icons.login_rounded,
-                                controller: _exSoldierFromController,
+                                label: '12th Board',
+                                hintText: 'Education Board',
+                                icon: Icons.history_edu_rounded,
+                                controller: _twelfthBoardController,
                                 enabled: !_isReadOnly,
+                                isRequired: true,
+                                textCapitalization: TextCapitalization.words,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r'[a-zA-Z\s]'),
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: OtrTextField(
-                                label: 'Service To',
-                                hintText: '2020',
-                                icon: Icons.logout_rounded,
-                                controller: _exSoldierToController,
+                                label: 'Year',
+                                hintText: '2012',
+                                icon: Icons.calendar_today,
+                                controller: _twelfthYearController,
+                                keyboardType: TextInputType.number,
                                 enabled: !_isReadOnly,
+                                isRequired: true,
+                                maxLength: 4,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(4),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        OtrTextField(
-                          label: 'ID Card No.',
-                          hintText: 'Number',
-                          icon: Icons.badge_rounded,
-                          controller: _exSoldierIdController,
-                          enabled: !_isReadOnly,
-                        ),
-                      ],
-                      _buildSwitchTile(
-                        'Govt Employee',
-                        _isGovtEmployee,
-                        _isReadOnly
-                            ? null
-                            : (val) => setState(() => _isGovtEmployee = val),
-                      ),
-                      if (_isGovtEmployee) ...[
-                        OtrTextField(
-                          label: 'Dept Name',
-                          hintText: 'Department',
-                          icon: Icons.business_rounded,
-                          controller: _govtDeptController,
-                          enabled: !_isReadOnly,
-                        ),
-                        const SizedBox(height: 12),
-                        _buildClickableField(
-                          label: 'Join Date',
-                          value: _govtJoinDateController.text.isEmpty
-                              ? 'Select Date'
-                              : _govtJoinDateController.text,
-                          icon: Icons.calendar_month_rounded,
-                          onTap: _isReadOnly
+                        const SizedBox(height: 20),
+
+                        const SizedBox(height: 24),
+                        _buildSwitchTile(
+                          'Physically Disabled',
+                          _isPhysicallyDisabled,
+                          _isReadOnly
                               ? null
-                              : () async {
-                                  final d = await showDatePicker(
-                                    context: context,
-                                    initialDate: DateTime.now(),
-                                    firstDate: DateTime(1990),
-                                    lastDate: DateTime.now(),
-                                  );
-                                  if (d != null) {
-                                    setState(
-                                      () => _govtJoinDateController.text =
-                                          DateFormat('yyyy-MM-dd').format(d),
+                              : (val) =>
+                                    setState(() => _isPhysicallyDisabled = val),
+                        ),
+                        if (_isPhysicallyDisabled) ...[
+                          OtrTextField(
+                            label: 'Disability Type',
+                            hintText: 'Type',
+                            icon: Icons.accessibility_new_rounded,
+                            controller: _disabilityTypeController,
+                            enabled: !_isReadOnly,
+                          ),
+                          const SizedBox(height: 12),
+                          OtrTextField(
+                            label: 'Percentage (%)',
+                            hintText: '40',
+                            icon: Icons.percent_rounded,
+                            controller: _disabilityPercentController,
+                            keyboardType: TextInputType.number,
+                            enabled: !_isReadOnly,
+                          ),
+                        ],
+                        _buildSwitchTile(
+                          'Sports Person',
+                          _isSportsPerson,
+                          _isReadOnly
+                              ? null
+                              : (val) => setState(() => _isSportsPerson = val),
+                        ),
+                        if (_isSportsPerson) ...[
+                          OtrTextField(
+                            label: 'Sports Name',
+                            hintText: 'Name',
+                            icon: Icons.emoji_events_rounded,
+                            controller: _sportsNameController,
+                            enabled: !_isReadOnly,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OtrTextField(
+                                  label: 'Level',
+                                  hintText: 'State/Nat.',
+                                  icon: Icons.leaderboard_rounded,
+                                  controller: _sportsLevelController,
+                                  enabled: !_isReadOnly,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OtrTextField(
+                                  label: 'Year',
+                                  hintText: '2020',
+                                  icon: Icons.calendar_today,
+                                  controller: _sportsYearController,
+                                  keyboardType: TextInputType.number,
+                                  enabled: !_isReadOnly,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          OtrTextField(
+                            label: 'Authority',
+                            hintText: 'Issuing Org',
+                            icon: Icons.account_balance_rounded,
+                            controller: _sportsAuthController,
+                            enabled: !_isReadOnly,
+                          ),
+                        ],
+                        _buildSwitchTile(
+                          'Widow Person',
+                          _isWidow,
+                          _isReadOnly
+                              ? null
+                              : (val) => setState(() => _isWidow = val),
+                        ),
+                        if (_isWidow) ...[
+                          OtrTextField(
+                            label: 'Certificate No.',
+                            hintText: 'Number',
+                            icon: Icons.description_rounded,
+                            controller: _widowCertController,
+                            enabled: !_isReadOnly,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildClickableField(
+                            label: 'Certificate Date',
+                            value: _widowDateController.text.isEmpty
+                                ? 'Select Date'
+                                : _widowDateController.text,
+                            icon: Icons.calendar_month_rounded,
+                            onTap: _isReadOnly
+                                ? null
+                                : () async {
+                                    final d = await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime(1990),
+                                      lastDate: DateTime.now(),
                                     );
-                                  }
-                                },
+                                    if (d != null) {
+                                      setState(
+                                        () => _widowDateController.text =
+                                            DateFormat('yyyy-MM-dd').format(d),
+                                      );
+                                    }
+                                  },
+                          ),
+                        ],
+                        _buildSwitchTile(
+                          'Ex-Soldier',
+                          _isExSoldier,
+                          _isReadOnly
+                              ? null
+                              : (val) => setState(() => _isExSoldier = val),
+                        ),
+                        if (_isExSoldier) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OtrTextField(
+                                  label: 'Service From',
+                                  hintText: '2010',
+                                  icon: Icons.login_rounded,
+                                  controller: _exSoldierFromController,
+                                  enabled: !_isReadOnly,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OtrTextField(
+                                  label: 'Service To',
+                                  hintText: '2020',
+                                  icon: Icons.logout_rounded,
+                                  controller: _exSoldierToController,
+                                  enabled: !_isReadOnly,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          OtrTextField(
+                            label: 'ID Card No.',
+                            hintText: 'Number',
+                            icon: Icons.badge_rounded,
+                            controller: _exSoldierIdController,
+                            enabled: !_isReadOnly,
+                          ),
+                        ],
+                        _buildSwitchTile(
+                          'Govt Employee',
+                          _isGovtEmployee,
+                          _isReadOnly
+                              ? null
+                              : (val) => setState(() => _isGovtEmployee = val),
+                        ),
+                        if (_isGovtEmployee) ...[
+                          OtrTextField(
+                            label: 'Dept Name',
+                            hintText: 'Department',
+                            icon: Icons.business_rounded,
+                            controller: _govtDeptController,
+                            enabled: !_isReadOnly,
+                          ),
+                          const SizedBox(height: 12),
+                          _buildClickableField(
+                            label: 'Join Date',
+                            value: _govtJoinDateController.text.isEmpty
+                                ? 'Select Date'
+                                : _govtJoinDateController.text,
+                            icon: Icons.calendar_month_rounded,
+                            onTap: _isReadOnly
+                                ? null
+                                : () async {
+                                    final d = await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime(1990),
+                                      lastDate: DateTime.now(),
+                                    );
+                                    if (d != null) {
+                                      setState(
+                                        () => _govtJoinDateController.text =
+                                            DateFormat('yyyy-MM-dd').format(d),
+                                      );
+                                    }
+                                  },
+                          ),
+                        ],
+                      ],
+                    ),
+                    _buildCollapsibleSection(
+                      index: 4,
+                      title: 'Language Proficiency',
+                      icon: Icons.translate_rounded,
+                      children: [
+                        _buildLanguageCard(
+                          'English',
+                          _engRead,
+                          _engWrite,
+                          _engSpeak,
+                          _isReadOnly
+                              ? null
+                              : (r, w, s) => setState(() {
+                                  _engRead = r;
+                                  _engWrite = w;
+                                  _engSpeak = s;
+                                }),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildLanguageCard(
+                          'Hindi',
+                          _hinRead,
+                          _hinWrite,
+                          _hinSpeak,
+                          _isReadOnly
+                              ? null
+                              : (r, w, s) => setState(() {
+                                  _hinRead = r;
+                                  _hinWrite = w;
+                                  _hinSpeak = s;
+                                }),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildLanguageCard(
+                          'Gujarati',
+                          _gujRead,
+                          _gujWrite,
+                          _gujSpeak,
+                          _isReadOnly
+                              ? null
+                              : (r, w, s) => setState(() {
+                                  _gujRead = r;
+                                  _gujWrite = w;
+                                  _gujSpeak = s;
+                                }),
                         ),
                       ],
-                    ],
-                  ),
-                  _buildCollapsibleSection(
-                    index: 4,
-                    title: 'Language Proficiency',
-                    icon: Icons.translate_rounded,
-                    children: [
-                      _buildLanguageCard(
-                        'English',
-                        _engRead,
-                        _engWrite,
-                        _engSpeak,
-                        _isReadOnly
-                            ? null
-                            : (r, w, s) => setState(() {
-                                _engRead = r;
-                                _engWrite = w;
-                                _engSpeak = s;
-                              }),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildLanguageCard(
-                        'Hindi',
-                        _hinRead,
-                        _hinWrite,
-                        _hinSpeak,
-                        _isReadOnly
-                            ? null
-                            : (r, w, s) => setState(() {
-                                _hinRead = r;
-                                _hinWrite = w;
-                                _hinSpeak = s;
-                              }),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildLanguageCard(
-                        'Gujarati',
-                        _gujRead,
-                        _gujWrite,
-                        _gujSpeak,
-                        _isReadOnly
-                            ? null
-                            : (r, w, s) => setState(() {
-                                _gujRead = r;
-                                _gujWrite = w;
-                                _gujSpeak = s;
-                              }),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  _buildSaveButton(),
-                  const SizedBox(height: 60),
-                ],
+                    ),
+                    const SizedBox(height: 40),
+                    _buildSaveButton(),
+                    const SizedBox(height: 60),
+                  ],
+                ),
               ),
-            ),
             ),
     );
   }
