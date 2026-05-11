@@ -259,7 +259,7 @@ class ApiService {
       } else {
         return {'success': false, 'message': parseMessage(decoded['message'])};
       }
-    } catch (e) { 
+    } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
@@ -888,10 +888,14 @@ class ApiService {
       return null;
     }
   }
+
   // --- Master Data ---
   Future<Map<String, dynamic>> getStates() async {
     try {
-      final response = await get(ApiConstants.masterStates, authenticated: false);
+      final response = await get(
+        ApiConstants.masterStates,
+        authenticated: false,
+      );
       final decoded = jsonDecode(response.body);
       return decoded;
     } catch (e) {

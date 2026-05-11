@@ -56,7 +56,10 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
               if (_selectedFilter == 'APPROVED') {
                 return status == 'APPROVED' ||
                     status == 'SUCCESS' ||
-                    status == 'ACCEPTED';
+                    status == 'ACCEPTED' ||
+                    status == 'ADMIT_CARD_ISSUED' ||
+                    status == 'APPROVE_FOR_EXAM' ||
+                    status == 'APPROVED_FOR_EXAM';
               }
               if (_selectedFilter == 'SUBMITTED') {
                 // Payment-completed applications are logically "submitted"
@@ -167,7 +170,7 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
         width: double.infinity,
         alignment: Alignment.center,
         child: Text(
-          filter == 'APPROVED' ? 'ACCEPTED' : filter,
+          filter,
           style: TextStyle(
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected ? Colors.white : OtrTheme.darkNavy,
@@ -284,7 +287,9 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
     if (status == 'APPROVED' ||
         status == 'SUCCESS' ||
         status == 'ACCEPTED' ||
-        status == 'ADMIT_CARD_ISSUED') {
+        status == 'ADMIT_CARD_ISSUED' ||
+        status == 'APPROVE_FOR_EXAM' ||
+        status == 'APPROVED_FOR_EXAM') {
       statusColor = OtrTheme.success;
     }
     if (status == 'REJECTED' || status == 'FAILED') {
@@ -342,34 +347,6 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
                               color: OtrTheme.darkNavy,
                               letterSpacing: -0.5,
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.business_rounded,
-                                size: 12,
-                                color: OtrTheme.primaryBlue,
-                              ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  app['advertisementName'] != null &&
-                                          app['advertisementName']
-                                              .toString()
-                                              .isNotEmpty
-                                      ? app['advertisementName']
-                                      : 'Department of Recruitment',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade500,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ),
@@ -505,6 +482,8 @@ class _AppliedRecruitmentPageState extends State<AppliedRecruitmentPage> {
       case 'APPROVED':
       case 'SUCCESS':
       case 'ACCEPTED':
+      case 'APPROVE_FOR_EXAM':
+      case 'APPROVED_FOR_EXAM':
         label = '✓ APPROVED';
         break;
       case 'ADMIT_CARD_ISSUED':

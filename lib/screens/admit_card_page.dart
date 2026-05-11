@@ -1,11 +1,16 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
 import '../utils/admit_card_generator.dart';
 import '../theme/otr_theme.dart';
+import 'pdf_viewer_page.dart';
 import 'admit_card_detail_page.dart';
 
 class AdmitCardPage extends StatefulWidget {
@@ -79,13 +84,48 @@ class _AdmitCardPageState extends State<AdmitCardPage> {
     }
   }
 
-  void _navigateToDetail(dynamic app) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AdmitCardDetailPage(application: app),
-      ),
-    );
+  Future<void> _navigateToDetail(dynamic app) async {
+    try {
+      final String id =
+          (app['applicationUuid'] ?? app['uuid'] ?? app['id'] ?? '').toString();
+      if (id.isEmpty) throw 'Invalid application ID';
+
+      CustomToast.showSuccess(context, 'Fetching official admit card...');
+
+      final urlString = _apiService.getAdmitCardDownloadUrl(id);
+      List<int>? bytes = await _apiService.downloadAdmitCardBytes(urlString);
+
+      // Fallback to local generation if server PDF fails
+      if (bytes == null || bytes.isEmpty) {
+        final detailResult = await _apiService.getAdmitCard(id);
+        if (detailResult['success'] == true) {
+          final fullData = detailResult['data'] ?? {};
+          bytes = await AdmitCardGenerator.generateAdmitCard(fullData);
+        }
+      }
+
+      if (bytes == null || bytes.isEmpty) {
+        throw 'Failed to load admit card PDF.';
+      }
+
+      // Save bytes to a temporary file for the PDF viewer
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/temp_admit_card.pdf');
+      await tempFile.writeAsBytes(bytes);
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PdfViewerPage(
+            filePath: tempFile.path,
+            title: 'Admit Card View',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) CustomToast.showError(context, 'Error: $e');
+    }
   }
 
   @override

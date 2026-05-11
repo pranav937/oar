@@ -11,6 +11,7 @@
         "file_picker",
         "fl_chart",
         "flutter",
+        "flutter_pdfview",
         "flutter_spinkit",
         "flutter_svg",
         "http",
@@ -86,6 +87,13 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "flutter_pdfview",
+      "version": "1.4.4",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

@@ -403,10 +403,10 @@ class _BioPageState extends State<BioPage> {
     // 3.5 ID Proof Validation
     final idProofStr = _idProofNumberController.text.trim().toUpperCase();
     if (_selectedIdProofType == 'Voter ID') {
-      if (!RegExp(r'^[A-Z]{3}\d{7}$').hasMatch(idProofStr)) {
+      if (idProofStr.length != 12) {
         CustomToast.showError(
           context,
-          'Invalid Voter ID format. It should be 10 characters (3 letters followed by 7 digits, e.g., ABC1234567).',
+          'Voter ID must be exactly 12 characters.',
         );
         return;
       }
@@ -414,15 +414,15 @@ class _BioPageState extends State<BioPage> {
       if (!RegExp(r'^[A-Z]{5}\d{4}[A-Z]{1}$').hasMatch(idProofStr)) {
         CustomToast.showError(
           context,
-          'Invalid PAN Card format. (e.g., ABCDE1234F)',
+          'Invalid PAN Card format. (e.g., ABCDE1234F). Must be 10 characters.',
         );
         return;
       }
     } else if (_selectedIdProofType == 'Driving License') {
-      if (idProofStr.length < 10) {
+      if (idProofStr.isEmpty || idProofStr.length > 15) {
         CustomToast.showError(
           context,
-          'Invalid Driving License format. Please enter a valid DL number.',
+          'Driving License must be between 1 and 15 characters.',
         );
         return;
       }
@@ -477,14 +477,95 @@ class _BioPageState extends State<BioPage> {
       }
     }
 
-    // 5. Disability Percentage Validation (0-100)
+    // 5. Social Category Mandatory Validations
     if (_isPhysicallyDisabled) {
+      if (_disabilityTypeController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Disability Type is required');
+        return;
+      }
       final percent = int.tryParse(_disabilityPercentController.text);
-      if (percent == null || percent < 0 || percent > 100) {
+      if (percent == null || percent <= 0 || percent > 100) {
         CustomToast.showError(
           context,
-          'Disability percentage must be between 0 and 100',
+          'Valid Disability Percentage (1-100) is required',
         );
+        return;
+      }
+    }
+
+    if (_isSportsPerson) {
+      if (_sportsNameController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Sports Name is required');
+        return;
+      }
+      if (_sportsLevelController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Sports Level is required');
+        return;
+      }
+      final sYear = int.tryParse(_sportsYearController.text);
+      if (sYear == null || sYear < 1980 || sYear > currentYear) {
+        CustomToast.showError(
+          context,
+          'Valid Sports Passing Year (1980-$currentYear) is required',
+        );
+        return;
+      }
+      if (_sportsAuthController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Sports Authority is required');
+        return;
+      }
+    }
+
+    if (_isWidow) {
+      if (_widowCertController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Widow Certificate Number is required');
+        return;
+      }
+      if (_widowDateController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Widow Certificate Date is required');
+        return;
+      }
+      if (_widowAuthController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Widow Authority is required');
+        return;
+      }
+    }
+
+    if (_isExSoldier) {
+      final fromYear = int.tryParse(_exSoldierFromController.text);
+      final toYear = int.tryParse(_exSoldierToController.text);
+      if (fromYear == null || fromYear < 1950 || fromYear > currentYear) {
+        CustomToast.showError(context, 'Valid Service From year is required');
+        return;
+      }
+      if (toYear == null || toYear < 1950 || toYear > currentYear) {
+        CustomToast.showError(context, 'Valid Service To year is required');
+        return;
+      }
+      if (toYear < fromYear) {
+        CustomToast.showError(
+          context,
+          'Service To year must be after Service From year',
+        );
+        return;
+      }
+      if (_exSoldierIdController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Ex-Soldier ID Card No is required');
+        return;
+      }
+      if (_exSoldierCatController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Ex-Soldier Category is required');
+        return;
+      }
+    }
+
+    if (_isGovtEmployee) {
+      if (_govtJoinDateController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Govt Service Join Date is required');
+        return;
+      }
+      if (_govtDeptController.text.trim().isEmpty) {
+        CustomToast.showError(context, 'Govt Department Name is required');
         return;
       }
     }
@@ -1038,6 +1119,22 @@ class _BioPageState extends State<BioPage> {
                             controller: _idProofNumberController,
                             enabled: !_isReadOnly,
                             isRequired: true,
+                            textCapitalization: TextCapitalization.characters,
+                            maxLength: _selectedIdProofType == 'PAN Card'
+                                ? 10
+                                : _selectedIdProofType == 'Voter ID'
+                                    ? 12
+                                    : _selectedIdProofType == 'Driving License'
+                                        ? 15
+                                        : null,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                              TextInputFormatter.withFunction((oldValue, newValue) {
+                                return newValue.copyWith(
+                                  text: newValue.text.toUpperCase(),
+                                );
+                              }),
+                            ],
                           ),
                         ],
                         const SizedBox(height: 20),
@@ -1236,6 +1333,9 @@ class _BioPageState extends State<BioPage> {
                             icon: Icons.accessibility_new_rounded,
                             controller: _disabilityTypeController,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           OtrTextField(
@@ -1245,6 +1345,10 @@ class _BioPageState extends State<BioPage> {
                             controller: _disabilityPercentController,
                             keyboardType: TextInputType.number,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(3),
+                            ],
                           ),
                         ],
                         _buildSwitchTile(
@@ -1261,6 +1365,9 @@ class _BioPageState extends State<BioPage> {
                             icon: Icons.emoji_events_rounded,
                             controller: _sportsNameController,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -1272,6 +1379,9 @@ class _BioPageState extends State<BioPage> {
                                   icon: Icons.leaderboard_rounded,
                                   controller: _sportsLevelController,
                                   enabled: !_isReadOnly,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -1283,6 +1393,10 @@ class _BioPageState extends State<BioPage> {
                                   controller: _sportsYearController,
                                   keyboardType: TextInputType.number,
                                   enabled: !_isReadOnly,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(4),
+                                  ],
                                 ),
                               ),
                             ],
@@ -1294,6 +1408,9 @@ class _BioPageState extends State<BioPage> {
                             icon: Icons.account_balance_rounded,
                             controller: _sportsAuthController,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                            ],
                           ),
                         ],
                         _buildSwitchTile(
@@ -1310,6 +1427,9 @@ class _BioPageState extends State<BioPage> {
                             icon: Icons.description_rounded,
                             controller: _widowCertController,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                           ),
                           const SizedBox(height: 12),
                           _buildClickableField(
@@ -1353,6 +1473,10 @@ class _BioPageState extends State<BioPage> {
                                   icon: Icons.login_rounded,
                                   controller: _exSoldierFromController,
                                   enabled: !_isReadOnly,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(4),
+                                  ],
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -1363,6 +1487,10 @@ class _BioPageState extends State<BioPage> {
                                   icon: Icons.logout_rounded,
                                   controller: _exSoldierToController,
                                   enabled: !_isReadOnly,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(4),
+                                  ],
                                 ),
                               ),
                             ],
@@ -1374,6 +1502,9 @@ class _BioPageState extends State<BioPage> {
                             icon: Icons.badge_rounded,
                             controller: _exSoldierIdController,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                           ),
                         ],
                         _buildSwitchTile(
@@ -1390,6 +1521,9 @@ class _BioPageState extends State<BioPage> {
                             icon: Icons.business_rounded,
                             controller: _govtDeptController,
                             enabled: !_isReadOnly,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           _buildClickableField(

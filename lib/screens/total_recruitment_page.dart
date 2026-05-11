@@ -3,6 +3,7 @@ import '../theme/otr_theme.dart';
 import '../services/api_service.dart';
 import '../models/advertisement_model.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import '../utils/custom_toast.dart';
 
 class TotalRecruitmentPage extends StatefulWidget {
   const TotalRecruitmentPage({super.key});
@@ -15,15 +16,41 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
   final ApiService _apiService = ApiService();
   List<Advertisement> _recruitments = [];
   String _searchQuery = '';
-  String _selectedFilter = 'ALL';
-  final List<String> _filters = ['ALL', 'ACTIVE', 'CLOSED'];
   bool _isLoading = true;
+  bool _isLoadingProfile = true;
+  Map<String, dynamic>? _profileData;
   String _error = '';
 
   @override
   void initState() {
     super.initState();
     _fetchRecruitments();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final result = await _apiService.getProfile();
+      if (result['success'] == true) {
+        setState(() {
+          _profileData = result['data'];
+          _isLoadingProfile = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile: $e');
+      setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  int _calculateAge(DateTime birthDate) {
+    DateTime today = DateTime.now();
+    int age = today.year - birthDate.year;
+    if (today.month < birthDate.month ||
+        (today.month == birthDate.month && today.day < birthDate.day)) {
+      age--;
+    }
+    return age;
   }
 
   Future<void> _fetchRecruitments() async {
@@ -53,20 +80,8 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
   Widget build(BuildContext context) {
     final filteredRecruitments = _recruitments.where((ad) {
       final query = _searchQuery.toLowerCase();
-      final matchesSearch = ad.postName.toLowerCase().contains(query) ||
+      return ad.postName.toLowerCase().contains(query) ||
              ad.organization.toLowerCase().contains(query);
-             
-      final status = ad.status.toUpperCase();
-      final isActive = status == 'OPEN' || status == 'PUBLISHED';
-      
-      bool matchesFilter = true;
-      if (_selectedFilter == 'ACTIVE') {
-        matchesFilter = isActive;
-      } else if (_selectedFilter == 'CLOSED') {
-        matchesFilter = !isActive;
-      }
-             
-      return matchesSearch && matchesFilter;
     }).toList();
 
     return Scaffold(
@@ -89,7 +104,6 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
       body: Column(
         children: [
           _buildSearchBar(),
-          _buildFilterBar(),
           Expanded(
             child: _isLoading
                 ? const Center(child: SpinKitPulse(color: OtrTheme.primaryBlue))
@@ -145,56 +159,6 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
       ),
-    );
-  }
-
-  Widget _buildFilterBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      margin: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        children: _filters.map((filter) {
-          return Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  right: filter == _filters.last ? 0 : 10),
-              child: _buildFilterChip(filter),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String filter) {
-    final isSelected = filter == _selectedFilter;
-    return ChoiceChip(
-      label: Container(
-        width: double.infinity,
-        alignment: Alignment.center,
-        child: Text(
-          filter,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? Colors.white : OtrTheme.darkNavy,
-            fontSize: 12,
-          ),
-        ),
-      ),
-      selected: isSelected,
-      selectedColor: OtrTheme.primaryBlue,
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? OtrTheme.primaryBlue : Colors.grey.shade300,
-        ),
-      ),
-      onSelected: (selected) {
-        if (!isSelected) {
-          setState(() => _selectedFilter = filter);
-        }
-      },
     );
   }
 
@@ -394,11 +358,58 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pushNamed(
-                            context,
-                            '/apply-now',
-                            arguments: data,
-                          ),
+                          onPressed: () {
+                            if (_isLoadingProfile) {
+                              CustomToast.showError(
+                                context,
+                                'Loading eligibility details...',
+                              );
+                              return;
+                            }
+
+                            if (_profileData == null ||
+                                _profileData!['dateOfBirth'] == null) {
+                              CustomToast.showError(
+                                context,
+                                'Please complete your bio data with date of birth first.',
+                              );
+                              return;
+                            }
+
+                            try {
+                              final dob = DateTime.parse(
+                                _profileData!['dateOfBirth'].toString(),
+                              );
+                              final age = _calculateAge(dob);
+
+                              if (age < data.minAge) {
+                                CustomToast.showError(
+                                  context,
+                                  'Min age for this advertisement is ${data.minAge} but your age is $age',
+                                );
+                                return;
+                              }
+
+                              if (age > data.maxAge && data.maxAge > 0) {
+                                CustomToast.showError(
+                                  context,
+                                  'Max age for this advertisement is ${data.maxAge} but your age is $age',
+                                );
+                                return;
+                              }
+
+                              Navigator.pushNamed(
+                                context,
+                                '/apply-now',
+                                arguments: data,
+                              );
+                            } catch (e) {
+                              CustomToast.showError(
+                                context,
+                                'Eligibility check failed: $e',
+                              );
+                            }
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: OtrTheme.primaryBlue,
                             foregroundColor: Colors.white,

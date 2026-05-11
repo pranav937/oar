@@ -157,7 +157,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                     color: OtrTheme.darkNavy,
                     fontSize: 12,
                   ),
-                )
+                ),
             ],
           ),
           const SizedBox(height: 20),
@@ -466,7 +466,7 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                           fontSize: 11,
                           color: Colors.grey.shade600,
                           height: 1.5,
-                        ),  
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -495,89 +495,6 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
           ),
 
           const SizedBox(height: 30),
-
-          if (data['viewUrl'] != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  try {
-                    final app = widget.application;
-                    final String id =
-                        (app['applicationUuid'] ??
-                                app['uuid'] ??
-                                app['id'] ??
-                                '')
-                            .toString();
-
-                    if (id.isEmpty) {
-                      if (!mounted) return;
-                      CustomToast.showError(context, 'Invalid application ID');
-                      return;
-                    }
-
-                    final urlString = _apiService.getAdmitCardDownloadUrl(id);
-                    if (!mounted) return;
-                    CustomToast.showSuccess(context, 'Loading Hall Ticket...');
-
-                    List<int>? bytes = await _apiService.downloadAdmitCardBytes(
-                      urlString,
-                    );
-
-                    if (bytes == null || bytes.isEmpty) {
-                      if (_admitCardData != null) {
-                        if (!mounted) return;
-                        CustomToast.showSuccess(
-                          context,
-                          'Generating view locally...',
-                        );
-                        bytes = await AdmitCardGenerator.generateAdmitCard(
-                          _admitCardData!,
-                        );
-                      } else {
-                        throw 'No data available to generate view.';
-                      }
-                    }
-
-                    if (bytes.isEmpty) {
-                      throw 'Failed to download or generate PDF.';
-                    }
-
-                    await Printing.layoutPdf(
-                      onLayout: (PdfPageFormat format) async =>
-                          Uint8List.fromList(bytes!),
-                      name:
-                          'AdmitCard_${app['applicationNumber'] ?? 'HallTicket'}',
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    CustomToast.showError(
-                      context,
-                      'Error opening print view: $e',
-                    );
-                  }
-                },
-                icon: const Icon(Icons.print_rounded),
-                label: const Text(
-                  'PRINT HALL TICKET',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                    letterSpacing: 1,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: OtrTheme.darkNavy,
-                  minimumSize: const Size.fromHeight(60),
-                  side: const BorderSide(color: OtrTheme.darkNavy, width: 2),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
 
           ElevatedButton.icon(
             onPressed: () async {
@@ -648,7 +565,8 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   );
                 }
               } catch (e) {
-                if (mounted) CustomToast.showError(context, 'Generation failed: $e');
+                if (mounted)
+                  CustomToast.showError(context, 'Generation failed: $e');
               }
             },
             icon: const Icon(Icons.download_rounded),

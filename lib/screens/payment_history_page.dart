@@ -22,14 +22,24 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
   List<Map<String, dynamic>> _payments = [];
 
   // ── Computed stats ──────────────────────────────────────────────────────────
-  double get _totalSettlement => _payments.fold(
-    0.0,
-    (sum, p) => sum + ((p['amount'] ?? 0) as num).toDouble(),
-  );
+  double _parseAmount(Map<String, dynamic> p) {
+    final val = p['amount'] ?? p['amountPaid'] ?? p['feeAmount'] ?? 0;
+    if (val is num) return val.toDouble();
+    if (val is String) return double.tryParse(val) ?? 0.0;
+    return 0.0;
+  }
+
+  double get _totalSettlement => _payments
+      .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'SUCCESS')
+      .fold(0.0, (sum, p) => sum + _parseAmount(p));
 
   double get _totalEscrow => _payments
       .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'PENDING')
-      .fold(0.0, (sum, p) => sum + ((p['amount'] ?? 0) as num).toDouble());
+      .fold(0.0, (sum, p) => sum + _parseAmount(p));
+
+  int get _successVolume => _payments
+      .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'SUCCESS')
+      .length;
 
   double get _failureRate {
     if (_payments.isEmpty) return 0.0;
@@ -61,6 +71,7 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
       final appRes = results[1];
 
       final List<Map<String, dynamic>> history = _extractList(paymentRes, [
+        'transactions',
         'payments',
         'data',
         'items',
@@ -105,10 +116,10 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
       merged.sort((a, b) {
         try {
           final da =
-              DateTime.tryParse(a['createdAt']?.toString() ?? '') ??
+              DateTime.tryParse(a['transactionDate']?.toString() ?? a['createdAt']?.toString() ?? '') ??
               DateTime(2000);
           final db =
-              DateTime.tryParse(b['createdAt']?.toString() ?? '') ??
+              DateTime.tryParse(b['transactionDate']?.toString() ?? b['createdAt']?.toString() ?? '') ??
               DateTime(2000);
           return db.compareTo(da);
         } catch (_) {
@@ -198,40 +209,26 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
 
   // ── Stats Row ───────────────────────────────────────────────────────────────
   Widget _buildStatsRow() {
-    return Column(
+    return Row(
       children: [
-        // Total Settlement — full width
-        _StatCard(
-          icon: Icons.account_balance_wallet_rounded,
-          iconColor: OtrTheme.primaryBlue,
-          label: 'TOTAL SETTLEMENT',
-          value: '₹${_totalSettlement.toStringAsFixed(2)}',
-          sub: 'TOTAL FEES PROCESSED',
+        Expanded(
+          child: _StatCard(
+            icon: Icons.account_balance_wallet_rounded,
+            iconColor: OtrTheme.primaryBlue,
+            label: 'TOTAL SETTLEMENT',
+            value: '₹${_totalSettlement.toStringAsFixed(2)}',
+            sub: 'TOTAL FEES PROCESSED',
+          ),
         ),
-        const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _StatCard(
-                icon: Icons.shield_outlined,
-                iconColor: OtrTheme.mediumBlue,
-                label: 'ACTIVE ESCROW',
-                value: '₹${_totalEscrow.toStringAsFixed(0)}',
-                sub: 'PENDING VERIFICATION',
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: _StatCard(
-                icon: Icons.trending_up_rounded,
-                iconColor: OtrTheme.error,
-                label: 'FAILURE RATE',
-                value: '${_failureRate.toStringAsFixed(1)}%',
-                sub: 'SUCCESS GAP',
-                valueColor: OtrTheme.error,
-              ),
-            ),
-          ],
+        const SizedBox(width: 14),
+        Expanded(
+          child: _StatCard(
+            icon: Icons.check_circle_outline_rounded,
+            iconColor: OtrTheme.success,
+            label: 'SUCCESS VOLUME',
+            value: _successVolume.toString(),
+            sub: 'APPLICATIONS COMPLETED',
+          ),
         ),
       ],
     );
@@ -275,7 +272,7 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
     final isSuccess = statusRaw == 'SUCCESS';
     final isFailed = statusRaw == 'FAILED' || statusRaw == 'FAILURE';
     final isExempt = p['isExempt'] == true;
-    final amount = (p['amount'] ?? 0) as num;
+    final amount = _parseAmount(p);
     final txnId = (p['transactionId'] ?? '').toString();
     final postName = (p['postName'] ?? 'N/A').toString();
     final payMode = (p['paymentMode'] ?? 'UPI').toString();
@@ -284,10 +281,11 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
     // Date formatting
     String dateStr = 'N/A';
     try {
-      if (p['createdAt'] != null) {
+      final rawDate = p['transactionDate'] ?? p['createdAt'];
+      if (rawDate != null) {
         dateStr = DateFormat(
           'dd MMM yyyy',
-        ).format(DateTime.parse(p['createdAt'].toString()));
+        ).format(DateTime.parse(rawDate.toString()));
       }
     } catch (_) {}
 
@@ -583,7 +581,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: OtrTheme.surface,
         borderRadius: BorderRadius.circular(20),
@@ -595,44 +593,53 @@ class _StatCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(7),
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: iconColor.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, size: 18, color: iconColor),
+                child: Icon(icon, size: 16, color: iconColor),
               ),
-              const Spacer(),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 9,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.grey.shade500,
-                  letterSpacing: 0.5,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.grey.shade500,
+                    letterSpacing: 0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-              color: valueColor ?? OtrTheme.darkNavy,
-              letterSpacing: -0.5,
+          const SizedBox(height: 12),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: valueColor ?? OtrTheme.darkNavy,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             sub,
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 8,
               fontWeight: FontWeight.w800,
               color: Colors.grey.shade400,
               letterSpacing: 0.3,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -707,10 +714,11 @@ class _PaymentDetailPage extends StatelessWidget {
 
     String dateStr = 'N/A';
     try {
-      if (payment['createdAt'] != null) {
+      final rawDate = payment['transactionDate'] ?? payment['createdAt'];
+      if (rawDate != null) {
         dateStr = DateFormat(
           'dd MMM yyyy, hh:mm a',
-        ).format(DateTime.parse(payment['createdAt'].toString()));
+        ).format(DateTime.parse(rawDate.toString()));
       }
     } catch (_) {}
 
@@ -804,6 +812,12 @@ class _PaymentDetailPage extends StatelessWidget {
                     'POST / POSITION',
                     payment['postName']?.toString() ?? 'N/A',
                     Icons.work_outline_rounded,
+                  ),
+                  _divider(),
+                  _detailRow(
+                    'EXEMPT',
+                    isExempt ? 'Yes' : 'No',
+                    isExempt ? Icons.verified_user_rounded : Icons.do_not_disturb_on_rounded,
                   ),
                   _divider(),
                   _detailRow(
