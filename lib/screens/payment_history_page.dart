@@ -33,21 +33,9 @@ class _PaymentHistoryPageState extends State<PaymentHistoryPage> {
       .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'SUCCESS')
       .fold(0.0, (sum, p) => sum + _parseAmount(p));
 
-  double get _totalEscrow => _payments
-      .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'PENDING')
-      .fold(0.0, (sum, p) => sum + _parseAmount(p));
-
   int get _successVolume => _payments
       .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'SUCCESS')
       .length;
-
-  double get _failureRate {
-    if (_payments.isEmpty) return 0.0;
-    final failed = _payments
-        .where((p) => (p['status'] ?? '').toString().toUpperCase() == 'FAILED')
-        .length;
-    return (failed / _payments.length) * 100;
-  }
 
   @override
   void initState() {
@@ -567,7 +555,6 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final String sub;
-  final Color? valueColor;
 
   const _StatCard({
     required this.icon,
@@ -575,7 +562,6 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.value,
     required this.sub,
-    this.valueColor,
   });
 
   @override
@@ -624,7 +610,7 @@ class _StatCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w900,
-                color: valueColor ?? OtrTheme.darkNavy,
+                color: OtrTheme.darkNavy,
                 letterSpacing: -0.5,
               ),
             ),

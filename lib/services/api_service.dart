@@ -127,6 +127,43 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> vendorLogin(
+    String email,
+    String password,
+  ) async {
+    try {
+      final response = await post(
+        ApiConstants.vendorLogin,
+        {
+          'contactEmail': email,
+          'password': password,
+        },
+        authenticated: false,
+      );
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (data['success'] == true && data['data'] != null) {
+          final token = data['data']['token'];
+          if (token != null) {
+            await _saveToken(token);
+          }
+        }
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Vendor login failed',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
   Future<Map<String, dynamic>> register(
     Map<String, dynamic> candidateData,
   ) async {
@@ -142,8 +179,6 @@ class ApiService {
       );
       final Map<String, dynamic> data = jsonDecode(response.body);
 
-      // Check for success - the API usually returns 200 or 201 for success
-      // If the API response structure has 'success' field, we use that
       if (response.statusCode == 200 || response.statusCode == 201) {
         return data.containsKey('success')
             ? data
@@ -152,6 +187,37 @@ class ApiService {
         return {
           'success': false,
           'message': data['message'] ?? 'Registration failed',
+          'data': data,
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> vendorRegister(
+    Map<String, dynamic> vendorData,
+  ) async {
+    try {
+      final response = await post(
+        ApiConstants.vendorRegister,
+        vendorData,
+        authenticated: false,
+      );
+
+      debugPrint(
+        "DEBUG: Vendor Registration Response (${response.statusCode}): ${response.body}",
+      );
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return data.containsKey('success')
+            ? data
+            : {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Vendor registration failed',
           'data': data,
         };
       }
@@ -909,6 +975,74 @@ class ApiService {
         "${ApiConstants.masterCities}/$stateCode",
         authenticated: false,
       );
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // --- Vendor EOIs ---
+  Future<Map<String, dynamic>> getVendorEOIs({String status = 'PUBLISHED'}) async {
+    try {
+      final response = await get(
+        ApiConstants.vendorEOIs,
+        queryParams: {'status': status},
+      );
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorBids() async {
+    try {
+      final response = await get(ApiConstants.vendorBids);
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> submitBid(Map<String, dynamic> bidData) async {
+    try {
+      final response = await post(
+        ApiConstants.vendorBids,
+        bidData,
+        authenticated: true,
+      );
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorProfile() async {
+    try {
+      final response = await get(ApiConstants.vendorProfile);
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorPerformance() async {
+    try {
+      final response = await get(ApiConstants.vendorPerformance);
+      final decoded = jsonDecode(response.body);
+      return decoded;
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorWorkOrders() async {
+    try {
+      final response = await get(ApiConstants.vendorWorkOrders);
       final decoded = jsonDecode(response.body);
       return decoded;
     } catch (e) {

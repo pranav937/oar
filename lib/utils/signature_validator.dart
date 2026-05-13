@@ -60,7 +60,6 @@ class SignatureValidator {
       // Printed text often has very regular horizontal gaps or vertical structures.
 
       // Check for horizontal regularity (character spacing)
-      int blankCols = 0;
       int inkClusters = 0;
       bool inCluster = false;
 
@@ -72,7 +71,6 @@ class SignatureValidator {
           }
         } else {
           if (inCluster) {
-            blankCols++;
             inCluster = false;
           }
         }

@@ -40,4 +40,11 @@ class ApiConstants {
   static const String admitCardFetch = "/api/ora/admit-cards";
   static const String masterStates = "/api/ora/master/states";
   static const String masterCities = "/api/ora/master/cities";
+  static const String vendorRegister = "/api/vendor/register";
+  static const String vendorLogin = "/api/vendor/auth/login";
+  static const String vendorEOIs = "/api/vendor/eoi";
+  static const String vendorBids = "/api/vendor/auth/bids";
+  static const String vendorProfile = "/api/vendor/auth/profile";
+  static const String vendorPerformance = "/api/vendor/auth/performance";
+  static const String vendorWorkOrders = "/api/vendor/auth/work-orders";
 }

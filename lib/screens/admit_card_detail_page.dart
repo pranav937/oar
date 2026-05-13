@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:pdf/pdf.dart';
-import 'package:printing/printing.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
 import '../utils/admit_card_generator.dart';
@@ -565,8 +563,9 @@ class _AdmitCardDetailPageState extends State<AdmitCardDetailPage> {
                   );
                 }
               } catch (e) {
-                if (mounted)
+                if (mounted) {
                   CustomToast.showError(context, 'Generation failed: $e');
+                }
               }
             },
             icon: const Icon(Icons.download_rounded),

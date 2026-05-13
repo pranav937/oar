@@ -15,6 +15,8 @@ class OtrTextField extends StatefulWidget {
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
   final TextCapitalization textCapitalization;
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   const OtrTextField({
     super.key,
@@ -30,6 +32,8 @@ class OtrTextField extends StatefulWidget {
     this.maxLength,
     this.inputFormatters,
     this.textCapitalization = TextCapitalization.none,
+    this.readOnly = false,
+    this.onTap,
   });
 
   @override
@@ -88,6 +92,8 @@ class _OtrTextFieldState extends State<OtrTextField> {
           child: TextField(
             controller: widget.controller,
             enabled: widget.enabled,
+            readOnly: widget.readOnly,
+            onTap: widget.onTap,
             keyboardType: widget.keyboardType,
             textCapitalization: widget.textCapitalization,
             obscureText: widget.isPassword ? _obscureText : false,

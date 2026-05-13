@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class OtrTheme {
-  // Brand Colors - Government Professional Palette
-  static const Color darkNavy = Color(0xFF001A33);    // Midnight Navy
-  static const Color primaryBlue = Color(0xFF003366); // Deep National Blue
-  static const Color mediumBlue = Color(0xFF0055A4);  // Formal Blue
-  static const Color lightBlue = Color(0xFFE6F0FF);   // Very Light Blue Tint
-  static const Color background = Color(0xFFF2F5F8);  // Professional Light Gray
+  // Brand Colors - Government Professional Palette (Premium HRMS)
+  static const Color darkNavy = Color(0xFF0F2854);    // Midnight Navy
+  static const Color primaryBlue = Color(0xFF1C4D8D); // Deep Formal Blue
+  static const Color mediumBlue = Color(0xFF4988C4);  // Professional Blue
+  static const Color lightBlue = Color(0xFFBDE8F5);   // Premium Sky Blue
+  static const Color background = Color(0xFFF8FAFC);  // Modern Soft White
   static const Color surface = Color(0xFFFFFFFF);     // Pure White
 
   // Status Colors

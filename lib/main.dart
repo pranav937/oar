@@ -16,6 +16,15 @@ import 'screens/apply_now_page.dart';
 import 'screens/forgot_password_page.dart';
 import 'screens/admit_card_page.dart';
 import 'screens/payment_history_page.dart';
+import 'screens/vendor_registration_page.dart';
+import 'screens/vendor_dashboard_page.dart';
+import 'screens/vendor_open_eois_page.dart';
+import 'screens/vendor_my_bids_page.dart';
+import 'screens/vendor_submit_proposal_page.dart';
+import 'screens/vendor_profile_page.dart';
+import 'screens/vendor_performance_page.dart';
+import 'screens/vendor_work_orders_page.dart';
+import 'models/eoi_model.dart';
 
 void main() {
   runApp(const OtrModelApp());
@@ -130,6 +139,17 @@ class OtrModelApp extends StatelessWidget {
         '/otp-verification': (context) => const OtpVerificationPage(),
         '/admit-card': (context) => const AdmitCardPage(),
         '/payment': (context) => const PaymentHistoryPage(),
+        '/vendor-register': (context) => const VendorRegistrationPage(),
+        '/vendor-dashboard': (context) => const VendorDashboardPage(),
+        '/vendor-open-eois': (context) => const VendorOpenEoisPage(),
+        '/vendor-my-bids': (context) => const VendorMyBidsPage(),
+        '/vendor-submit-proposal': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as EoiModel;
+          return VendorSubmitProposalPage(eoi: args);
+        },
+        '/vendor-profile': (context) => const VendorProfilePage(),
+        '/vendor-performance': (context) => const VendorPerformancePage(),
+        '/vendor-work-orders': (context) => const VendorWorkOrdersPage(),
       },
     );
   }

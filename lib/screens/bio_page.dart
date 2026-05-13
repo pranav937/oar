@@ -391,8 +391,9 @@ class _BioPageState extends State<BioPage> {
       return;
     }
 
-    // 3. Aadhaar Validation (exactly 12 digits)
-    if (!RegExp(r'^\d{12}$').hasMatch(_aadhaarController.text.trim())) {
+    // 3. Aadhaar Validation (exactly 12 digits, allowing spaces like 1234 1234 1234)
+    final aadhaarClean = _aadhaarController.text.replaceAll(' ', '');
+    if (aadhaarClean.length != 12 || !RegExp(r'^\d{12}$').hasMatch(aadhaarClean)) {
       CustomToast.showError(
         context,
         'Aadhaar Number must be exactly 12 digits',
@@ -403,26 +404,29 @@ class _BioPageState extends State<BioPage> {
     // 3.5 ID Proof Validation
     final idProofStr = _idProofNumberController.text.trim().toUpperCase();
     if (_selectedIdProofType == 'Voter ID') {
-      if (idProofStr.length != 12) {
+      // Example: ABC1234567 (3 letters + 7 digits)
+      if (!RegExp(r'^[A-Z]{3}\d{7}$').hasMatch(idProofStr)) {
         CustomToast.showError(
           context,
-          'Voter ID must be exactly 12 characters.',
+          'Invalid Voter ID format. (e.g., ABC1234567)',
         );
         return;
       }
     } else if (_selectedIdProofType == 'PAN Card') {
+      // Example: ABCDE1234F (5 letters + 4 digits + 1 letter)
       if (!RegExp(r'^[A-Z]{5}\d{4}[A-Z]{1}$').hasMatch(idProofStr)) {
         CustomToast.showError(
           context,
-          'Invalid PAN Card format. (e.g., ABCDE1234F). Must be 10 characters.',
+          'Invalid PAN Card format. (e.g., ABCDE1234F)',
         );
         return;
       }
     } else if (_selectedIdProofType == 'Driving License') {
-      if (idProofStr.isEmpty || idProofStr.length > 15) {
+      // Example: GJ01 20230012345 (2 letters + 2 digits + space + 11 digits)
+      if (!RegExp(r'^[A-Z]{2}\d{2}\s\d{11}$').hasMatch(idProofStr)) {
         CustomToast.showError(
           context,
-          'Driving License must be between 1 and 15 characters.',
+          'Invalid Driving License format. (e.g., GJ01 20230012345)',
         );
         return;
       }
@@ -595,8 +599,8 @@ class _BioPageState extends State<BioPage> {
         'dateOfBirth': _selectedDate?.toIso8601String(),
         'maritalStatus': _selectedMaritalStatus?.toUpperCase(),
         'idProofType': _idProofMapping[_selectedIdProofType],
-        'idProofNumber': _idProofNumberController.text,
-        'aadhaarNumber': _aadhaarController.text,
+        'idProofNumber': _idProofNumberController.text.replaceAll(' ', ''),
+        'aadhaarNumber': _aadhaarController.text.replaceAll(' ', ''),
         'isPhysicallyDisabled': _isPhysicallyDisabled,
         'nationality': _selectedNationality?.toUpperCase(),
         'category': _selectedCategory,
@@ -1114,7 +1118,11 @@ class _BioPageState extends State<BioPage> {
                           const SizedBox(height: 20),
                           OtrTextField(
                             label: 'ID Proof Number',
-                            hintText: 'Enter ID number',
+                            hintText: _selectedIdProofType == 'PAN Card'
+                                ? 'ABCDE1234F'
+                                : _selectedIdProofType == 'Voter ID'
+                                    ? 'ABC1234567'
+                                    : 'GJ01 20230012345',
                             icon: Icons.tag_rounded,
                             controller: _idProofNumberController,
                             enabled: !_isReadOnly,
@@ -1123,12 +1131,16 @@ class _BioPageState extends State<BioPage> {
                             maxLength: _selectedIdProofType == 'PAN Card'
                                 ? 10
                                 : _selectedIdProofType == 'Voter ID'
-                                    ? 12
+                                    ? 10
                                     : _selectedIdProofType == 'Driving License'
-                                        ? 15
+                                        ? 16
                                         : null,
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                              FilteringTextInputFormatter.allow(
+                                _selectedIdProofType == 'Driving License'
+                                    ? RegExp(r'[a-zA-Z0-9\s]')
+                                    : RegExp(r'[a-zA-Z0-9]'),
+                              ),
                               TextInputFormatter.withFunction((oldValue, newValue) {
                                 return newValue.copyWith(
                                   text: newValue.text.toUpperCase(),
@@ -1140,16 +1152,35 @@ class _BioPageState extends State<BioPage> {
                         const SizedBox(height: 20),
                         OtrTextField(
                           label: 'Aadhaar Number',
-                          hintText: '12-digit number',
+                          hintText: '1234 1234 1234',
                           icon: Icons.credit_card_rounded,
                           controller: _aadhaarController,
                           enabled: !_isReadOnly,
                           isRequired: true,
                           keyboardType: TextInputType.number,
-                          maxLength: 12,
+                          maxLength: 14,
                           inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                            LengthLimitingTextInputFormatter(12),
+                            FilteringTextInputFormatter.allow(RegExp(r'[0-9\s]')),
+                            LengthLimitingTextInputFormatter(14),
+                            TextInputFormatter.withFunction((oldValue, newValue) {
+                              final text = newValue.text.replaceAll(' ', '');
+                              if (text.length > 12) return oldValue;
+                              
+                              final buffer = StringBuffer();
+                              for (int i = 0; i < text.length; i++) {
+                                buffer.write(text[i]);
+                                final index = i + 1;
+                                if (index % 4 == 0 && index != text.length && index < 12) {
+                                  buffer.write(' ');
+                                }
+                              }
+                              
+                              final newStr = buffer.toString();
+                              return newValue.copyWith(
+                                text: newStr,
+                                selection: TextSelection.collapsed(offset: newStr.length),
+                              );
+                            }),
                           ],
                         ),
                       ],
@@ -1339,7 +1370,7 @@ class _BioPageState extends State<BioPage> {
                           ),
                           const SizedBox(height: 12),
                           OtrTextField(
-                            label: 'Percentage (%)',
+                             label: 'Percentage (%)',
                             hintText: '40',
                             icon: Icons.percent_rounded,
                             controller: _disabilityPercentController,

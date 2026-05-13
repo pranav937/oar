@@ -4,14 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
 import '../services/api_service.dart';
 import '../utils/custom_toast.dart';
 import '../utils/admit_card_generator.dart';
 import '../theme/otr_theme.dart';
 import 'pdf_viewer_page.dart';
-import 'admit_card_detail_page.dart';
 
 class AdmitCardPage extends StatefulWidget {
   const AdmitCardPage({super.key});
