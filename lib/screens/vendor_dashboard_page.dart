@@ -125,7 +125,7 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.3,
+                childAspectRatio: 1.15,
                 children: [
                   _serviceCard(
                     'Open EOIs',
@@ -165,14 +165,16 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.3,
+                childAspectRatio: 1.15,
                 children: [
                   _serviceCard(
-                    'Billing & Invoices',
+                    'Invoices & Payments',
                     'View History',
                     Icons.receipt_long_outlined,
                     const Color(0xFFFEFCE8),
                     Colors.amber,
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/vendor-finance'),
                   ),
                   _serviceCard(
                     'Work Orders',
@@ -180,7 +182,8 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                     Icons.assignment_outlined,
                     const Color(0xFFFFF1F2),
                     Colors.pink,
-                    onTap: () => Navigator.pushNamed(context, '/vendor-work-orders'),
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/vendor-work-orders'),
                   ),
                   _serviceCard(
                     'Performance',
@@ -188,7 +191,8 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                     Icons.trending_up_rounded,
                     const Color(0xFFF0FDFA),
                     Colors.teal,
-                    onTap: () => Navigator.pushNamed(context, '/vendor-performance'),
+                    onTap: () =>
+                        Navigator.pushNamed(context, '/vendor-performance'),
                   ),
                   _serviceCard(
                     'Documents',
@@ -378,46 +382,37 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
     Color bg,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 18, color: OtrTheme.darkNavy),
-              ),
-              const Icon(
-                Icons.trending_up_rounded,
-                size: 14,
-                color: Colors.grey,
-              ),
-            ],
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, size: 20, color: OtrTheme.darkNavy),
           ),
-          const SizedBox(height: 12),
+          const Spacer(),
           Text(
             count,
             style: const TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.w900,
               color: OtrTheme.darkNavy,
+              letterSpacing: -1,
             ),
           ),
           Text(
@@ -436,8 +431,8 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: Colors.grey,
+              fontWeight: FontWeight.w700,
+              color: Colors.blueGrey,
             ),
           ),
         ],
@@ -455,17 +450,17 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(28),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -479,7 +474,7 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
               ),
               child: Icon(icon, size: 22, color: iconColor),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,10 +482,10 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                 children: [
                   Text(
                     title,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 13,
                       fontWeight: FontWeight.w900,
                       color: OtrTheme.darkNavy,
                       height: 1.1,
@@ -503,8 +498,8 @@ class _VendorDashboardPageState extends State<VendorDashboardPage> {
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.blueGrey,
                     ),
                   ),
                 ],

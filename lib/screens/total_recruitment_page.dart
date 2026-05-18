@@ -81,14 +81,14 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
     final filteredRecruitments = _recruitments.where((ad) {
       final query = _searchQuery.toLowerCase();
       return ad.postName.toLowerCase().contains(query) ||
-             ad.organization.toLowerCase().contains(query);
+          ad.organization.toLowerCase().contains(query);
     }).toList();
 
     return Scaffold(
       backgroundColor: OtrTheme.background,
       appBar: AppBar(
         title: const Text(
-          'Recruitment Openings',
+          'Active Advertisements',
           style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
         centerTitle: true,
@@ -110,7 +110,9 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
                 : _error.isNotEmpty
                 ? _buildErrorPlaceholder()
                 : filteredRecruitments.isEmpty
-                ? const Center(child: Text('No recruitments found matching your search.'))
+                ? const Center(
+                    child: Text('No recruitments found matching your search.'),
+                  )
                 : RefreshIndicator(
                     onRefresh: _fetchRecruitments,
                     color: OtrTheme.primaryBlue,
@@ -218,7 +220,7 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
+                Container( 
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 4,
@@ -237,7 +239,6 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
                     ),
                   ),
                 ),
-                _buildStatusBadge(data.status),
               ],
             ),
           ),
@@ -432,43 +433,6 @@ class _TotalRecruitmentPageState extends State<TotalRecruitmentPage> {
                   ],
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(String status) {
-    final isOpen =
-        status.toUpperCase() == 'OPEN' || status.toUpperCase() == 'PUBLISHED';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: isOpen
-            ? OtrTheme.success.withValues(alpha: 0.1)
-            : Colors.orange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(
-              color: isOpen ? OtrTheme.success : Colors.orange,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            isOpen ? 'OPEN' : status.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: isOpen ? OtrTheme.success : Colors.orange,
-              letterSpacing: 0.5,
             ),
           ),
         ],

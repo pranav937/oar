@@ -24,6 +24,8 @@ import 'screens/vendor_submit_proposal_page.dart';
 import 'screens/vendor_profile_page.dart';
 import 'screens/vendor_performance_page.dart';
 import 'screens/vendor_work_orders_page.dart';
+import 'screens/vendor_finance_page.dart';
+import 'screens/vendor_raise_invoice_page.dart';
 import 'models/eoi_model.dart';
 
 void main() {
@@ -150,6 +152,8 @@ class OtrModelApp extends StatelessWidget {
         '/vendor-profile': (context) => const VendorProfilePage(),
         '/vendor-performance': (context) => const VendorPerformancePage(),
         '/vendor-work-orders': (context) => const VendorWorkOrdersPage(),
+        '/vendor-finance': (context) => const VendorFinancePage(),
+        '/vendor-raise-invoice': (context) => const VendorRaiseInvoicePage(),
       },
     );
   }

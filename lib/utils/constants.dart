@@ -1,6 +1,6 @@
 class ApiConstants {
   static const String baseUrl =
-      "http://192.168.1.9:3000"; // Updated local API URL
+      "http://192.168.1.11:3000"; // Updated local API URL
 
   // ORA Candidate Endpoints++
   static const String candidateRegister = "/api/ora/candidates/register";
@@ -47,4 +47,7 @@ class ApiConstants {
   static const String vendorProfile = "/api/vendor/auth/profile";
   static const String vendorPerformance = "/api/vendor/auth/performance";
   static const String vendorWorkOrders = "/api/vendor/auth/work-orders";
+  static const String vendorInvoices = "/api/vendor/auth/invoices";
+  static const String vendorPayments = "/api/vendor/auth/payments";
+  static const String vendorDashboard = "/api/vendor/auth/dashboard";
 }

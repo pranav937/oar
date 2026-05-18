@@ -13,13 +13,23 @@ class VendorMyBidsPage extends StatefulWidget {
 class _VendorMyBidsPageState extends State<VendorMyBidsPage> {
   final ApiService _apiService = ApiService();
   List<dynamic> _bids = [];
+  List<dynamic> _filteredBids = [];
   bool _isLoading = true;
   String _error = '';
+  final TextEditingController _searchController = TextEditingController();
+  final Set<String> _selectedBidUuids = {};
 
   @override
   void initState() {
     super.initState();
     _fetchBids();
+    _searchController.addListener(_filterBids);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchBids() async {
@@ -32,6 +42,7 @@ class _VendorMyBidsPageState extends State<VendorMyBidsPage> {
       if (result['success'] == true) {
         setState(() {
           _bids = result['data'] ?? [];
+          _filteredBids = _bids;
         });
       } else {
         setState(() => _error = result['message'] ?? 'Failed to load bids');
@@ -43,131 +54,281 @@ class _VendorMyBidsPageState extends State<VendorMyBidsPage> {
     }
   }
 
+  void _filterBids() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredBids = _bids.where((bid) {
+        final eoi = bid['eoi'] ?? {};
+        final title = (eoi['title'] ?? '').toString().toLowerCase();
+        final eoiNumber = (eoi['eoiNumber'] ?? '').toString().toLowerCase();
+        final uuid = (bid['uuid'] ?? '').toString().toLowerCase();
+        return title.contains(query) ||
+            eoiNumber.contains(query) ||
+            uuid.contains(query);
+      }).toList();
+    });
+  }
+
+  void _toggleSelectAll(bool? selected) {
+    setState(() {
+      if (selected == true) {
+        for (var bid in _filteredBids) {
+          _selectedBidUuids.add(bid['uuid'].toString());
+        }
+      } else {
+        _selectedBidUuids.clear();
+      }
+    });
+  }
+
+  void _toggleSelectBid(String uuid) {
+    setState(() {
+      if (_selectedBidUuids.contains(uuid)) {
+        _selectedBidUuids.remove(uuid);
+      } else {
+        _selectedBidUuids.add(uuid);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text(
-          'My Bids',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -0.5),
-        ),
-        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'My Bids',
+          style: TextStyle(
+            color: OtrTheme.darkNavy,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 20, color: OtrTheme.darkNavy),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _isLoading
           ? const Center(child: SpinKitPulse(color: OtrTheme.primaryBlue))
-          : _error.isNotEmpty
-              ? _buildErrorPlaceholder()
-              : _bids.isEmpty
-                  ? const Center(child: Text('No bids found.'))
-                  : RefreshIndicator(
-                      onRefresh: _fetchBids,
-                      color: OtrTheme.primaryBlue,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(20),
-                        itemCount: _bids.length,
-                        itemBuilder: (context, index) {
-                          return _buildBidCard(_bids[index]);
-                        },
+          : RefreshIndicator(
+              onRefresh: _fetchBids,
+              color: OtrTheme.primaryBlue,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Proposal Scrutiny',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: OtrTheme.darkNavy,
+                        letterSpacing: -0.5,
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    _buildSearchBar(),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: Checkbox(
+                                value: _filteredBids.isNotEmpty &&
+                                    _selectedBidUuids.length ==
+                                        _filteredBids.length,
+                                onChanged: _toggleSelectAll,
+                                activeColor: OtrTheme.primaryBlue,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Select All',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: OtrTheme.darkNavy,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Total: ${_filteredBids.length} Items',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: OtrTheme.darkNavy,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_error.isNotEmpty)
+                      _buildErrorPlaceholder()
+                    else if (_filteredBids.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 100),
+                        child: Center(
+                          child: Text('No bids found.', style: TextStyle(color: Colors.grey)),
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _filteredBids.length,
+                        itemBuilder: (context, index) {
+                          return _buildBidCard(_filteredBids[index]);
+                        },
+                      ),
+                  ],
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search by ID or Title...',
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          prefixIcon: Icon(Icons.search, color: Colors.grey.shade400, size: 20),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        ),
+      ),
     );
   }
 
   Widget _buildBidCard(dynamic bid) {
-    final String uuid = bid['uuid'] ?? '';
-    final String shortUuid = uuid.length > 8 ? uuid.substring(0, 8).toUpperCase() : uuid;
-    final String status = bid['evaluationStatus'] ?? 'PENDING';
+    // Correct mapping based on the provided API response structure
+    final eoi = bid['eoi'] ?? {};
+    final String title = eoi['title'] ?? 'N/A';
+    final String eoiNumber = eoi['eoiNumber'] ?? 'N/A';
     
-    Color statusColor = OtrTheme.warning;
-    if (status.toUpperCase() == 'ACCEPTED') statusColor = OtrTheme.success;
-    if (status.toUpperCase() == 'REJECTED') statusColor = OtrTheme.error;
+    // Formatting currency for financial quote
+    final dynamic rawQuote = bid['financialQuote'];
+    String bidValue = '₹ 0';
+    if (rawQuote != null) {
+      bidValue = '₹ ${rawQuote.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+    }
+    
+    final String submissionDate = _formatDate(bid['submittedAt']);
+    final String status = (bid['evaluationStatus'] ?? 'PENDING').toUpperCase();
+
+    Color statusColor = const Color(0xFFF59E0B); // Orange for Pending
+    if (status == 'SELECTED' || status == 'ACCEPTED') {
+      statusColor = const Color(0xFF10B981); // Green for Selected
+    } else if (status == 'REJECTED') {
+      statusColor = const Color(0xFFEF4444); // Red for Rejected
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: OtrTheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: OtrTheme.cardShadow,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: _selectedBidUuids.contains(bid['uuid'].toString()),
+                    onChanged: (val) => _toggleSelectBid(bid['uuid'].toString()),
+                    activeColor: OtrTheme.primaryBlue,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Project Submission #$shortUuid',
+                    title,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
                       color: OtrTheme.darkNavy,
-                      letterSpacing: -0.5,
                     ),
-                  ),
-                ),
-                _buildStatusBadge(status, statusColor),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Divider(height: 1, thickness: 1, color: OtrTheme.dividerColor),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInfoItem(
-                    'FINANCIAL QUOTE',
-                    '₹${bid['financialQuote'] ?? '0'}',
-                    Icons.currency_rupee_rounded,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildInfoItem(
-                    'SUBMITTED ON',
-                    _formatDate(bid['submittedAt']),
-                    Icons.event_note_rounded,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
+            _buildRowItem('EOI Number', eoiNumber, isBold: false),
+            const SizedBox(height: 12),
+            _buildRowItem('Bid Value', bidValue, isBold: true),
+            const SizedBox(height: 12),
+            _buildRowItem('Submission Date', submissionDate, isBold: false),
+            const SizedBox(height: 12),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: OtrTheme.primaryBlue,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('AUDIT TIMELINE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
-                  ),
+                const Text(
+                  'Status',
+                  style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: OtrTheme.primaryBlue.withValues(alpha: 0.2), width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                    child: const Text('VIEW PROPOSAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: OtrTheme.primaryBlue)),
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      status,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: OtrTheme.darkNavy,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -177,64 +338,22 @@ class _VendorMyBidsPageState extends State<VendorMyBidsPage> {
     );
   }
 
-  Widget _buildInfoItem(String label, String value, IconData icon) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildRowItem(String label, String value, {required bool isBold}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Icon(icon, size: 10, color: Colors.grey.shade400),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 9,
-                color: Colors.grey.shade400,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ],
+        Text(
+          label,
+          style: const TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 6),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
-            color: OtrTheme.darkNavy,
-            fontWeight: FontWeight.w800,
+            fontWeight: isBold ? FontWeight.w900 : FontWeight.w700,
+            color: isBold ? OtrTheme.darkNavy : Colors.black87,
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildStatusBadge(String status, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        status.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w900,
-          color: color,
-          letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoItem(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.grey)),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: OtrTheme.darkNavy)),
       ],
     );
   }
@@ -256,10 +375,10 @@ class _VendorMyBidsPageState extends State<VendorMyBidsPage> {
 
   String _formatDate(dynamic dateStr) {
     if (dateStr == null) return 'N/A';
+    if (dateStr == '14/05/2026') return dateStr; // Placeholder handling
     try {
       final date = DateTime.parse(dateStr.toString());
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return '${date.day} ${months[date.month - 1]} ${date.year}';
+      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
     } catch (_) {
       return dateStr.toString();
     }

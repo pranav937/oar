@@ -132,14 +132,10 @@ class ApiService {
     String password,
   ) async {
     try {
-      final response = await post(
-        ApiConstants.vendorLogin,
-        {
-          'contactEmail': email,
-          'password': password,
-        },
-        authenticated: false,
-      );
+      final response = await post(ApiConstants.vendorLogin, {
+        'contactEmail': email,
+        'password': password,
+      }, authenticated: false);
 
       final Map<String, dynamic> data = jsonDecode(response.body);
 
@@ -983,7 +979,9 @@ class ApiService {
   }
 
   // --- Vendor EOIs ---
-  Future<Map<String, dynamic>> getVendorEOIs({String status = 'PUBLISHED'}) async {
+  Future<Map<String, dynamic>> getVendorEOIs({
+    String status = 'PUBLISHED',
+  }) async {
     try {
       final response = await get(
         ApiConstants.vendorEOIs,
@@ -1030,21 +1028,96 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> getVendorPerformance() async {
+  Future<Map<String, dynamic>> getVendorWorkOrders() async {
     try {
-      final response = await get(ApiConstants.vendorPerformance);
+      final response = await get(ApiConstants.vendorWorkOrders);
       final decoded = jsonDecode(response.body);
-      return decoded;
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch work orders',
+        };
+      }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
 
-  Future<Map<String, dynamic>> getVendorWorkOrders() async {
+  Future<Map<String, dynamic>> getVendorInvoices() async {
     try {
-      final response = await get(ApiConstants.vendorWorkOrders);
+      final response = await get(ApiConstants.vendorInvoices);
       final decoded = jsonDecode(response.body);
-      return decoded;
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch invoices',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorPayments() async {
+    try {
+      final response = await get(ApiConstants.vendorPayments);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch payments',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorPerformance() async {
+    try {
+      final response = await get(ApiConstants.vendorPerformance);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch performance',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getVendorDashboard() async {
+    try {
+      final response = await get(ApiConstants.vendorDashboard);
+      final decoded = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return decoded.containsKey('success')
+            ? decoded
+            : {'success': true, 'data': decoded};
+      } else {
+        return {
+          'success': false,
+          'message': decoded['message'] ?? 'Failed to fetch dashboard',
+        };
+      }
     } catch (e) {
       return {'success': false, 'message': 'Network error: $e'};
     }

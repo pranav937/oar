@@ -226,11 +226,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
           padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            const Text(
-              'Upload required documents for profile verification.',
-              style: TextStyle(color: Colors.black54),
-            ),
-            const SizedBox(height: 24),
+
             ..._documentMap.keys.map((doc) => _buildDocCard(doc)),
             const SizedBox(height: 40),
             ElevatedButton(

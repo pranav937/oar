@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
     try {
       debugPrint("DEBUG: Attempting login for role: $_selectedRole");
-      
+
       final Map<String, dynamic> result;
       if (_selectedRole == 'Vendor') {
         result = await _apiService.vendorLogin(
@@ -53,20 +53,20 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (mounted) {
-          setState(() => _isLoading = true); 
+          setState(() => _isLoading = true);
         }
 
         final profileResult = await _apiService.getProfile();
 
         if (mounted) {
           // Role Validation Logic
-          final userRole = profileResult['data']?['role'] ?? 'Candidate'; 
-          
+          final userRole = profileResult['data']?['role'] ?? 'Candidate';
+
           if (_selectedRole != userRole) {
             setState(() => _isLoading = false);
             CustomToast.showError(
-              context, 
-              'Access Denied: You are trying to login as $_selectedRole with a $userRole account.'
+              context,
+              'Access Denied: You are trying to login as $_selectedRole with a $userRole account.',
             );
             await _apiService.logout();
             return;
@@ -273,12 +273,8 @@ class _LoginPageState extends State<LoginPage> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _buildRoleButton('Candidate', Icons.person_rounded),
-          ),
-          Expanded(
-            child: _buildRoleButton('Vendor', Icons.business_rounded),
-          ),
+          Expanded(child: _buildRoleButton('Candidate', Icons.person_rounded)),
+          Expanded(child: _buildRoleButton('Vendor', Icons.business_rounded)),
         ],
       ),
     );
@@ -351,149 +347,156 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 60),
-                  // Logo Section
-                  Center(
-                    child: Hero(
-                      tag: 'app_logo',
-                      child: SvgPicture.asset(
-                        'assets/images/jadeE.svg',
-                        width: 150,
-                        height: 75,
-                      ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                  ),
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Welcome Back',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: OtrTheme.darkNavy,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Sign in to continue to OTR System',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.black45,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  _buildRoleToggle(),
-                  const SizedBox(height: 40),
-                  // Form
-                  OtrTextField(
-                    label: 'Username / Email',
-                    hintText: 'Enter your username',
-                    icon: Icons.alternate_email_rounded,
-                    controller: _usernameController,
-                  ),
-                  const SizedBox(height: 20),
-                  OtrTextField(
-                    label: 'Password',
-                    hintText: 'Enter your password',
-                    icon: Icons.lock_person_outlined,
-                    isPassword: true,
-                    controller: _passwordController,
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        '/forgot-password',
-                      ),
-                      style: TextButton.styleFrom(
-                        foregroundColor: OtrTheme.primaryBlue,
-                        padding: EdgeInsets.zero,
-                        minimumSize: const Size(50, 30),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: OtrTheme.intenseShadow,
-                    ),
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: OtrTheme.primaryBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 18,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : const Text(
-                              'LOG IN',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1,
+                    child: IntrinsicHeight(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Spacer(flex: 2),
+                          // Logo Section
+                          Center(
+                            child: Hero(
+                              tag: 'app_logo',
+                              child: SvgPicture.asset(
+                                'assets/images/jadeE.svg',
+                                width: 150,
+                                height: 75,
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text(
+                            'Welcome Back',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: OtrTheme.darkNavy,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Sign in to JadeEdu ',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.black45,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          _buildRoleToggle(),
+                          const SizedBox(height: 32),
+                          // Form
+                          OtrTextField(
+                            label: 'Username / Email',
+                            hintText: 'Enter your username',
+                            icon: Icons.alternate_email_rounded,
+                            controller: _usernameController,
+                          ),
+                          const SizedBox(height: 16),
+                          OtrTextField(
+                            label: 'Password',
+                            hintText: 'Enter your password',
+                            icon: Icons.lock_person_outlined,
+                            isPassword: true,
+                            controller: _passwordController,
+                          ),
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, '/forgot-password'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: OtrTheme.primaryBlue,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(50, 30),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: const Text(
+                                'Forgot Password?',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: OtrTheme.intenseShadow,
+                            ),
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleLogin,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: OtrTheme.primaryBlue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 18),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'LOG IN',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const Spacer(flex: 3),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Don't have an account? ",
+                                style: TextStyle(
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: _showRegistrationOptions,
+                                child: const Text(
+                                  'Register Now',
+                                  style: TextStyle(
+                                    color: OtrTheme.primaryBlue,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 60),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: _showRegistrationOptions,
-                        child: const Text(
-                          'Register Now',
-                          style: TextStyle(
-                            color: OtrTheme.primaryBlue,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
